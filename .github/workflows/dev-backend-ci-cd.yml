@@ -49,7 +49,7 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Docker Pull & Run From DockerHub
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ vars.SSH_HOST }}
         username: ${{ vars.SSH_USERNAME }}
