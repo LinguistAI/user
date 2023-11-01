@@ -51,8 +51,8 @@ jobs:
     - name: Docker Pull & Run From DockerHub
       uses: appleboy/ssh-action@master
       with:
-        host:
-        username:
+        host: ${{ vars.SSH_HOST }}
+        username: ${{ vars.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         envs: GITHUB_SHA
         script: |
