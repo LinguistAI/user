@@ -19,7 +19,17 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: mvn clean install
-
+      env:
+        JDBC_DATABASE_URL: ${{ secrets.JDBC_DATABASE_URL }}
+        JDBC_DATABASE_USERNAME: ${{ secrets.JDBC_DATABASE_USERNAME }}
+        JDBC_DATABASE_PASSWORD: ${{ secrets.JDBC_DATABASE_PASSWORD }}
+        JDBC_DATABASE_DRIVER: ${{ vars.JDBC_DATABASE_DRIVER }}
+        JPA_HIBERNATE_DDL: ${{ vars.JPA_HIBERNATE_DDL }}
+        JDBC_DATABASE_DIALECT: ${{ vars.JDBC_DATABASE_DIALECT }}
+        EMAIL_SMTP_HOST: ${{ vars.EMAIL_SMTP_HOST }}
+        EMAIL_SMTP_PORT: ${{ vars.EMAIL_SMTP_PORT }}
+        EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+        EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
 
 
     - name: Build & push Docker image
