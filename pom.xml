@@ -118,6 +118,7 @@
 				</configuration>
 			</plugin>
 		</plugins>
+		<finalName>linguistai</finalName>
 	</build>
 
 </project>
