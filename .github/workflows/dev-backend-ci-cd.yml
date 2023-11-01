@@ -51,10 +51,10 @@ jobs:
     - name: Docker Pull & Run From DockerHub
       uses: appleboy/ssh-action@v1.0.0
       with:
-        host: 92.205.25.135
-        username: ${{ vars.SSH_USERNAME }}
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ vars.SSH_PORT }}
+        port: ${{ secrets.SSH_PORT }}
         script: |
           docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
           docker pull linguistai/backend-dev:latest
