@@ -54,6 +54,7 @@ jobs:
         host: ${{ vars.SSH_HOST }}
         username: ${{ vars.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ vars.SSH_PORT }}
         script: |
           docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
           docker pull linguistai/backend-dev:latest
