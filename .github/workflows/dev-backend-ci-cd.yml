@@ -47,3 +47,18 @@ jobs:
         dockerfile: Dockerfile
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Docker Pull & Run From DockerHub
+      uses: appleboy/ssh-action@master
+      with:
+        host:
+        username:
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        envs: GITHUB_SHA
+        script: |
+          docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+          docker pull linguistai/backend-dev:latest
+          docker stop backend-dev
+          docker rm backend-dev
+          cd /home/tolgaozgun/LinguistAI-dev
+          docker-compose up -d
