@@ -25,7 +25,6 @@ jobs:
     - name: Build and tag Docker image
       run: |
         docker build -t linguistai-backend-dev .
-      working-directory: .
 
     - name: Push Docker image to your Docker registry (e.g., Docker Hub)
       run: |
