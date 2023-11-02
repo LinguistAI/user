@@ -33,7 +33,7 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 @RestController
-@RequestMapping("api/v1/auth")
+@RequestMapping("auth")
 public class AccountController {
     private final AccountService accountService;
     private final EmailService emailService;

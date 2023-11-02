@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 @AllArgsConstructor
 @RestController
-@RequestMapping("api/v1/message")
+@RequestMapping("message")
 public class MessageController {
     @Autowired
     @Qualifier("no-llm-message-service")
