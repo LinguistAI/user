@@ -31,10 +31,22 @@ jobs:
         EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         SPRING_BASE_PATH: ${{ vars.SPRING_BASE_PATH }}
 
+    - name: Upload build artifact
+      uses: actions/upload-artifact@master
+      with:
+        name: backend-dev-artifact
+        path: .
+
   publish:
-    needs: build
     runs-on: ubuntu-latest
+    needs: build
     steps:
+    - name: Download build artifact
+      uses: actions/download-artifact@master
+      with:
+        name: backend-dev-artifact
+        path: .
+
     - name: Login to DockerHub
       uses: docker/login-action@v1
       with:
