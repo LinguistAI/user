@@ -32,6 +32,7 @@ jobs:
         SPRING_BASE_PATH: ${{ vars.SPRING_BASE_PATH }}
 
   publish:
+    needs: build
     runs-on: ubuntu-latest
     steps:
     - name: Login to DockerHub
@@ -51,6 +52,7 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
   deploy:
+    needs: publish
     runs-on: ubuntu-latest
     steps:
     - name: Docker Pull & Run From DockerHub
