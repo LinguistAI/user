@@ -31,6 +31,7 @@ jobs:
         EMAIL_SMTP_PORT: ${{ vars.EMAIL_SMTP_PORT }}
         EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
         EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        SPRING_BASE_PATH: ${{ vars.SPRING_BASE_PATH }}
 
     - name: Login to DockerHub
       uses: docker/login-action@v1
