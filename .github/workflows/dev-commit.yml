@@ -1,0 +1,69 @@
+name: Backend Dev Workflow
+
+on:
+  push:
+    branches: [ dev ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK 1.17
+      uses: actions/setup-java@v1
+      with:
+        java-version: '1.17'
+        distribution: 'adopt'
+        cache: maven
+
+    - name: Build with Maven
+      run: mvn clean install
+      env:
+        JDBC_DATABASE_URL: ${{ secrets.JDBC_DATABASE_URL }}
+        JDBC_DATABASE_USERNAME: ${{ secrets.JDBC_DATABASE_USERNAME }}
+        JDBC_DATABASE_PASSWORD: ${{ secrets.JDBC_DATABASE_PASSWORD }}
+        JDBC_DATABASE_DRIVER: ${{ vars.JDBC_DATABASE_DRIVER }}
+        JPA_HIBERNATE_DDL: ${{ vars.JPA_HIBERNATE_DDL }}
+        JDBC_DATABASE_DIALECT: ${{ vars.JDBC_DATABASE_DIALECT }}
+        EMAIL_SMTP_HOST: ${{ vars.EMAIL_SMTP_HOST }}
+        EMAIL_SMTP_PORT: ${{ vars.EMAIL_SMTP_PORT }}
+        EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+        EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        SPRING_BASE_PATH: ${{ vars.SPRING_BASE_PATH }}
+
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build & push Docker image
+      uses: mr-smithers-excellent/docker-build-push@v5
+      with:
+        image: linguistai/backend-dev
+        tags: latest
+        registry: docker.io
+        dockerfile: Dockerfile
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Docker Pull & Run From DockerHub
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+          docker pull linguistai/backend-dev:latest
+          docker stop backend-dev
+          docker rm backend-dev
+          cd /home/tolgaozgun/LinguistAI-dev
+          docker-compose up -d

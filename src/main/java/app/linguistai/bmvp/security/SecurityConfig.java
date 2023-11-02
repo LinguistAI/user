@@ -28,13 +28,13 @@ public class SecurityConfig {
 	private static final String[] AUTH_WHITELIST = {
 			"/v3/api-docs/**",
 			"/swagger-ui/**",
-			"/api/v1/auth/hello",
-			"/api/v1/auth/login",
-			"/api/v1/auth/register",
-			"/api/v1/auth/request-reset",
-			"/api/v1/auth/test-reset",
-			"/api/v1/auth/validate-reset",
-			"/api/v1/auth/reset-password"
+			"/auth/hello",
+			"/auth/login",
+			"/auth/register",
+			"/auth/request-reset",
+			"/auth/test-reset",
+			"/auth/validate-reset",
+			"/auth/reset-password"
 	};
 
 	@Bean

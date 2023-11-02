@@ -16,7 +16,7 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 @RestController
-@RequestMapping("api/v1/user-streak")
+@RequestMapping("user-streak")
 public class UserStreakController {
     private final UserStreakService userStreakService;
 
