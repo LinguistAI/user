@@ -49,17 +49,15 @@ public class UserStreakService {
             LocalDate lastLoginLocalDate = streakTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             LocalDate currentDate = LocalDate.now();
             long daysDifference = ChronoUnit.DAYS.between(lastLoginLocalDate, currentDate);
-            
-            // Streak must be incremented
-            if (daysDifference == 1) {
-                return incrementUserStreak(userStreak);
-            }
-            // Streak must be reset || (edge case, if last login is after current time) Streak must be reset
-            else if (daysDifference != 1) {
-                return resetUserStreak(userStreak);
-            }
-            // else if (daysDifference == 0), Do nothing. Maybe later add hello again message?
-            return userStreak;
+
+            return switch ((int) daysDifference) {
+                // if (daysDifference == 0), Do nothing. Maybe later add hello again message?
+                case 0 -> userStreak;
+                // Streak must be incremented
+                case 1 -> incrementUserStreak(userStreak);
+                // Streak must be reset (edge case, if last login is after current time) Streak must be reset
+                default -> resetUserStreak(userStreak);
+            };
         }
         catch (Exception e) {
             throw e;
