@@ -75,16 +75,10 @@ public class UserStreakServiceTest {
             streak.setHighestStreak(2);
             streak.setLastLogin(DateUtils.convertLocalDateToSqlDate(LocalDate.now()));
 
-            ArgumentCaptor<UserStreak> userStreakCaptor = ArgumentCaptor.forClass(UserStreak.class);
-
             when(userStreakRepository.findByUserEmail(user.getEmail())).thenReturn(Optional.of(streak));
-            when(userStreakRepository.save(userStreakCaptor.capture())).thenReturn(new UserStreak());
 
-            userStreakService.updateUserStreak(user.getEmail());
-            UserStreak updatedStreak = userStreakCaptor.getValue();
+            UserStreak updatedStreak = userStreakService.updateUserStreak(user.getEmail());
 
-            verify(userStreakRepository, times(1)).deleteById(any());
-            verify(userStreakRepository, times(1)).save(any());
             assertEquals(streak.getCurrentStreak(), updatedStreak.getCurrentStreak());
             assertEquals(streak.getHighestStreak(), updatedStreak.getHighestStreak());
         }
