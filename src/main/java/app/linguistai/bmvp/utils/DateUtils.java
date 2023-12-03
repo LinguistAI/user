@@ -27,4 +27,12 @@ public class DateUtils {
 
         return calendar.getTime();
     }
+
+    public static java.sql.Date convertLocalDateToSqlDate(java.time.LocalDate localDate) {
+        return localDate != null ? java.sql.Date.valueOf(localDate) : null;
+    }
+
+    public static java.util.Date convertLocalDateToUtilDate(java.time.LocalDate localDate) {
+        return convertSqlDateToUtilDate(convertLocalDateToSqlDate(localDate));
+    }
 }
