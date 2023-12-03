@@ -64,7 +64,8 @@ public class AccountService {
             final String refreshToken = jwtUtils.createRefreshToken(userDetails);
 
             // If login is successful, check whether to increase user streak or not
-            // MIGRATED TO MESSAGE SERVICE: userStreakService.updateUserStreak(dbUser.getEmail());
+            // ALSO IN MESSAGE SERVICE: userStreakService.updateUserStreak(dbUser.getEmail());
+            userStreakService.updateUserStreak(dbUser.getEmail());
 
             return new RLoginUser(dbUser, accessToken, refreshToken);
         } catch (Exception e) {
