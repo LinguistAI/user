@@ -107,6 +107,16 @@ public class AccountController {
     }
 
     @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
+    @GetMapping("hello")
+    public ResponseEntity<Object> testUnsecuredEndpoint() {
+        try {
+            return Response.create("ok", HttpStatus.OK);
+        } catch (Exception e) {
+            return Response.create(ExceptionLogger.log(e), HttpStatus.OK);  
+        }        
+    }
+
+    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/request-reset")
     public ResponseEntity<Object> requestResetPassword(@Valid @RequestBody QResetPassword resetPasswordInfo) {
         try {

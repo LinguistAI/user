@@ -5,6 +5,7 @@ import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -18,10 +19,20 @@ import javax.crypto.SecretKey;
 
 @Component
 public class JWTUtils {
+    @Value("${spring.jwt.access.key}")
     private String accessSignKey = "broccoliisthegreatestfoodinthewholeuniverse";
+
+    @Value("${spring.jwt.referesh.key}")
     private String refreshSignKey = "pizzaisalsogoodbutnotreallygoodwithoutbroccoli";
-    private long accessExp = TimeUnit.HOURS.toMillis(10);
-    private long refreshExp = TimeUnit.HOURS.toMillis(24);
+
+    @Value("${spring.jwt.access.expiration}")
+    private int accessMins;
+    
+    @Value("${spring.jwt.refresh.expiration}")
+    private int refreshMins;
+
+    private long accessExp = TimeUnit.MINUTES.toMillis(accessMins);
+    private long refreshExp = TimeUnit.MINUTES.toMillis(refreshMins);
 
     private Claims extractAllClaims(String token, String signKey)  {
         SecretKey key = Keys.hmacShaKeyFor(signKey.getBytes(StandardCharsets.UTF_8));
