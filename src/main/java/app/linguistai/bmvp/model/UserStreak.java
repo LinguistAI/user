@@ -25,7 +25,12 @@ public class UserStreak {
 
     @NotNull
     @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id", foreignKey = @ForeignKey())
+    @JoinColumn(
+            name = "user_id",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(),
+            nullable = false
+    )
     private User user;
 
     @NotNull
