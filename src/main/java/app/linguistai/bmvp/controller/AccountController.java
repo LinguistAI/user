@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import app.linguistai.bmvp.consts.Header;
 import app.linguistai.bmvp.exception.ExceptionLogger;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.request.QChangePassword;
@@ -63,10 +64,10 @@ public class AccountController {
     @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/change-password")
     public ResponseEntity<Object> changePassword(@Valid @RequestBody QChangePassword userInfo,
-        @RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
+        @RequestHeader(Header.USER_EMAIL) String email) {
 
         try {
-            accountService.changePassword(auth, userInfo);
+            accountService.changePassword(email, userInfo);
             return Response.create("password is changed", HttpStatus.OK);
         } catch (Exception e) {
             return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);

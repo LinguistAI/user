@@ -8,14 +8,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.UserStreak;
 import app.linguistai.bmvp.repository.gamification.IUserStreakRepository;
-import app.linguistai.bmvp.security.JWTFilter;
-import app.linguistai.bmvp.security.JWTUtils;
 import app.linguistai.bmvp.utils.DateUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +21,6 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class UserStreakService {
     private final IUserStreakRepository userStreakRepository;
-
-    @Autowired
-    private final JWTUtils jwtUtils;
 
     public UserStreak updateUserStreak(String email) throws Exception {
         try {
@@ -104,9 +98,8 @@ public class UserStreakService {
         }
     }
 
-    public UserStreak getUserStreakByToken(String token) throws Exception {
+    public UserStreak getUserStreakByToken(String email) throws Exception {
         try {
-            String email = jwtUtils.extractAccessUsername(JWTFilter.getTokenWithoutBearer(token));
             return getUserStreakWithEmail(email);
         }
         catch (NotFoundException e1) {

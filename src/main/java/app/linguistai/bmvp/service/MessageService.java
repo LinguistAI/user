@@ -10,12 +10,9 @@ import app.linguistai.bmvp.repository.IMessageRepository;
 import app.linguistai.bmvp.request.QMessage;
 import app.linguistai.bmvp.response.RMessage;
 import app.linguistai.bmvp.response.RMessagePair;
-import app.linguistai.bmvp.security.JWTFilter;
-import app.linguistai.bmvp.security.JWTUtils;
 import app.linguistai.bmvp.service.gamification.UserStreakService;
 import app.linguistai.bmvp.utils.mapper.MessageMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
@@ -34,15 +31,11 @@ public class MessageService implements IMessageService {
 
     private final IAccountRepository accountRepository;
 
-    @Autowired
-    private final JWTUtils jwtUtils;
-
     private final String MODEL_NAME = "Model";
 
     @Override
-    public RMessagePair sendMessage(QMessage qMessage, String token) throws Exception {
+    public RMessagePair sendMessage(QMessage qMessage, String email) throws Exception {
         try {
-            String email = jwtUtils.extractAccessUsername(JWTFilter.getTokenWithoutBearer(token));
             Optional<User> optionalUser = accountRepository.findUserByEmail(email);
 
             if (optionalUser.isEmpty()) {

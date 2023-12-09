@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,11 +20,13 @@ import javax.crypto.SecretKey;
 
 @Component
 public class JWTUtils {
-    @Value("${spring.jwt.access.key}")
-    private String accessSignKey = "broccoliisthegreatestfoodinthewholeuniverse";
+    private final static String TOKEN_BEARER_PREFIX = "Bearer";
 
-    @Value("${spring.jwt.referesh.key}")
-    private String refreshSignKey = "pizzaisalsogoodbutnotreallygoodwithoutbroccoli";
+    @Value("${spring.jwt.access.key}")
+    private String accessSignKey;
+
+    @Value("${spring.jwt.refresh.key}")
+    private String refreshSignKey;
 
     @Value("${spring.jwt.access.expiration}")
     private int accessMins;
@@ -31,8 +34,14 @@ public class JWTUtils {
     @Value("${spring.jwt.refresh.expiration}")
     private int refreshMins;
 
-    private long accessExp = TimeUnit.MINUTES.toMillis(accessMins);
-    private long refreshExp = TimeUnit.MINUTES.toMillis(refreshMins);
+    private long accessExp;
+    private long refreshExp;
+
+    @PostConstruct
+    public void initExpirationValues() {
+        accessExp = TimeUnit.MINUTES.toMillis(accessMins);
+        refreshExp = TimeUnit.MINUTES.toMillis(refreshMins);
+    }
 
     private Claims extractAllClaims(String token, String signKey)  {
         SecretKey key = Keys.hmacShaKeyFor(signKey.getBytes(StandardCharsets.UTF_8));
@@ -123,5 +132,13 @@ public class JWTUtils {
     public boolean validateRefreshToken(String token, UserDetails user) {
         String username = extractRefreshUsername(token);
         return user.getUsername().equals(username) && !isRefreshTokenExpired(token);
+    }
+
+    public static String getTokenWithoutBearer(String token) throws Exception {
+        if (token == null) {
+            throw new Exception("Token is not found!");
+        }
+
+        return token.substring(TOKEN_BEARER_PREFIX.length());
     }
 }

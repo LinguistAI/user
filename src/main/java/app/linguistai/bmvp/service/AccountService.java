@@ -18,7 +18,6 @@ import app.linguistai.bmvp.request.QChangePassword;
 import app.linguistai.bmvp.request.QUserLogin;
 import app.linguistai.bmvp.response.RLoginUser;
 import app.linguistai.bmvp.response.RRefreshToken;
-import app.linguistai.bmvp.security.JWTFilter;
 import app.linguistai.bmvp.security.JWTUserService;
 import app.linguistai.bmvp.security.JWTUtils;
 import app.linguistai.bmvp.service.gamification.UserStreakService;
@@ -76,7 +75,7 @@ public class AccountService {
 
     public RRefreshToken refreshToken(String auth) throws Exception {
         try {
-            String username = jwtUtils.extractRefreshUsername(JWTFilter.getTokenWithoutBearer(auth));
+            String username = jwtUtils.extractRefreshUsername(JWTUtils.getTokenWithoutBearer(auth));
 
             final UserDetails userDetails = jwtUserService.loadUserByUsername(username);
             final String accessToken = jwtUtils.createAccessToken(userDetails);
@@ -88,9 +87,8 @@ public class AccountService {
         }
     }
 
-    public boolean changePassword(String auth, QChangePassword passwords) throws Exception {
+    public boolean changePassword(String email, QChangePassword passwords) throws Exception {
         try {
-            String email = jwtUtils.extractAccessUsername(JWTFilter.getTokenWithoutBearer(auth));
             User dbUser = accountRepository.findUserByEmail(email).orElse(null);
 
             if (dbUser == null) {

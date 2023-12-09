@@ -1,6 +1,5 @@
 package app.linguistai.bmvp.controller.gamification;
 
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -8,6 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import app.linguistai.bmvp.consts.Header;
 import app.linguistai.bmvp.exception.ExceptionLogger;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.response.Response;
@@ -33,9 +34,9 @@ public class UserStreakController {
 
     @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @GetMapping
-    public ResponseEntity<Object> getUserStreakByToken(@RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
+    public ResponseEntity<Object> getUserStreakByToken(@RequestHeader(Header.USER_EMAIL) String email) {
         try {
-            return Response.create("Successfully fetched UserStreak", HttpStatus.OK, userStreakService.getUserStreakByToken(auth));
+            return Response.create("Successfully fetched UserStreak", HttpStatus.OK, userStreakService.getUserStreakByToken(email));
         }
         catch (NotFoundException e1) {
             return Response.create("UserStreak does not exist for user email", HttpStatus.INTERNAL_SERVER_ERROR);
