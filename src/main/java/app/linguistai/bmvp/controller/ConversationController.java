@@ -19,7 +19,7 @@ public class ConversationController {
     @GetMapping
     public ResponseEntity<Object> getConversationByUser(@RequestHeader(Header.USER_EMAIL) String email) {
         try {
-            return Response.create("Successfully fetched Conversation", HttpStatus.OK, conversationService.getConversationByToken(email));
+            return Response.create("Successfully fetched Conversation", HttpStatus.OK, conversationService.getConversationByUserEmail(email));
         }
         catch (Exception e) {
             return Response.create(ExceptionLogger.log(e), HttpStatus.INTERNAL_SERVER_ERROR);

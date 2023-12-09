@@ -39,7 +39,7 @@ public class ConversationService {
         }
     }
 
-    private RConversation getConversationByUserEmail(String email) throws Exception {
+    public RConversation getConversationByUserEmail(String email) throws Exception {
         try {
             Optional<User> optionalUser = accountRepository.findUserByEmail(email);
 
