@@ -21,7 +21,6 @@ public class MessageController {
     @Qualifier("no-llm-message-service")
     private final IMessageService messageService;
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @PostMapping
     public ResponseEntity<Object> sendMessage(@Valid @RequestBody QMessage qMessage, @RequestHeader(Header.USER_EMAIL) String email) {
         try {

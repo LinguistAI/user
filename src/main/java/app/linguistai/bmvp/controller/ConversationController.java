@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 public class ConversationController {
     private final ConversationService conversationService;
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @GetMapping
     public ResponseEntity<Object> getConversationByUser(@RequestHeader(Header.USER_EMAIL) String email) {
         try {

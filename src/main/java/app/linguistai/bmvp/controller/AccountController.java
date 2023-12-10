@@ -41,7 +41,6 @@ public class AccountController {
     private final AccountService accountService;
     private final EmailService emailService;
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "login")
     public ResponseEntity<Object> login(@Valid @RequestBody QUserLogin userInfo) {
         try {
@@ -52,7 +51,6 @@ public class AccountController {
         }        
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "register")
     public ResponseEntity<Object> register(@Valid @RequestBody User userInfo) {
         try {
@@ -64,7 +62,6 @@ public class AccountController {
         }        
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/change-password")
     public ResponseEntity<Object> changePassword(@Valid @RequestBody QChangePassword userInfo,
         @RequestHeader(Header.USER_EMAIL) String email) {
@@ -77,7 +74,6 @@ public class AccountController {
         }        
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @GetMapping("/refresh")
     public ResponseEntity<Object> refreshToken(@RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
         try {
@@ -88,7 +84,6 @@ public class AccountController {
         }        
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @GetMapping("/test")
     public ResponseEntity<Object> testAuth() {
         try {
@@ -99,7 +94,6 @@ public class AccountController {
         }        
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @GetMapping("/")
     public ResponseEntity<Object> getUsers() {
         try {
@@ -110,7 +104,6 @@ public class AccountController {
         }        
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @GetMapping("hello")
     public ResponseEntity<Object> testUnsecuredEndpoint() {
         try {
@@ -120,7 +113,6 @@ public class AccountController {
         }        
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/request-reset")
     public ResponseEntity<Object> requestResetPassword(@Valid @RequestBody QResetPassword resetPasswordInfo) {
         try {
@@ -132,7 +124,6 @@ public class AccountController {
         }
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/test-reset")
     public ResponseEntity<Object> requestResetPasswordWithoutEmail(@Valid @RequestBody QResetPassword resetPasswordInfo) {
         try {
@@ -143,7 +134,6 @@ public class AccountController {
         }
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @PostMapping("/validate-reset")
     public ResponseEntity<Object> validateResetPassword(@Valid @RequestBody QResetPasswordVerification verificationInfo) {
         try {
@@ -157,7 +147,6 @@ public class AccountController {
         }
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/reset-password")
     public ResponseEntity<Object> saveResetPassword(@Valid @RequestBody QResetPasswordSave passwordInfo) {
         try {

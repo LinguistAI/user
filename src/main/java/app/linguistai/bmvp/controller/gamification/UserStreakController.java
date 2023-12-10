@@ -21,7 +21,6 @@ import lombok.AllArgsConstructor;
 public class UserStreakController {
     private final UserStreakService userStreakService;
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @GetMapping(path = "/all")
     public ResponseEntity<Object> getAllUserStreaks() {
         try {
@@ -32,7 +31,6 @@ public class UserStreakController {
         }        
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @GetMapping
     public ResponseEntity<Object> getUserStreakByToken(@RequestHeader(Header.USER_EMAIL) String email) {
         try {
