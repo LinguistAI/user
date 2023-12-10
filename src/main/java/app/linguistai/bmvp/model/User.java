@@ -16,7 +16,6 @@ import lombok.NoArgsConstructor;
 @Table(name = "user")
 @NoArgsConstructor
 public class User {
-    @NotNull
     @Id
     @Column(name = "id", nullable = false)
     private UUID id;

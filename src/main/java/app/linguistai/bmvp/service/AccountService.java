@@ -21,6 +21,7 @@ import app.linguistai.bmvp.response.RRefreshToken;
 import app.linguistai.bmvp.security.JWTUserService;
 import app.linguistai.bmvp.security.JWTUtils;
 import app.linguistai.bmvp.service.gamification.UserStreakService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -119,6 +120,7 @@ public class AccountService {
         }
     }
 
+    @Transactional
     public User addUser(User user) throws Exception {
         try {
             System.out.println("user that will be saved: " + user);

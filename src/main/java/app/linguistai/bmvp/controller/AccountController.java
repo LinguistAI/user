@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +35,7 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 @RestController
+@Validated
 @RequestMapping("auth")
 public class AccountController {
     private final AccountService accountService;
@@ -46,7 +48,7 @@ public class AccountController {
             RLoginUser token = accountService.login(userInfo);
             return Response.create("login is successful", HttpStatus.OK, token);
         } catch (Exception e) {
-            return Response.create(ExceptionLogger.log(e), 499);
+            return Response.create(ExceptionLogger.log(e), HttpStatus.UNAUTHORIZED);
         }        
     }
 
@@ -57,6 +59,7 @@ public class AccountController {
             User ids = accountService.addUser(userInfo);
             return Response.create("account is created", HttpStatus.OK, ids);
         } catch (Exception e) {
+            e.printStackTrace();
             return Response.create(ExceptionLogger.log(e), HttpStatus.CONFLICT);
         }        
     }

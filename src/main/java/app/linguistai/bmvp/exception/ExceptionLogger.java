@@ -1,18 +1,32 @@
 package app.linguistai.bmvp.exception;
 
 import lombok.Data;
-
+ 
 @Data
 public class ExceptionLogger {
+    private static final boolean NEXT_LINE_FLAG = false; 
+    
     public static String log(Exception e) {
-        String log = "";
+        String msg = "";
+        msg += (e.getMessage().equals(e.getLocalizedMessage())) ? e.getLocalizedMessage()
+                : e.getLocalizedMessage() + ": " + e.getMessage();
+        if (NEXT_LINE_FLAG) msg += "\n";
+        return msg;
+    }
 
-        if (e.getMessage().equals(e.getLocalizedMessage())) {
-            log += e.getLocalizedMessage();
-        } else {
-            log += e.getLocalizedMessage() + " : " + e.getMessage();
-        }
+    public static String warn(Exception e) {
+        String msg = "[WARNING] ";
+        msg += (e.getMessage().equals(e.getLocalizedMessage())) ? e.getLocalizedMessage()
+                : e.getLocalizedMessage() + ": " + e.getMessage();
+        if (NEXT_LINE_FLAG) msg += "\n";
+        return msg;
+    }
 
-        return log;
+    public static String error(Exception e) {
+        String msg = "[ERROR] ";
+        msg += (e.getMessage().equals(e.getLocalizedMessage())) ? e.getLocalizedMessage()
+                : e.getLocalizedMessage() + ": " + e.getMessage();
+        if (NEXT_LINE_FLAG) msg += "\n";
+        return msg;
     }
 }
