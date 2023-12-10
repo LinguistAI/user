@@ -10,7 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import app.linguistai.bmvp.consts.Header;
 import app.linguistai.bmvp.exception.ExceptionLogger;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.request.QChangePassword;
@@ -33,47 +34,45 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 @RestController
+@Validated
 @RequestMapping("auth")
 public class AccountController {
     private final AccountService accountService;
     private final EmailService emailService;
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "login")
     public ResponseEntity<Object> login(@Valid @RequestBody QUserLogin userInfo) {
         try {
             RLoginUser token = accountService.login(userInfo);
             return Response.create("login is successful", HttpStatus.OK, token);
         } catch (Exception e) {
-            return Response.create(ExceptionLogger.log(e), 499);
+            return Response.create(ExceptionLogger.log(e), HttpStatus.UNAUTHORIZED);
         }        
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "register")
     public ResponseEntity<Object> register(@Valid @RequestBody User userInfo) {
         try {
             User ids = accountService.addUser(userInfo);
             return Response.create("account is created", HttpStatus.OK, ids);
         } catch (Exception e) {
+            e.printStackTrace();
             return Response.create(ExceptionLogger.log(e), HttpStatus.CONFLICT);
         }        
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/change-password")
     public ResponseEntity<Object> changePassword(@Valid @RequestBody QChangePassword userInfo,
-        @RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
+        @RequestHeader(Header.USER_EMAIL) String email) {
 
         try {
-            accountService.changePassword(auth, userInfo);
+            accountService.changePassword(email, userInfo);
             return Response.create("password is changed", HttpStatus.OK);
         } catch (Exception e) {
             return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
         }        
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @GetMapping("/refresh")
     public ResponseEntity<Object> refreshToken(@RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
         try {
@@ -84,7 +83,6 @@ public class AccountController {
         }        
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @GetMapping("/test")
     public ResponseEntity<Object> testAuth() {
         try {
@@ -95,7 +93,6 @@ public class AccountController {
         }        
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @GetMapping("/")
     public ResponseEntity<Object> getUsers() {
         try {
@@ -106,7 +103,15 @@ public class AccountController {
         }        
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
+    @GetMapping("hello")
+    public ResponseEntity<Object> testUnsecuredEndpoint() {
+        try {
+            return Response.create("ok", HttpStatus.OK);
+        } catch (Exception e) {
+            return Response.create(ExceptionLogger.log(e), HttpStatus.OK);  
+        }        
+    }
+
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/request-reset")
     public ResponseEntity<Object> requestResetPassword(@Valid @RequestBody QResetPassword resetPasswordInfo) {
         try {
@@ -118,7 +123,6 @@ public class AccountController {
         }
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/test-reset")
     public ResponseEntity<Object> requestResetPasswordWithoutEmail(@Valid @RequestBody QResetPassword resetPasswordInfo) {
         try {
@@ -129,7 +133,6 @@ public class AccountController {
         }
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @PostMapping("/validate-reset")
     public ResponseEntity<Object> validateResetPassword(@Valid @RequestBody QResetPasswordVerification verificationInfo) {
         try {
@@ -143,7 +146,6 @@ public class AccountController {
         }
     }
 
-    @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true")
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/reset-password")
     public ResponseEntity<Object> saveResetPassword(@Valid @RequestBody QResetPasswordSave passwordInfo) {
         try {
