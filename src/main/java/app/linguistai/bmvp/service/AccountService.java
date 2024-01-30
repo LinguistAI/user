@@ -57,8 +57,6 @@ public class AccountService {
                 throw new Exception("Passwords do not match");
             }
 
-            System.out.println("Passwords are matched");
-
             final UserDetails userDetails = jwtUserService.loadUserByUsername(user.getEmail());
             final String accessToken = jwtUtils.createAccessToken(userDetails);
             final String refreshToken = jwtUtils.createRefreshToken(userDetails);
@@ -105,13 +103,11 @@ public class AccountService {
                 throw new Exception("pasword no match");
             }
 
-            System.out.println("passwords are matched");
             // hash new password
             String hashedNewPassword = bCryptPasswordEncoder.encode(passwords.getNewPassword());
             
             dbUser.setPassword(hashedNewPassword);
-            int result = accountRepository.updatePassword(hashedNewPassword, dbUser.getId());
-            System.out.println("result: " + result);
+            accountRepository.updatePassword(hashedNewPassword, dbUser.getId());
            
             return true;            
         } catch (Exception e) {

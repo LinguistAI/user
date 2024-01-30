@@ -44,7 +44,7 @@ public class AccountController {
     public ResponseEntity<Object> login(@Valid @RequestBody QUserLogin userInfo) {
         try {
             RLoginUser token = accountService.login(userInfo);
-            return Response.create("login is successful", HttpStatus.OK, token);
+            return Response.create("Login is successful", HttpStatus.OK, token);
         } catch (Exception e) {
             return Response.create(ExceptionLogger.log(e), HttpStatus.UNAUTHORIZED);
         }        
@@ -54,7 +54,7 @@ public class AccountController {
     public ResponseEntity<Object> register(@Valid @RequestBody User userInfo) {
         try {
             User ids = accountService.addUser(userInfo);
-            return Response.create("account is created", HttpStatus.OK, ids);
+            return Response.create("Account is created", HttpStatus.OK, ids);
         } catch (Exception e) {
             e.printStackTrace();
             return Response.create(ExceptionLogger.log(e), HttpStatus.CONFLICT);
@@ -67,7 +67,7 @@ public class AccountController {
 
         try {
             accountService.changePassword(email, userInfo);
-            return Response.create("password is changed", HttpStatus.OK);
+            return Response.create("Password is changed", HttpStatus.OK);
         } catch (Exception e) {
             return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
         }        
@@ -77,7 +77,7 @@ public class AccountController {
     public ResponseEntity<Object> refreshToken(@RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
         try {
             RRefreshToken newToken = accountService.refreshToken(auth);
-            return Response.create("new access token is created", HttpStatus.OK, newToken);
+            return Response.create("New access token is created", HttpStatus.OK, newToken);
         } catch (Exception e) {
             return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
         }        
@@ -86,7 +86,7 @@ public class AccountController {
     @GetMapping("/test")
     public ResponseEntity<Object> testAuth() {
         try {
-            String test = "welcome to the authenticated endpoint!";
+            String test = "Welcome to the authenticated endpoint!";
             return Response.create("ok", HttpStatus.OK, test);
         } catch (Exception e) {
             return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
@@ -97,7 +97,7 @@ public class AccountController {
     public ResponseEntity<Object> getUsers() {
         try {
             List<User> userList = accountService.getUsers();
-            return Response.create("ok", HttpStatus.OK, userList);
+            return Response.create("Ok", HttpStatus.OK, userList);
         } catch (Exception e) {
             return Response.create(ExceptionLogger.log(e), HttpStatus.OK);  
         }        
@@ -106,7 +106,7 @@ public class AccountController {
     @GetMapping("hello")
     public ResponseEntity<Object> testUnsecuredEndpoint() {
         try {
-            return Response.create("ok", HttpStatus.OK);
+            return Response.create("Ok", HttpStatus.OK);
         } catch (Exception e) {
             return Response.create(ExceptionLogger.log(e), HttpStatus.OK);  
         }        
