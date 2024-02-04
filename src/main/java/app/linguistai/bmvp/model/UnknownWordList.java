@@ -28,4 +28,8 @@ public class UnknownWordList {
     @NotNull
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
+
+    @NotNull
+    @Column(name = "is_favorite", nullable = false)
+    private Boolean isFavorite;
 }

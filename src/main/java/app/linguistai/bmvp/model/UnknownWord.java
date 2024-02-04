@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @IdClass(UnknownWordId.class)
 public class UnknownWord {
-
     @NotNull
     @Id
     @ManyToOne
