@@ -22,8 +22,8 @@ public class UnknownWordList {
     private UUID listId;
 
     @NotNull
-    @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id", foreignKey = @ForeignKey())
+    @ManyToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
 
     @NotNull
