@@ -1,6 +1,6 @@
 package app.linguistai.bmvp.model.embedded;
 
-import app.linguistai.bmvp.model.UnknownWordList;
+import app.linguistai.bmvp.model.wordbank.UnknownWordList;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

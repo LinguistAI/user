@@ -1,16 +1,21 @@
-package app.linguistai.bmvp.model;
+package app.linguistai.bmvp.model.wordbank;
 
 import app.linguistai.bmvp.model.embedded.UnknownWordId;
+import app.linguistai.bmvp.model.enums.Confidence;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Builder
 @Data
 @Entity
 @Table(name = "unknown_word")
 @NoArgsConstructor
+@AllArgsConstructor
 @IdClass(UnknownWordId.class)
 public class UnknownWord {
     @NotNull
@@ -27,4 +32,7 @@ public class UnknownWord {
     @NotBlank
     @Id
     private String word;
+
+    @NotNull
+    private Confidence confidence;
 }
