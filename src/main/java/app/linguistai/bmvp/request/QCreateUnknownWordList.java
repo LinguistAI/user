@@ -9,9 +9,6 @@ import java.util.UUID;
 
 @Data
 public class QCreateUnknownWordList {
-    @NotNull
-    private UUID userId;
-
     @NotBlank
     private String title;
 
@@ -31,7 +28,6 @@ public class QCreateUnknownWordList {
             @JsonProperty("isActive") Boolean isActive,
             @JsonProperty("isFavorite") Boolean isFavorite
     ) {
-        this.userId = userId;
         this.title = title;
         this.description = description;
         this.isActive = isActive;
