@@ -73,4 +73,24 @@ public class UnknownWordController {
             return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @PostMapping("/lists/add-favorite")
+    public ResponseEntity<Object> addFavoriteList(@Valid @RequestBody QUnknownWordListId qUnknownWordListId, @RequestHeader(Header.USER_EMAIL) String email) {
+        try {
+            return Response.create("Successfully added list to favorites.", HttpStatus.OK, unknownWordService.addFavoriteList(qUnknownWordListId.getListId(), email));
+        }
+        catch (Exception e) {
+            return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/lists/remove-favorite")
+    public ResponseEntity<Object> removeFavoriteList(@Valid @RequestBody QUnknownWordListId qUnknownWordListId, @RequestHeader(Header.USER_EMAIL) String email) {
+        try {
+            return Response.create("Successfully removed list from favorites.", HttpStatus.OK, unknownWordService.removeFavoriteList(qUnknownWordListId.getListId(), email));
+        }
+        catch (Exception e) {
+            return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

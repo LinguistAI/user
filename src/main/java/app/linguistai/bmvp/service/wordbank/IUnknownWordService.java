@@ -13,4 +13,6 @@ public interface IUnknownWordService {
     void addWord(QAddUnknownWord qAddUnknownWord, String email) throws Exception;
     ROwnerUnknownWordList activateList(UUID listId, String email) throws Exception;
     ROwnerUnknownWordList deactivateList(UUID listId, String email) throws Exception;
+    ROwnerUnknownWordList addFavoriteList(UUID listId, String email) throws Exception;
+    ROwnerUnknownWordList removeFavoriteList(UUID listId, String email) throws Exception;
 }

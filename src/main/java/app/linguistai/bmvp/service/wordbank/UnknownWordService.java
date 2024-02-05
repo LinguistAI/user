@@ -30,6 +30,10 @@ public class UnknownWordService implements IUnknownWordService {
 
     private final IAccountRepository accountRepository;
 
+    private final int MODIFY_LIST_ACTIVE = 1001;
+
+    private final int MODIFY_LIST_FAVORITE = 1002;
+
     @Override
     public RUnknownWordLists getListsByEmail(String email) throws Exception {
         try {
@@ -139,7 +143,7 @@ public class UnknownWordService implements IUnknownWordService {
     @Override
     public ROwnerUnknownWordList activateList(UUID listId, String email) throws Exception {
         try {
-            return modifyListActive(listId, email, Boolean.TRUE);
+            return modifyList(listId, email, Boolean.TRUE, MODIFY_LIST_ACTIVE);
         }
         catch (Exception e1) {
             System.out.println("ERROR: Could not activate list.");
@@ -150,7 +154,7 @@ public class UnknownWordService implements IUnknownWordService {
     @Override
     public ROwnerUnknownWordList deactivateList(UUID listId, String email) throws Exception {
         try {
-            return modifyListActive(listId, email, Boolean.FALSE);
+            return modifyList(listId, email, Boolean.FALSE, MODIFY_LIST_ACTIVE);
         }
         catch (Exception e1) {
             System.out.println("ERROR: Could not deactivate list.");
@@ -158,7 +162,33 @@ public class UnknownWordService implements IUnknownWordService {
         }
     }
 
-    private ROwnerUnknownWordList modifyListActive(UUID listId, String email, Boolean newActive) throws Exception {
+    @Override
+    public ROwnerUnknownWordList addFavoriteList(UUID listId, String email) throws Exception {
+        try {
+            return modifyList(listId, email, Boolean.TRUE, MODIFY_LIST_FAVORITE);
+        }
+        catch (Exception e1) {
+            System.out.println("ERROR: Could not add list to favorites.");
+            throw e1;
+        }
+    }
+
+    @Override
+    public ROwnerUnknownWordList removeFavoriteList(UUID listId, String email) throws Exception {
+        try {
+            return modifyList(listId, email, Boolean.FALSE, MODIFY_LIST_FAVORITE);
+        }
+        catch (Exception e1) {
+            System.out.println("ERROR: Could not remove list from favorites.");
+            throw e1;
+        }
+    }
+
+    private ROwnerUnknownWordList modifyList(UUID listId, String email, Boolean newValue, int mode) throws Exception {
+        if (mode != MODIFY_LIST_ACTIVE && mode != MODIFY_LIST_FAVORITE) {
+            throw new Exception("Invalid modification attempt for Unknown Word List.");
+        }
+
         // Check if user exists
         User user = accountRepository.findUserByEmail(email)
             .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
@@ -173,7 +203,13 @@ public class UnknownWordService implements IUnknownWordService {
         }
 
         // If we are here, user is authorized to edit list
-        userList.setIsActive(newActive);
+        switch (mode) {
+            case MODIFY_LIST_ACTIVE -> userList.setIsActive(newValue);
+            case MODIFY_LIST_FAVORITE -> userList.setIsFavorite(newValue);
+        }
+
+        // If we are here, we know we are trying to modify isActive or isFavorite
+        // therefore we don't need to check if userList has changed
         UnknownWordList updated = listRepository.save(userList);
 
         return ROwnerUnknownWordList.builder()
