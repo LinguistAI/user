@@ -2,6 +2,7 @@ package app.linguistai.bmvp.service.wordbank;
 
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.model.User;
+import app.linguistai.bmvp.model.embedded.UnknownWordId;
 import app.linguistai.bmvp.model.enums.Confidence;
 import app.linguistai.bmvp.model.wordbank.UnknownWord;
 import app.linguistai.bmvp.model.wordbank.UnknownWordList;
@@ -10,10 +11,10 @@ import app.linguistai.bmvp.repository.wordbank.IUnknownWordListRepository;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordRepository;
 import app.linguistai.bmvp.request.QAddUnknownWord;
 import app.linguistai.bmvp.request.QCreateUnknownWordList;
+import app.linguistai.bmvp.response.RCreateNewUnknownWordList;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -26,7 +27,7 @@ public class UnknownWordService implements IUnknownWordService {
     private final IAccountRepository accountRepository;
 
     @Override
-    public UnknownWordList createList(QCreateUnknownWordList qCreateUnknownWordList, String email) throws Exception {
+    public RCreateNewUnknownWordList createList(QCreateUnknownWordList qCreateUnknownWordList, String email) throws Exception {
         try {
             // Check if user exists
             User user = accountRepository.findUserByEmail(email)
@@ -42,10 +43,19 @@ public class UnknownWordService implements IUnknownWordService {
                 .isFavorite(qCreateUnknownWordList.getIsFavorite())
                 .build();
 
-            return listRepository.save(newList);
+            UnknownWordList savedList = listRepository.save(newList);
+
+            return RCreateNewUnknownWordList.builder()
+                .listId(savedList.getListId())
+                .ownerUsername(user.getUsername())
+                .title(savedList.getTitle())
+                .description(savedList.getDescription())
+                .isActive(savedList.getIsActive())
+                .isFavorite(savedList.getIsFavorite())
+                .build();
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not add unknown word.");
+            System.out.println("ERROR: Could not add unknown word list.");
             throw e1;
         }
     }
@@ -66,7 +76,17 @@ public class UnknownWordService implements IUnknownWordService {
                 throw new Exception("User not authorized to add new word to list.");
             }
 
-            // Build new unknown word
+            // Check if the same word already exists
+            UnknownWordId unknownWordId = UnknownWordId.builder()
+                .ownerList(userList)
+                .word(qAddUnknownWord.getWord())
+                .build();
+
+            wordRepository.findById(unknownWordId).ifPresent(existingWord -> {
+                throw new RuntimeException("Word " + qAddUnknownWord.getWord() + " already exists in list " + userList.getTitle() + ".");
+            });
+
+            // If the word does not exist in the list, build new unknown word
             UnknownWord newWord = UnknownWord.builder()
                     .ownerList(userList)
                     .word(qAddUnknownWord.getWord())

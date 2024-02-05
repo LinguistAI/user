@@ -6,6 +6,6 @@ import app.linguistai.bmvp.response.RMessage;
 import app.linguistai.bmvp.response.RMessagePair;
 
 public interface IMessageService {
-    public RMessagePair sendMessage(QMessage qMessage, String email) throws Exception;
-    public RMessage reply(Message message) throws Exception;
+    RMessagePair sendMessage(QMessage qMessage, String email) throws Exception;
+    RMessage reply(Message message) throws Exception;
 }

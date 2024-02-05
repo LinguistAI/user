@@ -1,7 +1,6 @@
 package app.linguistai.bmvp.controller;
 
 import app.linguistai.bmvp.consts.Header;
-import app.linguistai.bmvp.exception.ExceptionLogger;
 import app.linguistai.bmvp.request.QAddUnknownWord;
 import app.linguistai.bmvp.request.QCreateUnknownWordList;
 import app.linguistai.bmvp.response.Response;
@@ -35,6 +34,9 @@ public class UnknownWordController {
         try {
             unknownWordService.addWord(qAddUnknownWord, email);
             return Response.create("Successfully added unknown word " + qAddUnknownWord.getWord() + ".", HttpStatus.OK);
+        }
+        catch (RuntimeException e) {
+            return Response.create(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
         catch (Exception e) {
             return Response.create("Could not add unknown word " + qAddUnknownWord.getWord() + ".", HttpStatus.INTERNAL_SERVER_ERROR);
