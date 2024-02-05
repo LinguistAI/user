@@ -159,35 +159,30 @@ public class UnknownWordService implements IUnknownWordService {
     }
 
     private ROwnerUnknownWordList modifyListActive(UUID listId, String email, Boolean newActive) throws Exception {
-        try {
-            // Check if user exists
-            User user = accountRepository.findUserByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+        // Check if user exists
+        User user = accountRepository.findUserByEmail(email)
+            .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
 
-            // Check if list exists
-            UnknownWordList userList = listRepository.findById(listId)
-                .orElseThrow(() -> new NotFoundException("Unknown Word List does not exist for given listId: [" + listId + "]."));
+        // Check if list exists
+        UnknownWordList userList = listRepository.findById(listId)
+            .orElseThrow(() -> new NotFoundException("Unknown Word List does not exist for given listId: [" + listId + "]."));
 
-            // Check if user is owner of the list
-            if (userList.getUser().getId() != user.getId()) {
-                throw new Exception("User not authorized to modify list.");
-            }
-
-            // If we are here, user is authorized to edit list
-            userList.setIsActive(newActive);
-            UnknownWordList updated = listRepository.save(userList);
-
-            return ROwnerUnknownWordList.builder()
-                .listId(updated.getListId())
-                .ownerUsername(user.getUsername())
-                .title(updated.getTitle())
-                .description(updated.getDescription())
-                .isActive(updated.getIsActive())
-                .isFavorite(updated.getIsFavorite())
-                .build();
+        // Check if user is owner of the list
+        if (userList.getUser().getId() != user.getId()) {
+            throw new Exception("User not authorized to modify list.");
         }
-        catch (Exception e1) {
-            throw e1;
-        }
+
+        // If we are here, user is authorized to edit list
+        userList.setIsActive(newActive);
+        UnknownWordList updated = listRepository.save(userList);
+
+        return ROwnerUnknownWordList.builder()
+            .listId(updated.getListId())
+            .ownerUsername(user.getUsername())
+            .title(updated.getTitle())
+            .description(updated.getDescription())
+            .isActive(updated.getIsActive())
+            .isFavorite(updated.getIsFavorite())
+            .build();
     }
 }
