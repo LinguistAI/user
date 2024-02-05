@@ -42,4 +42,14 @@ public class UnknownWordController {
             return Response.create("Could not add unknown word " + qAddUnknownWord.getWord() + ".", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/lists")
+    public ResponseEntity<Object> getLists(@RequestHeader(Header.USER_EMAIL) String email) {
+        try {
+            return Response.create("Successfully retrieved all lists of user.", HttpStatus.OK, unknownWordService.getListsByEmail(email));
+        }
+        catch (Exception e) {
+            return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

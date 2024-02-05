@@ -12,9 +12,13 @@ import app.linguistai.bmvp.repository.wordbank.IUnknownWordRepository;
 import app.linguistai.bmvp.request.QAddUnknownWord;
 import app.linguistai.bmvp.request.QCreateUnknownWordList;
 import app.linguistai.bmvp.response.RCreateNewUnknownWordList;
+import app.linguistai.bmvp.response.RUnknownWordList;
+import app.linguistai.bmvp.response.RUnknownWordLists;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -27,11 +31,42 @@ public class UnknownWordService implements IUnknownWordService {
     private final IAccountRepository accountRepository;
 
     @Override
+    public RUnknownWordLists getListsByEmail(String email) throws Exception {
+        try {
+            User user = accountRepository.findUserByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+
+            List<UnknownWordList> listsOfUser = listRepository.findByUserId(user.getId());
+            List<RUnknownWordList> responseListsOfUser = new ArrayList<>();
+
+            for (UnknownWordList list : listsOfUser) {
+                responseListsOfUser.add(RUnknownWordList.builder()
+                    .listId(list.getListId())
+                    .title(list.getTitle())
+                    .description(list.getDescription())
+                    .isActive(list.getIsActive())
+                    .isFavorite(list.getIsFavorite())
+                    .build()
+                );
+            }
+
+            return RUnknownWordLists.builder()
+                .ownerUsername(user.getUsername())
+                .lists(responseListsOfUser)
+                .build();
+        }
+        catch (Exception e1) {
+            System.out.println("ERROR: Could not get unknown word lists.");
+            throw e1;
+        }
+    }
+
+    @Override
     public RCreateNewUnknownWordList createList(QCreateUnknownWordList qCreateUnknownWordList, String email) throws Exception {
         try {
             // Check if user exists
             User user = accountRepository.findUserByEmail(email)
-                    .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
 
             // Build new unknown word list
             UnknownWordList newList = UnknownWordList.builder()
@@ -55,7 +90,7 @@ public class UnknownWordService implements IUnknownWordService {
                 .build();
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not add unknown word list.");
+            System.out.println("ERROR: Could not create unknown word list.");
             throw e1;
         }
     }
@@ -65,11 +100,11 @@ public class UnknownWordService implements IUnknownWordService {
         try {
             // Check if user exists
             User user = accountRepository.findUserByEmail(email)
-                    .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
 
             // Check if list exists
             UnknownWordList userList = listRepository.findById(qAddUnknownWord.getListId())
-                    .orElseThrow(() -> new NotFoundException("Unknown Word List does not exist for given listId: [" + qAddUnknownWord.getListId() + "]."));
+                .orElseThrow(() -> new NotFoundException("Unknown Word List does not exist for given listId: [" + qAddUnknownWord.getListId() + "]."));
 
             // Check if user is owner of the list
             if (userList.getUser().getId() != user.getId()) {
@@ -88,10 +123,10 @@ public class UnknownWordService implements IUnknownWordService {
 
             // If the word does not exist in the list, build new unknown word
             UnknownWord newWord = UnknownWord.builder()
-                    .ownerList(userList)
-                    .word(qAddUnknownWord.getWord())
-                    .confidence(Confidence.LOWEST)
-                    .build();
+                .ownerList(userList)
+                .word(qAddUnknownWord.getWord())
+                .confidence(Confidence.LOWEST)
+                .build();
 
             wordRepository.save(newWord);
         }
