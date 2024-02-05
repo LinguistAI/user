@@ -11,7 +11,7 @@ import app.linguistai.bmvp.repository.wordbank.IUnknownWordListRepository;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordRepository;
 import app.linguistai.bmvp.request.QAddUnknownWord;
 import app.linguistai.bmvp.request.QCreateUnknownWordList;
-import app.linguistai.bmvp.response.RCreateNewUnknownWordList;
+import app.linguistai.bmvp.response.ROwnerUnknownWordList;
 import app.linguistai.bmvp.response.RUnknownWordList;
 import app.linguistai.bmvp.response.RUnknownWordLists;
 import lombok.RequiredArgsConstructor;
@@ -62,7 +62,7 @@ public class UnknownWordService implements IUnknownWordService {
     }
 
     @Override
-    public RCreateNewUnknownWordList createList(QCreateUnknownWordList qCreateUnknownWordList, String email) throws Exception {
+    public ROwnerUnknownWordList createList(QCreateUnknownWordList qCreateUnknownWordList, String email) throws Exception {
         try {
             // Check if user exists
             User user = accountRepository.findUserByEmail(email)
@@ -80,7 +80,7 @@ public class UnknownWordService implements IUnknownWordService {
 
             UnknownWordList savedList = listRepository.save(newList);
 
-            return RCreateNewUnknownWordList.builder()
+            return ROwnerUnknownWordList.builder()
                 .listId(savedList.getListId())
                 .ownerUsername(user.getUsername())
                 .title(savedList.getTitle())
@@ -132,6 +132,61 @@ public class UnknownWordService implements IUnknownWordService {
         }
         catch (Exception e1) {
             System.out.println("ERROR: Could not add unknown word.");
+            throw e1;
+        }
+    }
+
+    @Override
+    public ROwnerUnknownWordList activateList(UUID listId, String email) throws Exception {
+        try {
+            return modifyListActive(listId, email, Boolean.TRUE);
+        }
+        catch (Exception e1) {
+            System.out.println("ERROR: Could not activate list.");
+            throw e1;
+        }
+    }
+
+    @Override
+    public ROwnerUnknownWordList deactivateList(UUID listId, String email) throws Exception {
+        try {
+            return modifyListActive(listId, email, Boolean.FALSE);
+        }
+        catch (Exception e1) {
+            System.out.println("ERROR: Could not deactivate list.");
+            throw e1;
+        }
+    }
+
+    private ROwnerUnknownWordList modifyListActive(UUID listId, String email, Boolean newActive) throws Exception {
+        try {
+            // Check if user exists
+            User user = accountRepository.findUserByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+
+            // Check if list exists
+            UnknownWordList userList = listRepository.findById(listId)
+                .orElseThrow(() -> new NotFoundException("Unknown Word List does not exist for given listId: [" + listId + "]."));
+
+            // Check if user is owner of the list
+            if (userList.getUser().getId() != user.getId()) {
+                throw new Exception("User not authorized to modify list.");
+            }
+
+            // If we are here, user is authorized to edit list
+            userList.setIsActive(newActive);
+            UnknownWordList updated = listRepository.save(userList);
+
+            return ROwnerUnknownWordList.builder()
+                .listId(updated.getListId())
+                .ownerUsername(user.getUsername())
+                .title(updated.getTitle())
+                .description(updated.getDescription())
+                .isActive(updated.getIsActive())
+                .isFavorite(updated.getIsFavorite())
+                .build();
+        }
+        catch (Exception e1) {
             throw e1;
         }
     }

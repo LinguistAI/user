@@ -22,7 +22,6 @@ public class QCreateUnknownWordList {
     private Boolean isFavorite;
 
     public QCreateUnknownWordList(
-            @JsonProperty("userId") UUID userId,
             @JsonProperty("title") String title,
             @JsonProperty("description") String description,
             @JsonProperty("isActive") Boolean isActive,

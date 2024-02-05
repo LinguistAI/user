@@ -9,7 +9,7 @@ import java.util.UUID;
 @Builder
 @Data
 @AllArgsConstructor
-public class RCreateNewUnknownWordList {
+public class ROwnerUnknownWordList {
     private UUID listId;
     private String ownerUsername;
     private String title;
