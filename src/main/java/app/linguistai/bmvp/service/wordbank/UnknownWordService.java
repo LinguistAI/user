@@ -9,11 +9,11 @@ import app.linguistai.bmvp.model.wordbank.UnknownWordList;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordListRepository;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordRepository;
-import app.linguistai.bmvp.request.QAddUnknownWord;
-import app.linguistai.bmvp.request.QCreateUnknownWordList;
-import app.linguistai.bmvp.response.ROwnerUnknownWordList;
-import app.linguistai.bmvp.response.RUnknownWordList;
-import app.linguistai.bmvp.response.RUnknownWordLists;
+import app.linguistai.bmvp.request.wordbank.QAddUnknownWord;
+import app.linguistai.bmvp.request.wordbank.QUnknownWordList;
+import app.linguistai.bmvp.response.wordbank.ROwnerUnknownWordList;
+import app.linguistai.bmvp.response.wordbank.RUnknownWordList;
+import app.linguistai.bmvp.response.wordbank.RUnknownWordLists;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +34,8 @@ public class UnknownWordService implements IUnknownWordService {
 
     private final int MODIFY_LIST_FAVORITE = 1002;
 
+    private final int MODIFY_LIST_PINNED = 1003;
+
     @Override
     public RUnknownWordLists getListsByEmail(String email) throws Exception {
         try {
@@ -50,6 +52,7 @@ public class UnknownWordService implements IUnknownWordService {
                     .description(list.getDescription())
                     .isActive(list.getIsActive())
                     .isFavorite(list.getIsFavorite())
+                    .isPinned(list.getIsPinned())
                     .build()
                 );
             }
@@ -66,7 +69,7 @@ public class UnknownWordService implements IUnknownWordService {
     }
 
     @Override
-    public ROwnerUnknownWordList createList(QCreateUnknownWordList qCreateUnknownWordList, String email) throws Exception {
+    public ROwnerUnknownWordList createList(QUnknownWordList qUnknownWordList, String email) throws Exception {
         try {
             // Check if user exists
             User user = accountRepository.findUserByEmail(email)
@@ -76,10 +79,11 @@ public class UnknownWordService implements IUnknownWordService {
             UnknownWordList newList = UnknownWordList.builder()
                 .listId(UUID.randomUUID())
                 .user(user)
-                .title(qCreateUnknownWordList.getTitle())
-                .description(qCreateUnknownWordList.getDescription())
-                .isActive(qCreateUnknownWordList.getIsActive())
-                .isFavorite(qCreateUnknownWordList.getIsFavorite())
+                .title(qUnknownWordList.getTitle())
+                .description(qUnknownWordList.getDescription())
+                .isActive(qUnknownWordList.getIsActive())
+                .isFavorite(qUnknownWordList.getIsFavorite())
+                .isPinned(qUnknownWordList.getIsPinned())
                 .build();
 
             UnknownWordList savedList = listRepository.save(newList);
@@ -91,10 +95,56 @@ public class UnknownWordService implements IUnknownWordService {
                 .description(savedList.getDescription())
                 .isActive(savedList.getIsActive())
                 .isFavorite(savedList.getIsFavorite())
+                .isPinned(savedList.getIsPinned())
                 .build();
         }
         catch (Exception e1) {
             System.out.println("ERROR: Could not create unknown word list.");
+            throw e1;
+        }
+    }
+
+    @Override
+    public ROwnerUnknownWordList editList(UUID listId, QUnknownWordList qUnknownWordList, String email) throws Exception {
+        try {
+            // Check if user exists
+            User user = accountRepository.findUserByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+
+            // Check if list exists
+            UnknownWordList userList = listRepository.findById(listId)
+                .orElseThrow(() -> new NotFoundException("Unknown Word List does not exist for given listId: [" + listId + "]."));
+
+            // Check if user is owner of the list
+            if (userList.getUser().getId() != user.getId()) {
+                throw new Exception("User not authorized to modify list.");
+            }
+
+            // Build edited unknown word list
+            UnknownWordList editedList = UnknownWordList.builder()
+                .listId(userList.getListId())
+                .user(user)
+                .title(qUnknownWordList.getTitle())
+                .description(qUnknownWordList.getDescription())
+                .isActive(qUnknownWordList.getIsActive())
+                .isFavorite(qUnknownWordList.getIsFavorite())
+                .isPinned(qUnknownWordList.getIsPinned())
+                .build();
+
+            UnknownWordList savedList = listRepository.save(editedList);
+
+            return ROwnerUnknownWordList.builder()
+                .listId(savedList.getListId())
+                .ownerUsername(user.getUsername())
+                .title(savedList.getTitle())
+                .description(savedList.getDescription())
+                .isActive(savedList.getIsActive())
+                .isFavorite(savedList.getIsFavorite())
+                .isPinned(savedList.getIsPinned())
+                .build();
+        }
+        catch (Exception e1) {
+            System.out.println("ERROR: Could not edit unknown word list.");
             throw e1;
         }
     }
@@ -184,8 +234,30 @@ public class UnknownWordService implements IUnknownWordService {
         }
     }
 
+    @Override
+    public ROwnerUnknownWordList pinList(UUID listId, String email) throws Exception {
+        try {
+            return modifyList(listId, email, Boolean.TRUE, MODIFY_LIST_PINNED);
+        }
+        catch (Exception e1) {
+            System.out.println("ERROR: Could not pin list.");
+            throw e1;
+        }
+    }
+
+    @Override
+    public ROwnerUnknownWordList unpinList(UUID listId, String email) throws Exception {
+        try {
+            return modifyList(listId, email, Boolean.FALSE, MODIFY_LIST_PINNED);
+        }
+        catch (Exception e1) {
+            System.out.println("ERROR: Could not unpin list.");
+            throw e1;
+        }
+    }
+
     private ROwnerUnknownWordList modifyList(UUID listId, String email, Boolean newValue, int mode) throws Exception {
-        if (mode != MODIFY_LIST_ACTIVE && mode != MODIFY_LIST_FAVORITE) {
+        if (mode != MODIFY_LIST_ACTIVE && mode != MODIFY_LIST_FAVORITE && mode != MODIFY_LIST_PINNED) {
             throw new Exception("Invalid modification attempt for Unknown Word List.");
         }
 
@@ -206,9 +278,10 @@ public class UnknownWordService implements IUnknownWordService {
         switch (mode) {
             case MODIFY_LIST_ACTIVE -> userList.setIsActive(newValue);
             case MODIFY_LIST_FAVORITE -> userList.setIsFavorite(newValue);
+            case MODIFY_LIST_PINNED -> userList.setIsPinned(newValue);
         }
 
-        // If we are here, we know we are trying to modify isActive or isFavorite
+        // If we are here, we know we are trying to modify isActive, isFavorite or isPinned
         // therefore we don't need to check if userList has changed
         UnknownWordList updated = listRepository.save(userList);
 
@@ -219,6 +292,7 @@ public class UnknownWordService implements IUnknownWordService {
             .description(updated.getDescription())
             .isActive(updated.getIsActive())
             .isFavorite(updated.getIsFavorite())
+            .isPinned(updated.getIsPinned())
             .build();
     }
 }

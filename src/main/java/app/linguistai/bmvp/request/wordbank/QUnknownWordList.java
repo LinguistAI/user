@@ -1,14 +1,12 @@
-package app.linguistai.bmvp.request;
+package app.linguistai.bmvp.request.wordbank;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.util.UUID;
-
 @Data
-public class QCreateUnknownWordList {
+public class QUnknownWordList {
     @NotBlank
     private String title;
 
@@ -21,15 +19,20 @@ public class QCreateUnknownWordList {
     @NotNull
     private Boolean isFavorite;
 
-    public QCreateUnknownWordList(
+    @NotNull
+    private Boolean isPinned;
+
+    public QUnknownWordList(
             @JsonProperty("title") String title,
             @JsonProperty("description") String description,
             @JsonProperty("isActive") Boolean isActive,
-            @JsonProperty("isFavorite") Boolean isFavorite
+            @JsonProperty("isFavorite") Boolean isFavorite,
+            @JsonProperty("isPinned") Boolean isPinned
     ) {
         this.title = title;
         this.description = description;
         this.isActive = isActive;
         this.isFavorite = isFavorite;
+        this.isPinned = isPinned;
     }
 }

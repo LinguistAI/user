@@ -1,9 +1,7 @@
 package app.linguistai.bmvp.controller;
 
 import app.linguistai.bmvp.consts.Header;
-import app.linguistai.bmvp.request.QAddUnknownWord;
-import app.linguistai.bmvp.request.QCreateUnknownWordList;
-import app.linguistai.bmvp.request.QUnknownWordListId;
+import app.linguistai.bmvp.request.wordbank.*;
 import app.linguistai.bmvp.response.Response;
 import app.linguistai.bmvp.service.wordbank.IUnknownWordService;
 import jakarta.validation.Valid;
@@ -21,12 +19,30 @@ public class UnknownWordController {
     private final IUnknownWordService unknownWordService;
 
     @PostMapping("/lists")
-    public ResponseEntity<Object> createList(@Valid @RequestBody QCreateUnknownWordList qCreateUnknownWordList, @RequestHeader(Header.USER_EMAIL) String email) {
+    public ResponseEntity<Object> createList(@Valid @RequestBody QUnknownWordList qUnknownWordList, @RequestHeader(Header.USER_EMAIL) String email) {
         try {
-            return Response.create("Successfully created new list " + qCreateUnknownWordList.getTitle() + ".", HttpStatus.OK, unknownWordService.createList(qCreateUnknownWordList, email));
+            return Response.create("Successfully created new list " + qUnknownWordList.getTitle() + ".", HttpStatus.OK, unknownWordService.createList(qUnknownWordList, email));
         }
         catch (Exception e) {
-            return Response.create("Could not create new list " + qCreateUnknownWordList.getTitle() + ".", HttpStatus.INTERNAL_SERVER_ERROR);
+            return Response.create("Could not create new list " + qUnknownWordList.getTitle() + ".", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/lists")
+    public ResponseEntity<Object> editList(@Valid @RequestBody QEditUnknownWordList qEditUnknownWordList, @RequestHeader(Header.USER_EMAIL) String email) {
+        try {
+            return Response.create(
+                "Successfully edited list " + qEditUnknownWordList.getEditedList().getTitle() + ".",
+                HttpStatus.OK,
+                unknownWordService.editList(
+                    qEditUnknownWordList.getListId(),
+                    qEditUnknownWordList.getEditedList(),
+                    email
+                )
+            );
+        }
+        catch (Exception e) {
+            return Response.create("Could not edit list.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -88,6 +104,26 @@ public class UnknownWordController {
     public ResponseEntity<Object> removeFavoriteList(@Valid @RequestBody QUnknownWordListId qUnknownWordListId, @RequestHeader(Header.USER_EMAIL) String email) {
         try {
             return Response.create("Successfully removed list from favorites.", HttpStatus.OK, unknownWordService.removeFavoriteList(qUnknownWordListId.getListId(), email));
+        }
+        catch (Exception e) {
+            return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/lists/pin")
+    public ResponseEntity<Object> pinList(@Valid @RequestBody QUnknownWordListId qUnknownWordListId, @RequestHeader(Header.USER_EMAIL) String email) {
+        try {
+            return Response.create("Successfully pinned list.", HttpStatus.OK, unknownWordService.pinList(qUnknownWordListId.getListId(), email));
+        }
+        catch (Exception e) {
+            return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/lists/unpin")
+    public ResponseEntity<Object> unpinList(@Valid @RequestBody QUnknownWordListId qUnknownWordListId, @RequestHeader(Header.USER_EMAIL) String email) {
+        try {
+            return Response.create("Successfully unpinned list.", HttpStatus.OK, unknownWordService.unpinList(qUnknownWordListId.getListId(), email));
         }
         catch (Exception e) {
             return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

@@ -1,4 +1,4 @@
-package app.linguistai.bmvp.request;
+package app.linguistai.bmvp.request.wordbank;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;

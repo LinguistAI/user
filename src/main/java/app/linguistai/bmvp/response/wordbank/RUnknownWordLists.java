@@ -1,4 +1,4 @@
-package app.linguistai.bmvp.response;
+package app.linguistai.bmvp.response.wordbank;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
