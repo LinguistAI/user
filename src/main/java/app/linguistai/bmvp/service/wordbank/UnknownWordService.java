@@ -16,6 +16,7 @@ import app.linguistai.bmvp.response.wordbank.RUnknownWordList;
 import app.linguistai.bmvp.response.wordbank.RUnknownWordLists;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,6 +70,7 @@ public class UnknownWordService implements IUnknownWordService {
     }
 
     @Override
+    @Transactional
     public ROwnerUnknownWordList createList(QUnknownWordList qUnknownWordList, String email) throws Exception {
         try {
             // Check if user exists
@@ -105,6 +107,7 @@ public class UnknownWordService implements IUnknownWordService {
     }
 
     @Override
+    @Transactional
     public ROwnerUnknownWordList editList(UUID listId, QUnknownWordList qUnknownWordList, String email) throws Exception {
         try {
             // Check if user exists
@@ -150,6 +153,7 @@ public class UnknownWordService implements IUnknownWordService {
     }
 
     @Override
+    @Transactional
     public void addWord(QAddUnknownWord qAddUnknownWord, String email) throws Exception {
         try {
             // Check if user exists
@@ -256,6 +260,7 @@ public class UnknownWordService implements IUnknownWordService {
         }
     }
 
+    @Transactional
     private ROwnerUnknownWordList modifyList(UUID listId, String email, Boolean newValue, int mode) throws Exception {
         if (mode != MODIFY_LIST_ACTIVE && mode != MODIFY_LIST_FAVORITE && mode != MODIFY_LIST_PINNED) {
             throw new Exception("Invalid modification attempt for Unknown Word List.");

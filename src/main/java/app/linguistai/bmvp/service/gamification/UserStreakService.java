@@ -14,7 +14,7 @@ import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.UserStreak;
 import app.linguistai.bmvp.repository.gamification.IUserStreakRepository;
 import app.linguistai.bmvp.utils.DateUtils;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
