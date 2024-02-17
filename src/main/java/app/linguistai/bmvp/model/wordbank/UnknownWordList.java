@@ -41,4 +41,8 @@ public class UnknownWordList {
     @NotNull
     @Column(name = "is_favorite", nullable = false)
     private Boolean isFavorite;
+
+    @NotNull
+    @Column(name = "is_pinned", nullable = false)
+    private Boolean isPinned;
 }
