@@ -1,4 +1,4 @@
-package app.linguistai.bmvp.model;
+package app.linguistai.bmvp.model.profile;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -9,14 +9,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-
-import app.linguistai.bmvp.model.UserProfile;
-
 import org.springframework.transaction.annotation.Transactional;
+
+import app.linguistai.bmvp.model.profile.UserProfile;
 
 @Repository
 public interface IProfileRepository extends JpaRepository<UserProfile, UUID> {
     Optional<UserProfile> findUserById(UUID id);
+    Optional<UserProfile> findByUserEmail(String email);
 
     @Transactional
     @Modifying

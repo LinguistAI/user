@@ -1,27 +1,43 @@
-package app.linguistai.bmvp.model;
+package app.linguistai.bmvp.model.profile;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
 import app.linguistai.bmvp.consts.EnglishLevels;
+import app.linguistai.bmvp.model.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
 
 @Data
 @Entity
+@Builder
 @Table(name = "user_profile")
 @AllArgsConstructor
 public class UserProfile {
     @Id
-    @Column(name = "id", nullable = true)
-    private UUID id;
+    @NotNull
+    private UUID userId;
+
+    @NotNull
+    @MapsId
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "profile_id",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(),
+            nullable = false
+    )
+    private User user;
 
     @NotBlank
     @Column(name = "name", nullable = true)

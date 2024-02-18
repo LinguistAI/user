@@ -4,7 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
-import app.linguistai.bmvp.model.Hobby;
+
+import app.linguistai.bmvp.model.profile.Hobby;
 import app.linguistai.bmvp.repository.IHobbyRepository;
 import java.util.Arrays;
 

@@ -24,11 +24,14 @@ import app.linguistai.bmvp.exception.ExceptionLogger;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.request.QChangePassword;
 import app.linguistai.bmvp.request.QUserLogin;
+import app.linguistai.bmvp.request.QUserProfile;
 import app.linguistai.bmvp.response.RLoginUser;
 import app.linguistai.bmvp.response.RRefreshToken;
+import app.linguistai.bmvp.response.RUserProfile;
 import app.linguistai.bmvp.response.Response;
 import app.linguistai.bmvp.service.AccountService;
 import app.linguistai.bmvp.service.EmailService;
+import app.linguistai.bmvp.service.profile.ProfileService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
@@ -37,25 +40,25 @@ import lombok.AllArgsConstructor;
 @Validated
 @RequestMapping("profile")
 public class ProfileController {
-    private final AccountService accountService;
+    private final ProfileService profileService;
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "")
-    public ResponseEntity<Object> updateProfile(@Valid @RequestBody QChangePassword userInfo,
+    public ResponseEntity<Object> updateProfile(@Valid @RequestBody QUserProfile profile,
         @RequestHeader(Header.USER_EMAIL) String email) {
 
         try {
-            accountService.changePassword(email, userInfo);
-            return Response.create("Password is changed", HttpStatus.OK);
+            RUserProfile userProfile = profileService.updateUserProfile(email, profile);
+            return Response.create("Profile is updated", HttpStatus.OK, userProfile);
         } catch (Exception e) {
             return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
         }        
     }
 
     @GetMapping("")
-    public ResponseEntity<Object> getProfile(@RequestHeader(HttpHeaders.AUTHORIZATION) String auth) {
+    public ResponseEntity<Object> getProfile(@RequestHeader(Header.USER_EMAIL) String email) {
         try {
-            RRefreshToken newToken = accountService.refreshToken(auth);
-            return Response.create("New access token is created", HttpStatus.OK, newToken);
+            RUserProfile userProfile = profileService.getUserProfile(email);
+            return Response.create("OK", HttpStatus.OK, userProfile);
         } catch (Exception e) {
             return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
         }        

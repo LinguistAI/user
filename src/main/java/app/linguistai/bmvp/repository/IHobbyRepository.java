@@ -5,8 +5,8 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import app.linguistai.bmvp.model.Hobby;
-import app.linguistai.bmvp.model.UserProfile;
+import app.linguistai.bmvp.model.profile.Hobby;
+import app.linguistai.bmvp.model.profile.UserProfile;
 
 @Repository
 public interface IHobbyRepository extends JpaRepository<Hobby, Integer> {

@@ -9,8 +9,6 @@ import lombok.Data;
 
 @Data
 public class QUserProfile {
-    private UUID id;
-
     @NotBlank
     private String name;
 
