@@ -128,6 +128,7 @@ public class UnknownWordService implements IUnknownWordService {
                 .isActive(qUnknownWordList.getIsActive())
                 .isFavorite(qUnknownWordList.getIsFavorite())
                 .isPinned(qUnknownWordList.getIsPinned())
+                .imageUrl(qUnknownWordList.getImageUrl())
                 .build();
 
             UnknownWordList savedList = listRepository.save(newList);
@@ -167,6 +168,7 @@ public class UnknownWordService implements IUnknownWordService {
                 .isActive(qUnknownWordList.getIsActive())
                 .isFavorite(qUnknownWordList.getIsFavorite())
                 .isPinned(qUnknownWordList.getIsPinned())
+                .imageUrl(qUnknownWordList.getImageUrl())
                 .build();
 
             UnknownWordList savedList = listRepository.save(editedList);
@@ -312,15 +314,13 @@ public class UnknownWordService implements IUnknownWordService {
     }
 
     @Override
+    @Transactional
     public ROwnerUnknownWordList deleteList(UUID listId, String email) throws Exception {
         try {
             UnknownWordListWithUser userListInfo = this.getUserOwnedList(listId, email);
             UnknownWordList userList = userListInfo.list();
 
-            // If we are here, the list exists and the user is the owner of the list
-            listRepository.deleteById(listId);
-
-            return ROwnerUnknownWordList.builder()
+            ROwnerUnknownWordList response = ROwnerUnknownWordList.builder()
                 .listId(userList.getListId())
                 .ownerUsername(userListInfo.user().getUsername())
                 .title(userList.getTitle())
@@ -331,6 +331,11 @@ public class UnknownWordService implements IUnknownWordService {
                 .imageUrl(userList.getImageUrl())
                 .listStats(this.getListStats(userList.getListId()))
                 .build();
+
+            // If we are here, the list exists and the user is the owner of the list
+            listRepository.deleteById(listId);
+
+            return response;
         }
         catch (Exception e1) {
             System.out.println("ERROR: Could not delete list.");
