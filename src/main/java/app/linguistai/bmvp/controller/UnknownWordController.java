@@ -49,14 +49,33 @@ public class UnknownWordController {
     @PostMapping("/add-word")
     public ResponseEntity<Object> addWord(@Valid @RequestBody QAddUnknownWord qAddUnknownWord, @RequestHeader(Header.USER_EMAIL) String email) {
         try {
-            unknownWordService.addWord(qAddUnknownWord, email);
-            return Response.create("Successfully added unknown word " + qAddUnknownWord.getWord() + ".", HttpStatus.OK);
+            return Response.create("Successfully added unknown word " + qAddUnknownWord.getWord() + ".", HttpStatus.OK, unknownWordService.addWord(qAddUnknownWord, email));
         }
         catch (RuntimeException e) {
             return Response.create(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
         catch (Exception e) {
             return Response.create("Could not add unknown word " + qAddUnknownWord.getWord() + ".", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/increase-confidence")
+    public ResponseEntity<Object> increaseWordConfidence(@Valid @RequestBody QAddUnknownWord qAddUnknownWord, @RequestHeader(Header.USER_EMAIL) String email) {
+        try {
+            return Response.create("Successfully increased word confidence.", HttpStatus.OK, unknownWordService.increaseConfidence(qAddUnknownWord, email));
+        }
+        catch (Exception e) {
+            return Response.create("Could not increase word confidence.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/decrease-confidence")
+    public ResponseEntity<Object> decreaseWordConfidence(@Valid @RequestBody QAddUnknownWord qAddUnknownWord, @RequestHeader(Header.USER_EMAIL) String email) {
+        try {
+            return Response.create("Successfully decreased word confidence.", HttpStatus.OK, unknownWordService.decreaseConfidence(qAddUnknownWord, email));
+        }
+        catch (Exception e) {
+            return Response.create("Could not decrease word confidence.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

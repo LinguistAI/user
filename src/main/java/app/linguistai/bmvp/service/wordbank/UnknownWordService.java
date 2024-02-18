@@ -38,6 +38,10 @@ public class UnknownWordService implements IUnknownWordService {
 
     private final int MODIFY_LIST_PINNED = 1003;
 
+    private final int MODIFY_WORD_CONFIDENCE_UP = 2001;
+
+    private final int MODIFY_WORD_CONFIDENCE_DOWN = 2002;
+
     @Override
     @Transactional
     public RUnknownWordLists getListsByEmail(String email) throws Exception {
@@ -183,7 +187,7 @@ public class UnknownWordService implements IUnknownWordService {
 
     @Override
     @Transactional
-    public void addWord(QAddUnknownWord qAddUnknownWord, String email) throws Exception {
+    public RUnknownWord addWord(QAddUnknownWord qAddUnknownWord, String email) throws Exception {
         try {
             UnknownWordListWithUser userListInfo = this.getUserOwnedList(qAddUnknownWord.getListId(), email);
             UnknownWordList userList = userListInfo.list();
@@ -205,10 +209,34 @@ public class UnknownWordService implements IUnknownWordService {
                 .confidence(ConfidenceEnum.LOWEST)
                 .build();
 
-            wordRepository.save(newWord);
+            UnknownWord saved = wordRepository.save(newWord);
+
+            return RUnknownWord.builder().word(saved.getWord()).confidence(saved.getConfidence()).build();
         }
         catch (Exception e1) {
             System.out.println("ERROR: Could not add unknown word.");
+            throw e1;
+        }
+    }
+
+    @Override
+    public RUnknownWord increaseConfidence(QAddUnknownWord qAddUnknownWord, String email) throws Exception {
+        try {
+            return modifyWord(qAddUnknownWord.getListId(), email, qAddUnknownWord.getWord(), MODIFY_WORD_CONFIDENCE_UP);
+        }
+        catch (Exception e1) {
+            System.out.println("ERROR: Could not increase word confidence.");
+            throw e1;
+        }
+    }
+
+    @Override
+    public RUnknownWord decreaseConfidence(QAddUnknownWord qAddUnknownWord, String email) throws Exception {
+        try {
+            return modifyWord(qAddUnknownWord.getListId(), email, qAddUnknownWord.getWord(), MODIFY_WORD_CONFIDENCE_DOWN);
+        }
+        catch (Exception e1) {
+            System.out.println("ERROR: Could not decrease word confidence.");
             throw e1;
         }
     }
@@ -280,6 +308,28 @@ public class UnknownWordService implements IUnknownWordService {
     }
 
     @Transactional
+    protected RUnknownWord modifyWord(UUID listId, String email, String word, int mode) throws Exception {
+        if (mode != MODIFY_WORD_CONFIDENCE_UP && mode != MODIFY_WORD_CONFIDENCE_DOWN) {
+            throw new Exception("Invalid modification attempt for Unknown Word.");
+        }
+
+        UnknownWordListWithUser userListInfo = this.getUserOwnedList(listId, email);
+
+        // If we are here, user is authorized to edit list and words within the list
+        UnknownWord wordToEdit = wordRepository.findByOwnerListListIdAndWord(userListInfo.list().getListId(), word)
+            .orElseThrow(() -> new NotFoundException("Unknown Word [" + word + "] does not exist for given listId: [" + listId + "]."));
+
+        switch (mode) {
+            case MODIFY_WORD_CONFIDENCE_UP -> wordToEdit.setConfidence(this.increaseConfidence(wordToEdit.getConfidence()));
+            case MODIFY_WORD_CONFIDENCE_DOWN -> wordToEdit.setConfidence(this.decreaseConfidence(wordToEdit.getConfidence()));
+        }
+
+        UnknownWord updated = wordRepository.save(wordToEdit);
+
+        return RUnknownWord.builder().word(updated.getWord()).confidence(updated.getConfidence()).build();
+    }
+
+    @Transactional
     protected ROwnerUnknownWordList modifyList(UUID listId, String email, Boolean newValue, int mode) throws Exception {
         if (mode != MODIFY_LIST_ACTIVE && mode != MODIFY_LIST_FAVORITE && mode != MODIFY_LIST_PINNED) {
             throw new Exception("Invalid modification attempt for Unknown Word List.");
@@ -316,11 +366,11 @@ public class UnknownWordService implements IUnknownWordService {
     protected UnknownWordListWithUser getUserOwnedList(UUID listId, String email) throws Exception {
         // Check if user exists
         User user = accountRepository.findUserByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+            .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
 
         // Check if list exists
         UnknownWordList userList = listRepository.findById(listId)
-                .orElseThrow(() -> new NotFoundException("Unknown Word List does not exist for given listId: [" + listId + "]."));
+            .orElseThrow(() -> new NotFoundException("Unknown Word List does not exist for given listId: [" + listId + "]."));
 
         // Check if user is owner of the list
         if (userList.getUser().getId() != user.getId()) {
@@ -354,5 +404,17 @@ public class UnknownWordService implements IUnknownWordService {
         }
 
         return stats;
+    }
+
+    private ConfidenceEnum increaseConfidence(ConfidenceEnum currentConfidence) {
+        return (currentConfidence.ordinal() < ConfidenceEnum.values().length - 1)
+            ? ConfidenceEnum.values()[currentConfidence.ordinal() + 1]
+            : currentConfidence;
+    }
+
+    private ConfidenceEnum decreaseConfidence(ConfidenceEnum currentConfidence) {
+        return (currentConfidence.ordinal() > 0)
+            ? ConfidenceEnum.values()[currentConfidence.ordinal() - 1]
+            : currentConfidence;
     }
 }
