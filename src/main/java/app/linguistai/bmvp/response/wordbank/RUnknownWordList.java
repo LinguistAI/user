@@ -1,5 +1,6 @@
 package app.linguistai.bmvp.response.wordbank;
 
+import app.linguistai.bmvp.model.wordbank.ListStats;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,4 +17,5 @@ public class RUnknownWordList {
     private Boolean isActive;
     private Boolean isFavorite;
     private Boolean isPinned;
+    private ListStats listStats;
 }

@@ -3,17 +3,17 @@ package app.linguistai.bmvp.service.wordbank;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.embedded.UnknownWordId;
-import app.linguistai.bmvp.model.enums.Confidence;
+import app.linguistai.bmvp.model.enums.ConfidenceEnum;
+import app.linguistai.bmvp.model.wordbank.ListStats;
 import app.linguistai.bmvp.model.wordbank.UnknownWord;
 import app.linguistai.bmvp.model.wordbank.UnknownWordList;
+import app.linguistai.bmvp.model.wordbank.UnknownWordListWithUser;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordListRepository;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordRepository;
 import app.linguistai.bmvp.request.wordbank.QAddUnknownWord;
 import app.linguistai.bmvp.request.wordbank.QUnknownWordList;
-import app.linguistai.bmvp.response.wordbank.ROwnerUnknownWordList;
-import app.linguistai.bmvp.response.wordbank.RUnknownWordList;
-import app.linguistai.bmvp.response.wordbank.RUnknownWordLists;
+import app.linguistai.bmvp.response.wordbank.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -38,6 +39,7 @@ public class UnknownWordService implements IUnknownWordService {
     private final int MODIFY_LIST_PINNED = 1003;
 
     @Override
+    @Transactional
     public RUnknownWordLists getListsByEmail(String email) throws Exception {
         try {
             User user = accountRepository.findUserByEmail(email)
@@ -54,6 +56,7 @@ public class UnknownWordService implements IUnknownWordService {
                     .isActive(list.getIsActive())
                     .isFavorite(list.getIsFavorite())
                     .isPinned(list.getIsPinned())
+                    .listStats(this.getListStats(list.getListId()))
                     .build()
                 );
             }
@@ -61,6 +64,39 @@ public class UnknownWordService implements IUnknownWordService {
             return RUnknownWordLists.builder()
                 .ownerUsername(user.getUsername())
                 .lists(responseListsOfUser)
+                .build();
+        }
+        catch (Exception e1) {
+            System.out.println("ERROR: Could not get unknown word lists.");
+            throw e1;
+        }
+    }
+
+    @Override
+    @Transactional
+    public RUnknownWordListWords getListWithWordsById(UUID listId, String email) throws Exception {
+        try {
+            UnknownWordListWithUser userListInfo = this.getUserOwnedList(listId, email);
+            User user = userListInfo.user();
+            UnknownWordList userList = userListInfo.list();
+
+            List<RUnknownWord> responseWords = wordRepository.findByOwnerListListId(listId)
+                .stream()
+                .map(word -> new RUnknownWord(word.getWord(), word.getConfidence()))
+                .collect(Collectors.toList());
+
+            return RUnknownWordListWords.builder()
+                .unknownWordList(ROwnerUnknownWordList.builder()
+                    .listId(userList.getListId())
+                    .ownerUsername(user.getUsername())
+                    .title(userList.getTitle())
+                    .description(userList.getDescription())
+                    .isActive(userList.getIsActive())
+                    .isFavorite(userList.getIsFavorite())
+                    .isPinned(userList.getIsPinned())
+                    .listStats(this.getListStats(userList.getListId()))
+                    .build())
+                .words(responseWords)
                 .build();
         }
         catch (Exception e1) {
@@ -98,6 +134,7 @@ public class UnknownWordService implements IUnknownWordService {
                 .isActive(savedList.getIsActive())
                 .isFavorite(savedList.getIsFavorite())
                 .isPinned(savedList.getIsPinned())
+                .listStats(this.getListStats(savedList.getListId()))
                 .build();
         }
         catch (Exception e1) {
@@ -110,18 +147,9 @@ public class UnknownWordService implements IUnknownWordService {
     @Transactional
     public ROwnerUnknownWordList editList(UUID listId, QUnknownWordList qUnknownWordList, String email) throws Exception {
         try {
-            // Check if user exists
-            User user = accountRepository.findUserByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
-
-            // Check if list exists
-            UnknownWordList userList = listRepository.findById(listId)
-                .orElseThrow(() -> new NotFoundException("Unknown Word List does not exist for given listId: [" + listId + "]."));
-
-            // Check if user is owner of the list
-            if (userList.getUser().getId() != user.getId()) {
-                throw new Exception("User not authorized to modify list.");
-            }
+            UnknownWordListWithUser userListInfo = this.getUserOwnedList(listId, email);
+            User user = userListInfo.user();
+            UnknownWordList userList = userListInfo.list();
 
             // Build edited unknown word list
             UnknownWordList editedList = UnknownWordList.builder()
@@ -144,6 +172,7 @@ public class UnknownWordService implements IUnknownWordService {
                 .isActive(savedList.getIsActive())
                 .isFavorite(savedList.getIsFavorite())
                 .isPinned(savedList.getIsPinned())
+                .listStats(this.getListStats(savedList.getListId()))
                 .build();
         }
         catch (Exception e1) {
@@ -156,18 +185,8 @@ public class UnknownWordService implements IUnknownWordService {
     @Transactional
     public void addWord(QAddUnknownWord qAddUnknownWord, String email) throws Exception {
         try {
-            // Check if user exists
-            User user = accountRepository.findUserByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
-
-            // Check if list exists
-            UnknownWordList userList = listRepository.findById(qAddUnknownWord.getListId())
-                .orElseThrow(() -> new NotFoundException("Unknown Word List does not exist for given listId: [" + qAddUnknownWord.getListId() + "]."));
-
-            // Check if user is owner of the list
-            if (userList.getUser().getId() != user.getId()) {
-                throw new Exception("User not authorized to add new word to list.");
-            }
+            UnknownWordListWithUser userListInfo = this.getUserOwnedList(qAddUnknownWord.getListId(), email);
+            UnknownWordList userList = userListInfo.list();
 
             // Check if the same word already exists
             UnknownWordId unknownWordId = UnknownWordId.builder()
@@ -183,7 +202,7 @@ public class UnknownWordService implements IUnknownWordService {
             UnknownWord newWord = UnknownWord.builder()
                 .ownerList(userList)
                 .word(qAddUnknownWord.getWord())
-                .confidence(Confidence.LOWEST)
+                .confidence(ConfidenceEnum.LOWEST)
                 .build();
 
             wordRepository.save(newWord);
@@ -261,23 +280,14 @@ public class UnknownWordService implements IUnknownWordService {
     }
 
     @Transactional
-    private ROwnerUnknownWordList modifyList(UUID listId, String email, Boolean newValue, int mode) throws Exception {
+    protected ROwnerUnknownWordList modifyList(UUID listId, String email, Boolean newValue, int mode) throws Exception {
         if (mode != MODIFY_LIST_ACTIVE && mode != MODIFY_LIST_FAVORITE && mode != MODIFY_LIST_PINNED) {
             throw new Exception("Invalid modification attempt for Unknown Word List.");
         }
 
-        // Check if user exists
-        User user = accountRepository.findUserByEmail(email)
-            .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
-
-        // Check if list exists
-        UnknownWordList userList = listRepository.findById(listId)
-            .orElseThrow(() -> new NotFoundException("Unknown Word List does not exist for given listId: [" + listId + "]."));
-
-        // Check if user is owner of the list
-        if (userList.getUser().getId() != user.getId()) {
-            throw new Exception("User not authorized to modify list.");
-        }
+        UnknownWordListWithUser userListInfo = this.getUserOwnedList(listId, email);
+        User user = userListInfo.user();
+        UnknownWordList userList = userListInfo.list();
 
         // If we are here, user is authorized to edit list
         switch (mode) {
@@ -298,6 +308,51 @@ public class UnknownWordService implements IUnknownWordService {
             .isActive(updated.getIsActive())
             .isFavorite(updated.getIsFavorite())
             .isPinned(updated.getIsPinned())
+            .listStats(this.getListStats(updated.getListId()))
             .build();
+    }
+
+    @Transactional
+    protected UnknownWordListWithUser getUserOwnedList(UUID listId, String email) throws Exception {
+        // Check if user exists
+        User user = accountRepository.findUserByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+
+        // Check if list exists
+        UnknownWordList userList = listRepository.findById(listId)
+                .orElseThrow(() -> new NotFoundException("Unknown Word List does not exist for given listId: [" + listId + "]."));
+
+        // Check if user is owner of the list
+        if (userList.getUser().getId() != user.getId()) {
+            throw new Exception("User not authorized to modify list.");
+        }
+
+        return new UnknownWordListWithUser(user, userList);
+    }
+
+    @Transactional
+    protected ListStats getListStats(UUID listId) throws Exception {
+        // Check if list exists
+        listRepository.findById(listId)
+            .orElseThrow(() -> new NotFoundException("Unknown Word List does not exist for given listId: [" + listId + "]."));
+
+        ListStats stats = new ListStats(0L, 0L, 0L);
+
+        List<UnknownWord> words = wordRepository.findByOwnerListListId(listId);
+
+        for (UnknownWord word : words) {
+            switch (word.getConfidence()) {
+                // Learning
+                case LOWEST, LOW -> stats.setLearning(stats.getLearning() + 1L);
+
+                // Reviewing
+                case MODERATE, HIGH -> stats.setReviewing(stats.getReviewing() + 1L);
+
+                // Mastered
+                case HIGHEST -> stats.setMastered(stats.getMastered() + 1L);
+            }
+        }
+
+        return stats;
     }
 }

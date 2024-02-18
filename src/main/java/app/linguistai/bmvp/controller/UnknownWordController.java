@@ -70,6 +70,16 @@ public class UnknownWordController {
         }
     }
 
+    @GetMapping("/list")
+    public ResponseEntity<Object> getListWithWords(@Valid @RequestBody QUnknownWordListId qUnknownWordListId, @RequestHeader(Header.USER_EMAIL) String email) {
+        try {
+            return Response.create("Successfully retrieved list of user.", HttpStatus.OK, unknownWordService.getListWithWordsById(qUnknownWordListId.getListId(), email));
+        }
+        catch (Exception e) {
+            return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @PostMapping("/lists/activate")
     public ResponseEntity<Object> activateList(@Valid @RequestBody QUnknownWordListId qUnknownWordListId, @RequestHeader(Header.USER_EMAIL) String email) {
         try {
