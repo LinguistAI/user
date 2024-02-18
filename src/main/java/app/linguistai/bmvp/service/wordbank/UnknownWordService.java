@@ -60,6 +60,7 @@ public class UnknownWordService implements IUnknownWordService {
                     .isActive(list.getIsActive())
                     .isFavorite(list.getIsFavorite())
                     .isPinned(list.getIsPinned())
+                    .imageUrl(list.getImageUrl())
                     .listStats(this.getListStats(list.getListId()))
                     .build()
                 );
@@ -98,6 +99,7 @@ public class UnknownWordService implements IUnknownWordService {
                     .isActive(userList.getIsActive())
                     .isFavorite(userList.getIsFavorite())
                     .isPinned(userList.getIsPinned())
+                    .imageUrl(userList.getImageUrl())
                     .listStats(this.getListStats(userList.getListId()))
                     .build())
                 .words(responseWords)
@@ -138,6 +140,7 @@ public class UnknownWordService implements IUnknownWordService {
                 .isActive(savedList.getIsActive())
                 .isFavorite(savedList.getIsFavorite())
                 .isPinned(savedList.getIsPinned())
+                .imageUrl(savedList.getImageUrl())
                 .listStats(this.getListStats(savedList.getListId()))
                 .build();
         }
@@ -176,6 +179,7 @@ public class UnknownWordService implements IUnknownWordService {
                 .isActive(savedList.getIsActive())
                 .isFavorite(savedList.getIsFavorite())
                 .isPinned(savedList.getIsPinned())
+                .imageUrl(savedList.getImageUrl())
                 .listStats(this.getListStats(savedList.getListId()))
                 .build();
         }
@@ -307,6 +311,33 @@ public class UnknownWordService implements IUnknownWordService {
         }
     }
 
+    @Override
+    public ROwnerUnknownWordList deleteList(UUID listId, String email) throws Exception {
+        try {
+            UnknownWordListWithUser userListInfo = this.getUserOwnedList(listId, email);
+            UnknownWordList userList = userListInfo.list();
+
+            // If we are here, the list exists and the user is the owner of the list
+            listRepository.deleteById(listId);
+
+            return ROwnerUnknownWordList.builder()
+                .listId(userList.getListId())
+                .ownerUsername(userListInfo.user().getUsername())
+                .title(userList.getTitle())
+                .description(userList.getDescription())
+                .isActive(userList.getIsActive())
+                .isFavorite(userList.getIsFavorite())
+                .isPinned(userList.getIsPinned())
+                .imageUrl(userList.getImageUrl())
+                .listStats(this.getListStats(userList.getListId()))
+                .build();
+        }
+        catch (Exception e1) {
+            System.out.println("ERROR: Could not delete list.");
+            throw e1;
+        }
+    }
+
     @Transactional
     protected RUnknownWord modifyWord(UUID listId, String email, String word, int mode) throws Exception {
         if (mode != MODIFY_WORD_CONFIDENCE_UP && mode != MODIFY_WORD_CONFIDENCE_DOWN) {
@@ -358,6 +389,7 @@ public class UnknownWordService implements IUnknownWordService {
             .isActive(updated.getIsActive())
             .isFavorite(updated.getIsFavorite())
             .isPinned(updated.getIsPinned())
+            .imageUrl(updated.getImageUrl())
             .listStats(this.getListStats(updated.getListId()))
             .build();
     }

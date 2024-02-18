@@ -17,5 +17,6 @@ public class RUnknownWordList {
     private Boolean isActive;
     private Boolean isFavorite;
     private Boolean isPinned;
+    private String imageUrl;
     private ListStats listStats;
 }

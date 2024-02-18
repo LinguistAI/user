@@ -23,4 +23,5 @@ public interface IUnknownWordService {
     ROwnerUnknownWordList removeFavoriteList(UUID listId, String email) throws Exception;
     ROwnerUnknownWordList pinList(UUID listId, String email) throws Exception;
     ROwnerUnknownWordList unpinList(UUID listId, String email) throws Exception;
+    ROwnerUnknownWordList deleteList(UUID listId, String email) throws Exception;
 }

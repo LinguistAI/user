@@ -158,4 +158,14 @@ public class UnknownWordController {
             return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @DeleteMapping("/list")
+    public ResponseEntity<Object> deleteList(@Valid @RequestBody QUnknownWordListId qUnknownWordListId, @RequestHeader(Header.USER_EMAIL) String email) {
+        try {
+            return Response.create("Successfully deleted list.", HttpStatus.OK, unknownWordService.deleteList(qUnknownWordListId.getListId(), email));
+        }
+        catch (Exception e) {
+            return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
