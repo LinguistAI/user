@@ -7,7 +7,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import app.linguistai.bmvp.repository.IAccountRepository;
+import app.linguistai.bmvp.response.RUserStreak;
 import org.springframework.stereotype.Service;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.model.User;
@@ -22,7 +25,9 @@ import lombok.RequiredArgsConstructor;
 public class UserStreakService {
     private final IUserStreakRepository userStreakRepository;
 
-    public UserStreak updateUserStreak(String email) throws Exception {
+    private final IAccountRepository accountRepository;
+
+    public RUserStreak updateUserStreak(String email) throws Exception {
         try {
             return checkUserStreakForUpdate(getUserStreakWithEmail(email));
         }
@@ -32,21 +37,30 @@ public class UserStreakService {
         }
     }
 
-    private UserStreak checkUserStreakForUpdate(UserStreak userStreak) throws Exception {
+    private RUserStreak checkUserStreakForUpdate(RUserStreak rUserStreak) throws Exception {
         try {
-            Date streakTime = DateUtils.convertSqlDateToUtilDate(userStreak.getLastLogin());
-            
+            Date streakTime = DateUtils.convertSqlDateToUtilDate(rUserStreak.getLastLogin());
+
             if (streakTime == null) {
                 throw new Exception("StreakTime is null");
             }
-            
+
             LocalDate lastLoginLocalDate = streakTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             LocalDate currentDate = LocalDate.now();
             long daysDifference = ChronoUnit.DAYS.between(lastLoginLocalDate, currentDate);
 
+            UserStreak userStreak = userStreakRepository.findByUserId(rUserStreak.getUserId())
+                .orElseThrow(() -> new NotFoundException("Could not find UserStreak for user."));
+
             return switch ((int) daysDifference) {
                 // if (daysDifference == 0), Do nothing. Maybe later add hello again message?
-                case 0 -> userStreak;
+                case 0 -> RUserStreak.builder()
+                    .userId(rUserStreak.getUserId())
+                    .username(userStreak.getUser().getUsername())
+                    .currentStreak(rUserStreak.getCurrentStreak())
+                    .highestStreak(rUserStreak.getHighestStreak())
+                    .lastLogin(rUserStreak.getLastLogin())
+                    .build();
                 // Streak must be incremented
                 case 1 -> incrementUserStreak(userStreak);
                 // Streak must be reset (edge case, if last login is after current time) Streak must be reset
@@ -59,7 +73,7 @@ public class UserStreakService {
     }
 
     @Transactional
-    private UserStreak incrementUserStreak(UserStreak userStreak) throws Exception {
+    protected RUserStreak incrementUserStreak(UserStreak userStreak) throws Exception {
         try {
             // Assume user streak increment operation is correct
             UserStreak newUserStreak = new UserStreak();
@@ -70,10 +84,16 @@ public class UserStreakService {
                 : userStreak.getHighestStreak()
             );
             newUserStreak.setLastLogin(DateUtils.convertUtilDateToSqlDate(Calendar.getInstance().getTime()));
-            newUserStreak.setUserId(userStreak.getUserId());
 
-            userStreakRepository.deleteById(userStreak.getUserId());
-            return userStreakRepository.save(newUserStreak);
+            UserStreak streak = userStreakRepository.save(newUserStreak);
+
+            return RUserStreak.builder()
+                .userId(streak.getUserId())
+                .username(streak.getUser().getUsername())
+                .currentStreak(streak.getCurrentStreak())
+                .highestStreak(streak.getHighestStreak())
+                .lastLogin(streak.getLastLogin())
+                .build();
         }
         catch (Exception e) {
             throw e;
@@ -81,24 +101,30 @@ public class UserStreakService {
     }
 
     @Transactional
-    private UserStreak resetUserStreak(UserStreak userStreak) throws Exception {
+    protected RUserStreak resetUserStreak(UserStreak userStreak) throws Exception {
         try {
             // Assume user streak reset operation is correct
             UserStreak newUserStreak = new UserStreak();
             newUserStreak.setCurrentStreak(1);
             newUserStreak.setHighestStreak(userStreak.getHighestStreak());
             newUserStreak.setLastLogin(DateUtils.convertUtilDateToSqlDate(Calendar.getInstance().getTime()));
-            newUserStreak.setUserId(userStreak.getUserId());
 
-            userStreakRepository.deleteById(userStreak.getUserId());
-            return userStreakRepository.save(newUserStreak);
+            UserStreak streak = userStreakRepository.save(newUserStreak);
+
+            return RUserStreak.builder()
+                .userId(streak.getUserId())
+                .username(streak.getUser().getUsername())
+                .currentStreak(streak.getCurrentStreak())
+                .highestStreak(streak.getHighestStreak())
+                .lastLogin(streak.getLastLogin())
+                .build();
         }
         catch (Exception e) {
             throw e;
         }
     }
 
-    public UserStreak getUserStreakByToken(String email) throws Exception {
+    public RUserStreak getUserStreakByToken(String email) throws Exception {
         try {
             return getUserStreakWithEmail(email);
         }
@@ -111,7 +137,7 @@ public class UserStreakService {
         }
     }
 
-    private UserStreak getUserStreakWithEmail(String email) throws Exception {
+    private RUserStreak getUserStreakWithEmail(String email) throws Exception {
         try {
             Optional<UserStreak> optionalStreak = userStreakRepository.findByUserEmail(email);
 
@@ -119,7 +145,15 @@ public class UserStreakService {
                 throw new NotFoundException("UserStreak does not exist for given email: [" + email + "].");
             }
 
-            return optionalStreak.get();
+            UserStreak streak = optionalStreak.get();
+
+            return RUserStreak.builder()
+                .userId(streak.getUserId())
+                .username(streak.getUser().getUsername())
+                .currentStreak(streak.getCurrentStreak())
+                .highestStreak(streak.getHighestStreak())
+                .lastLogin(streak.getLastLogin())
+                .build();
         }
         catch (NotFoundException e1) {
             throw e1;
@@ -130,18 +164,25 @@ public class UserStreakService {
         }
     }
 
+    public Boolean createUserStreak(String email) throws Exception {
+        User user = accountRepository.findUserByEmail(email)
+            .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+
+        return createUserStreak(user);
+    }
+
     public Boolean createUserStreak(User user) throws Exception {
         try {
             if (userStreakRepository.findByUserEmail(user.getEmail()).isPresent()) {
                 return false; // UserStreak already exists
             }
-            
+
             // Otherwise, create new "blank" UserStreak
             UserStreak newUserStreak = new UserStreak();
             newUserStreak.setCurrentStreak(1);
             newUserStreak.setHighestStreak(1);
             newUserStreak.setLastLogin(DateUtils.convertUtilDateToSqlDate(Calendar.getInstance().getTime()));
-            newUserStreak.setUserId(user.getId());
+            newUserStreak.setUser(user);
 
             userStreakRepository.save(newUserStreak);
             return true;
@@ -152,14 +193,16 @@ public class UserStreakService {
         }
     }
 
-    public List<UserStreak> getAllUserStreaks() throws Exception {
+    public List<RUserStreak> getAllUserStreaks() throws Exception {
         try {
-            return userStreakRepository.findAll();
+            return userStreakRepository.findAll().stream()
+                .map(streak -> new RUserStreak(streak.getUserId(), streak.getUser().getUsername(), streak.getCurrentStreak(), streak.getHighestStreak(), streak.getLastLogin()))
+                .collect(Collectors.toList());
         }
         catch (Exception e) {
             System.out.println("ERROR: Could not fetch all UserStreaks.");
             throw e;
         }
     }
-    
+
 }

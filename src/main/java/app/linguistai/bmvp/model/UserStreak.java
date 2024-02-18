@@ -2,13 +2,9 @@ package app.linguistai.bmvp.model;
 
 import java.util.UUID;
 import java.sql.Date;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,16 +15,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserStreak {
     @Id
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;
+    @NotNull
+    private UUID userId; // maps to User.id by @MapsId
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
     @JoinColumn(
             name = "user_id",
             referencedColumnName = "id",
             foreignKey = @ForeignKey(),
             nullable = false
     )
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private User user;
 
     @NotNull
