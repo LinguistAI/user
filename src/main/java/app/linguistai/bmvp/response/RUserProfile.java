@@ -16,6 +16,5 @@ public class RUserProfile {
     private String name;
     private LocalDate birhtDate;
     private Integer englishLevel;
-    private Object hobbies;
-    // private List<UserHobby> hobbies;
+    private List<String> hobbies;
 }

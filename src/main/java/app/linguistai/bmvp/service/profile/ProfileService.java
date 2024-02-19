@@ -1,18 +1,14 @@
 package app.linguistai.bmvp.service.profile;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import app.linguistai.bmvp.repository.IUserHobbyRepository;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import app.linguistai.bmvp.consts.EnglishLevels;
 import app.linguistai.bmvp.model.User;
-import app.linguistai.bmvp.model.profile.Hobby;
-import app.linguistai.bmvp.model.profile.UserHobby;
 import app.linguistai.bmvp.model.profile.UserProfile;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.IProfileRepository;
@@ -49,7 +45,7 @@ public class ProfileService {
     }
 
     @Transactional
-    public RUserProfile updateUserProfile(String email, QUserProfile profile) throws Exception { // TODO change return
+    public RUserProfile updateUserProfile(String email, QUserProfile profile) throws Exception {
         try {
             User dbUser = accountRepository.findUserByEmail(email).orElse(null);
 
@@ -76,8 +72,8 @@ public class ProfileService {
                 dbProfile = profileRepository.save(dbProfile);
             }
 
-            List<UserHobby> userHobbies = hobbyService.updateUserHobby(dbUser, profile.getHobbies());
-            return new RUserProfile(dbUser.getId(), dbProfile.getName(), dbProfile.getBirhtDate(), dbProfile.getEnglishLevel(), userHobbies); // TODO update null value what happens when user removes hobby
+            List<String> userHobbies = hobbyService.updateUserHobby(dbUser, profile.getHobbies());
+            return new RUserProfile(dbUser.getId(), dbProfile.getName(), dbProfile.getBirhtDate(), dbProfile.getEnglishLevel(), userHobbies);
         } catch (Exception e) {
             System.out.println("Something is wrong in update user profile");
             e.printStackTrace();
