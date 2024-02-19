@@ -28,7 +28,7 @@ public class UserHobby {
     private User user;
 
     @Id
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER) // if the fetch type is eager than delete operation does not work
     @JoinColumn(name = "hobby", referencedColumnName = "id", nullable = false)
     private Hobby hobby;
 
@@ -38,7 +38,9 @@ public class UserHobby {
     }
     
     public UserHobby(UUID userId, String hobbyName) {
+        this.user = new User();
         this.user.setId(userId);
-        this.hobby.setName(hobbyName);
+
+        this.hobby = new Hobby(hobbyName);
     }
 }

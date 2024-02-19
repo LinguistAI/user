@@ -1,6 +1,7 @@
 package app.linguistai.bmvp.request;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import jakarta.validation.constraints.NotBlank;
@@ -19,5 +20,5 @@ public class QUserProfile {
     private Integer englishLevel;
 
     @NotNull
-    private String[] hobbies;
+    private List<String> hobbies;
 }

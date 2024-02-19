@@ -15,7 +15,6 @@ import app.linguistai.bmvp.model.profile.UserProfile;
 
 @Repository
 public interface IProfileRepository extends JpaRepository<UserProfile, UUID> {
-    Optional<UserProfile> findUserById(UUID id);
     Optional<UserProfile> findByUserEmail(String email);
 
     @Transactional
