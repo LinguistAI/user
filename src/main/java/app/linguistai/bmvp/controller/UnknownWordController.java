@@ -6,6 +6,9 @@ import app.linguistai.bmvp.response.Response;
 import app.linguistai.bmvp.service.wordbank.IUnknownWordService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -89,10 +92,10 @@ public class UnknownWordController {
         }
     }
 
-    @GetMapping("/list")
-    public ResponseEntity<Object> getListWithWords(@Valid @RequestBody QUnknownWordListId qUnknownWordListId, @RequestHeader(Header.USER_EMAIL) String email) {
+    @GetMapping("/list/{listId}")
+    public ResponseEntity<Object> getListWithWords(@Valid @PathVariable("listId") UUID listId, @RequestHeader(Header.USER_EMAIL) String email) {
         try {
-            return Response.create("Successfully retrieved list of user.", HttpStatus.OK, unknownWordService.getListWithWordsById(qUnknownWordListId.getListId(), email));
+            return Response.create("Successfully retrieved list of user.", HttpStatus.OK, unknownWordService.getListWithWordsById(listId, email));
         }
         catch (Exception e) {
             return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -159,10 +162,10 @@ public class UnknownWordController {
         }
     }
 
-    @DeleteMapping("/list")
-    public ResponseEntity<Object> deleteList(@Valid @RequestBody QUnknownWordListId qUnknownWordListId, @RequestHeader(Header.USER_EMAIL) String email) {
+    @DeleteMapping("/list/{listId}")
+    public ResponseEntity<Object> deleteList(@Valid @PathVariable("listId") UUID listId, @RequestHeader(Header.USER_EMAIL) String email) {
         try {
-            return Response.create("Successfully deleted list.", HttpStatus.OK, unknownWordService.deleteList(qUnknownWordListId.getListId(), email));
+            return Response.create("Successfully deleted list.", HttpStatus.OK, unknownWordService.deleteList(listId, email));
         }
         catch (Exception e) {
             return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
