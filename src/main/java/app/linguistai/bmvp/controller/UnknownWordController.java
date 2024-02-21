@@ -92,7 +92,7 @@ public class UnknownWordController {
         }
     }
 
-    @GetMapping("/list")
+    @GetMapping("/list/{listId}")
     public ResponseEntity<Object> getListWithWords(@Valid @PathVariable("listId") UUID listId, @RequestHeader(Header.USER_EMAIL) String email) {
         try {
             return Response.create("Successfully retrieved list of user.", HttpStatus.OK, unknownWordService.getListWithWordsById(listId, email));
@@ -162,7 +162,7 @@ public class UnknownWordController {
         }
     }
 
-    @DeleteMapping("/list")
+    @DeleteMapping("/list/{listId}")
     public ResponseEntity<Object> deleteList(@Valid @PathVariable("listId") UUID listId, @RequestHeader(Header.USER_EMAIL) String email) {
         try {
             return Response.create("Successfully deleted list.", HttpStatus.OK, unknownWordService.deleteList(listId, email));
