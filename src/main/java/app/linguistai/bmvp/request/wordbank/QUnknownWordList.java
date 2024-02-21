@@ -22,17 +22,22 @@ public class QUnknownWordList {
     @NotNull
     private Boolean isPinned;
 
+    @NotBlank
+    private String imageUrl;
+
     public QUnknownWordList(
             @JsonProperty("title") String title,
             @JsonProperty("description") String description,
             @JsonProperty("isActive") Boolean isActive,
             @JsonProperty("isFavorite") Boolean isFavorite,
-            @JsonProperty("isPinned") Boolean isPinned
+            @JsonProperty("isPinned") Boolean isPinned,
+            @JsonProperty("imageUrl") String imageUrl
     ) {
         this.title = title;
         this.description = description;
         this.isActive = isActive;
         this.isFavorite = isFavorite;
         this.isPinned = isPinned;
+        this.imageUrl = imageUrl;
     }
 }

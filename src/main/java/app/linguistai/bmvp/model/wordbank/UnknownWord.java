@@ -1,7 +1,7 @@
 package app.linguistai.bmvp.model.wordbank;
 
 import app.linguistai.bmvp.model.embedded.UnknownWordId;
-import app.linguistai.bmvp.model.enums.Confidence;
+import app.linguistai.bmvp.model.enums.ConfidenceEnum;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -34,5 +34,5 @@ public class UnknownWord {
     private String word;
 
     @NotNull
-    private Confidence confidence;
+    private ConfidenceEnum confidence;
 }

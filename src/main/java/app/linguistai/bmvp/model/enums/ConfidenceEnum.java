@@ -1,6 +1,6 @@
 package app.linguistai.bmvp.model.enums;
 
-public enum Confidence {
+public enum ConfidenceEnum {
     LOWEST,
     LOW,
     MODERATE,
