@@ -27,7 +27,7 @@ import lombok.AllArgsConstructor;
 public class ProfileController {
     private final ProfileService profileService;
 
-    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "")
+    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> updateProfile(@Valid @RequestBody QUserProfile profile,
         @RequestHeader(Header.USER_EMAIL) String email) {
 
@@ -39,7 +39,7 @@ public class ProfileController {
         }        
     }
 
-    @GetMapping("")
+    @GetMapping
     public ResponseEntity<Object> getProfile(@RequestHeader(Header.USER_EMAIL) String email) {
         try {
             RUserProfile userProfile = profileService.getUserProfile(email);

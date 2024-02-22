@@ -3,6 +3,7 @@ package app.linguistai.bmvp.service.profile;
 import java.util.ArrayList;
 import java.util.List;
 import app.linguistai.bmvp.repository.IUserHobbyRepository;
+import jakarta.transaction.Transactional;
 
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,7 @@ public class HobbyService {
     private final IUserHobbyRepository userHobbyRepository;
     private final IHobbyRepository hobbyRepository;
 
-    // @Transactional
+    @Transactional
     public List<String> updateUserHobby(User user, List<String> hobbies) throws Exception {
         try {
             // first delete the hobbies of the user
