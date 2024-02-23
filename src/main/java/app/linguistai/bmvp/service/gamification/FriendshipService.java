@@ -63,6 +63,7 @@ public class FriendshipService {
         }
     }
 
+    @Transactional
     public Friendship acceptRequest(String user2Email, UUID user1Id) throws Exception {
         try {
             // the user who sends the request is saved to the db as user1
