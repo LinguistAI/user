@@ -1,6 +1,5 @@
 package app.linguistai.bmvp.model;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import app.linguistai.bmvp.model.embedded.FriendshipId;
