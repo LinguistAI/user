@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.embedded.FriendshipId;
-import app.linguistai.bmvp.model.enums.FrinedshipStatus;
+import app.linguistai.bmvp.model.enums.FriendshipStatus;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,7 @@ public class FriendshipService {
             LocalDateTime now = LocalDateTime.now();
 
             // save friendship to the db with pending status
-            Friendship friendship = friendshipRepository.save(new Friendship(dbUser1, dbUser2, now, FrinedshipStatus.PENDING));
+            Friendship friendship = friendshipRepository.save(new Friendship(dbUser1, dbUser2, now, FriendshipStatus.PENDING));
 
             return friendship;
         } catch (Exception e) { // TODO check what happens if same friendship request is send, or other person sends request
@@ -54,7 +54,25 @@ public class FriendshipService {
                 throw new Exception("User is not found");
             }
 
-            List<Friendship> friends = friendshipRepository.findByUser1IdOrUser2Id(dbUser1.getId(), dbUser1.getId());
+            List<Friendship> friends = friendshipRepository.findByUser1OrUser2AndStatus(dbUser1.getId(), FriendshipStatus.ACCEPTED.getValue());
+
+            return friends;
+        } catch (Exception e) {
+            System.out.println("Friendship exception");
+            throw e;
+        }
+    }
+
+    public List<Friendship> getFriendRequests(String userEmail) throws Exception {
+        try {
+            User dbUser1 = accountRepository.findUserByEmail(userEmail).orElse(null);
+
+            if (dbUser1 == null) {
+                throw new Exception("User is not found");
+            }
+
+            List<Friendship> friends = friendshipRepository.findByUser1OrUser2AndStatus(dbUser1.getId(), FriendshipStatus.PENDING.getValue());
+
 
             return friends;
         } catch (Exception e) {
@@ -82,7 +100,7 @@ public class FriendshipService {
                 throw new Exception("Frinedship is not found");
             }
 
-            friendship.setStatus(FrinedshipStatus.ACCEPTED);
+            friendship.setStatus(FriendshipStatus.ACCEPTED);
 
             // update the date
             friendship.setDate(LocalDateTime.now());

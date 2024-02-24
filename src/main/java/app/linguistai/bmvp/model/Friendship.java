@@ -3,7 +3,7 @@ package app.linguistai.bmvp.model;
 import java.time.LocalDateTime;
 
 import app.linguistai.bmvp.model.embedded.FriendshipId;
-import app.linguistai.bmvp.model.enums.FrinedshipStatus;
+import app.linguistai.bmvp.model.enums.FriendshipStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -40,5 +40,5 @@ public class Friendship {
 
     @NotNull
     @Column(name = "status", nullable = false)
-    private FrinedshipStatus status;
+    private FriendshipStatus status;
 }
