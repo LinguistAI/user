@@ -1,13 +1,13 @@
-// package app.linguistai.bmvp;
+ package app.linguistai.bmvp;
 
-// import org.junit.jupiter.api.Test;
-// import org.springframework.boot.test.context.SpringBootTest;
+ import org.junit.jupiter.api.Test;
+ import org.springframework.boot.test.context.SpringBootTest;
 
-// @SpringBootTest
-// class LinguistaiApplicationTests {
+ @SpringBootTest
+ class LinguistaiApplicationTests {
 
-// 	@Test
-// 	void contextLoads() {
-// 	}
+ 	@Test
+ 	void contextLoads() {
+ 	}
 
-// }
+ }
