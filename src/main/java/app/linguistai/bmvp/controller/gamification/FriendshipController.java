@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,6 +40,16 @@ public class FriendshipController {
             return Response.create(ExceptionLogger.log(e), HttpStatus.CONFLICT);
         }        
     }
+
+    @GetMapping("request")
+    public ResponseEntity<Object> getFriendRequests(@RequestHeader(Header.USER_EMAIL) String email) {
+        try {
+            List<Friendship> friends = friendshipService.getFriendRequests(email);
+            return Response.create("OK", HttpStatus.OK, friends);
+        } catch (Exception e) {
+            return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
+        }        
+    }
     
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "request/accept")
     public ResponseEntity<Object> acceptFriendRequest(@RequestHeader(Header.USER_EMAIL) String email, @Valid @RequestBody QFriendRequest friendRequest) {
@@ -62,18 +73,19 @@ public class FriendshipController {
         }        
     }
 
-    @GetMapping
-    public ResponseEntity<Object> getFriends(@RequestHeader(Header.USER_EMAIL) String email) {
+    @DeleteMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> removeFriend(@RequestHeader(Header.USER_EMAIL) String email, @Valid @RequestBody QFriendRequest friendRequest) {
         try {
-            List<Friendship> friends = friendshipService.getFriends(email);
-            return Response.create("OK", HttpStatus.OK, friends);
+            Friendship request = friendshipService.removeFriend(email, friendRequest.getFriendId()); // TODO check what happens if id is null
+            return Response.create("Frined is removed successfuly", HttpStatus.OK, request);
         } catch (Exception e) {
-            return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
+            e.printStackTrace();
+            return Response.create(ExceptionLogger.log(e), HttpStatus.CONFLICT);
         }        
     }
-    
+
     @GetMapping
-    public ResponseEntity<Object> getFriendRequests(@RequestHeader(Header.USER_EMAIL) String email) {
+    public ResponseEntity<Object> getFriends(@RequestHeader(Header.USER_EMAIL) String email) {
         try {
             List<Friendship> friends = friendshipService.getFriends(email);
             return Response.create("OK", HttpStatus.OK, friends);

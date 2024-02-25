@@ -23,25 +23,37 @@ public class FriendshipService {
     private final IAccountRepository accountRepository;
     private final IFriendshipRepository friendshipRepository;
 
+    // TODO cannot send request to themselves add
     public Friendship sendFriendRequest(String user1Email, UUID user2Id) throws Exception {
         try {
-            User dbUser1 = accountRepository.findUserByEmail(user1Email).orElse(null);
-            User dbUser2 = accountRepository.findUserById(user2Id).orElse(null);
+            User dbUser1 = accountRepository.findUserByEmail(user1Email).orElseThrow(() -> new Exception("User is not found"));
+            User dbUser2 = accountRepository.findUserById(user2Id).orElseThrow(() -> new Exception("Requested user is not found"));
 
-            if (dbUser1 == null) {
-                throw new Exception("User is not found");
-            } else if (dbUser2 == null) {
-                throw new Exception("Requested user is not found");
+            // if (dbUser1 == null) {
+            //     throw new Exception("User is not found");
+            // } else if (dbUser2 == null) {
+            //     throw new Exception("Requested user is not found");
+            // } else 
+            if (dbUser1.getId().equals(dbUser2.getId())) {
+                throw new Exception("User cannot send friend request to themselves");
+            }
+
+            // check if friend request exists
+            Friendship friendship = friendshipRepository.findByUserPair(dbUser1.getId(), user2Id).orElse(null);
+
+            if (friendship != null) {
+                throw new Exception("Friendship or request already exist");
             }
             
             LocalDateTime now = LocalDateTime.now();
 
             // save friendship to the db with pending status
-            Friendship friendship = friendshipRepository.save(new Friendship(dbUser1, dbUser2, now, FriendshipStatus.PENDING));
+            friendship = friendshipRepository.save(new Friendship(dbUser1, dbUser2, now, FriendshipStatus.PENDING));
 
             return friendship;
         } catch (Exception e) { // TODO check what happens if same friendship request is send, or other person sends request
             System.out.println("Friendship exception");
+            e.printStackTrace();
             throw e;
         }
     }
@@ -54,11 +66,12 @@ public class FriendshipService {
                 throw new Exception("User is not found");
             }
 
-            List<Friendship> friends = friendshipRepository.findByUser1OrUser2AndStatus(dbUser1.getId(), FriendshipStatus.ACCEPTED.getValue());
+            List<Friendship> friends = friendshipRepository.findByUser1OrUser2AndStatus(dbUser1.getId(), FriendshipStatus.ACCEPTED);
 
             return friends;
         } catch (Exception e) {
             System.out.println("Friendship exception");
+            e.printStackTrace();
             throw e;
         }
     }
@@ -71,12 +84,12 @@ public class FriendshipService {
                 throw new Exception("User is not found");
             }
 
-            List<Friendship> friends = friendshipRepository.findByUser1OrUser2AndStatus(dbUser1.getId(), FriendshipStatus.PENDING.getValue());
-
+            List<Friendship> friends = friendshipRepository.findByUser1OrUser2AndStatus(dbUser1.getId(), FriendshipStatus.PENDING);
 
             return friends;
         } catch (Exception e) {
             System.out.println("Friendship exception");
+            e.printStackTrace();
             throw e;
         }
     }
@@ -111,11 +124,11 @@ public class FriendshipService {
             return friendship;
         } catch (Exception e) {
             System.out.println("Friendship exception");
+            e.printStackTrace();
             throw e;
         }
     }
 
-    // the same method is called when user rejects the request or removes the friend
     @Transactional
     public Friendship rejectRequest(String user2Email, UUID user1Id) throws Exception {
         try {
@@ -140,6 +153,36 @@ public class FriendshipService {
             return friendship;
         } catch (Exception e) {
             System.out.println("Friendship exception");
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+    @Transactional
+    public Friendship removeFriend(String user2Email, UUID user1Id) throws Exception {
+        try {
+            // the user who sends the request is saved to the db as user1
+            User dbUser1 = accountRepository.findUserById(user1Id).orElse(null);
+            User dbUser2 = accountRepository.findUserByEmail(user2Email).orElse(null);
+
+            if (dbUser1 == null) {
+                throw new Exception("User is not found");
+            } else if (dbUser2 == null) {
+                throw new Exception("Requested user is not found");
+            }
+
+            Friendship friendship = friendshipRepository.findByUserPairAndStatus(dbUser1.getId(), dbUser2.getId(), FriendshipStatus.ACCEPTED).orElse(null);
+
+            if (friendship == null) {
+                throw new Exception("Frinedship is not found");
+            }
+
+            friendshipRepository.delete(friendship);
+
+            return friendship;
+        } catch (Exception e) {
+            System.out.println("Friendship exception");
+            e.printStackTrace();
             throw e;
         }
     }

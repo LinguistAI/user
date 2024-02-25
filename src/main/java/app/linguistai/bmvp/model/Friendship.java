@@ -25,12 +25,12 @@ import lombok.NoArgsConstructor;
 @IdClass(FriendshipId.class)
 public class Friendship {
     @Id
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user1", referencedColumnName = "id", insertable = false, updatable = false)
     private User user1;
 
     @Id
-    @ManyToOne(fetch = FetchType.LAZY) // if the fetch type is eager than delete operation does not work TODO check if smth doesnt work
+    @ManyToOne(fetch = FetchType.EAGER) // if the fetch type is eager than delete operation does not work TODO check if smth doesnt work
     @JoinColumn(name = "user2", referencedColumnName = "id", nullable = false)
     private User user2;
 
