@@ -36,8 +36,7 @@ public class FriendshipController {
             Friendship request = friendshipService.sendFriendRequest(email, friendRequest.getFriendId()); // TODO check what happens if id is null
             return Response.create("Frined request is sent successfuly", HttpStatus.OK, request);
         } catch (Exception e) {
-            e.printStackTrace();
-            return Response.create(ExceptionLogger.log(e), HttpStatus.CONFLICT);
+            return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
         }        
     }
 
@@ -57,8 +56,7 @@ public class FriendshipController {
             Friendship request = friendshipService.acceptRequest(email, friendRequest.getFriendId()); // TODO check what happens if id is null
             return Response.create("Frined request is accepted successfuly", HttpStatus.OK, request);
         } catch (Exception e) {
-            e.printStackTrace();
-            return Response.create(ExceptionLogger.log(e), HttpStatus.CONFLICT);
+            return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
         }        
     }
     
@@ -68,8 +66,7 @@ public class FriendshipController {
             Friendship request = friendshipService.rejectRequest(email, friendRequest.getFriendId()); // TODO check what happens if id is null
             return Response.create("Frined request is rejected successfuly", HttpStatus.OK, request);
         } catch (Exception e) {
-            e.printStackTrace();
-            return Response.create(ExceptionLogger.log(e), HttpStatus.CONFLICT);
+            return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
         }        
     }
 
@@ -79,8 +76,7 @@ public class FriendshipController {
             Friendship request = friendshipService.removeFriend(email, friendRequest.getFriendId()); // TODO check what happens if id is null
             return Response.create("Frined is removed successfuly", HttpStatus.OK, request);
         } catch (Exception e) {
-            e.printStackTrace();
-            return Response.create(ExceptionLogger.log(e), HttpStatus.CONFLICT);
+            return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
         }        
     }
 

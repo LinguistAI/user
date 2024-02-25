@@ -6,9 +6,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-import app.linguistai.bmvp.model.profile.Hobby;
-import app.linguistai.bmvp.model.profile.UserHobby;
-
 @Data
 @AllArgsConstructor
 public class RUserProfile {

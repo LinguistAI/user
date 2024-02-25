@@ -10,7 +10,6 @@ import app.linguistai.bmvp.repository.gamification.IFriendshipRepository;
 import org.springframework.stereotype.Service;
 
 import app.linguistai.bmvp.model.User;
-import app.linguistai.bmvp.model.embedded.FriendshipId;
 import app.linguistai.bmvp.model.enums.FriendshipStatus;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import jakarta.transaction.Transactional;
@@ -52,8 +51,7 @@ public class FriendshipService {
 
             return friendship;
         } catch (Exception e) { // TODO check what happens if same friendship request is send, or other person sends request
-            System.out.println("Friendship exception");
-            e.printStackTrace();
+            System.out.println(e.getLocalizedMessage());
             throw e;
         }
     }
@@ -70,8 +68,7 @@ public class FriendshipService {
 
             return friends;
         } catch (Exception e) {
-            System.out.println("Friendship exception");
-            e.printStackTrace();
+            System.out.println(e.getLocalizedMessage());
             throw e;
         }
     }
@@ -88,8 +85,7 @@ public class FriendshipService {
 
             return friends;
         } catch (Exception e) {
-            System.out.println("Friendship exception");
-            e.printStackTrace();
+            System.out.println(e.getLocalizedMessage());
             throw e;
         }
     }
@@ -107,10 +103,10 @@ public class FriendshipService {
                 throw new Exception("Requested user is not found");
             }
 
-            Friendship friendship = friendshipRepository.findById(new FriendshipId(dbUser1, dbUser2)).orElse(null);
+            Friendship friendship = friendshipRepository.findByUser1IdAndUser2IdAndStatus(dbUser1.getId(), dbUser2.getId(), FriendshipStatus.PENDING).orElse(null);
 
             if (friendship == null) {
-                throw new Exception("Frinedship is not found");
+                throw new Exception("Friendship is not found");
             }
 
             friendship.setStatus(FriendshipStatus.ACCEPTED);
@@ -123,13 +119,12 @@ public class FriendshipService {
 
             return friendship;
         } catch (Exception e) {
-            System.out.println("Friendship exception");
-            e.printStackTrace();
+            System.out.println(e.getMessage());
             throw e;
         }
     }
 
-    @Transactional
+    @Transactional // TODO also add sender removes their request
     public Friendship rejectRequest(String user2Email, UUID user1Id) throws Exception {
         try {
             // the user who sends the request is saved to the db as user1
@@ -142,18 +137,17 @@ public class FriendshipService {
                 throw new Exception("Requested user is not found");
             }
 
-            Friendship friendship = friendshipRepository.findById(new FriendshipId(dbUser1, dbUser2)).orElse(null);
+            Friendship friendship = friendshipRepository.findByUserPairAndStatus(dbUser1.getId(), dbUser2.getId(), FriendshipStatus.PENDING).orElse(null);
 
             if (friendship == null) {
-                throw new Exception("Frinedship is not found");
+                throw new Exception("Friendship is not found");
             }
 
             friendshipRepository.delete(friendship);
 
             return friendship;
         } catch (Exception e) {
-            System.out.println("Friendship exception");
-            e.printStackTrace();
+            System.out.println(e.getLocalizedMessage());
             throw e;
         }
     }
@@ -174,15 +168,14 @@ public class FriendshipService {
             Friendship friendship = friendshipRepository.findByUserPairAndStatus(dbUser1.getId(), dbUser2.getId(), FriendshipStatus.ACCEPTED).orElse(null);
 
             if (friendship == null) {
-                throw new Exception("Frinedship is not found");
+                throw new Exception("Friendship is not found");
             }
 
             friendshipRepository.delete(friendship);
 
             return friendship;
         } catch (Exception e) {
-            System.out.println("Friendship exception");
-            e.printStackTrace();
+            System.out.println(e.getLocalizedMessage());
             throw e;
         }
     }
