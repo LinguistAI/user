@@ -11,7 +11,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.model.User;
-import app.linguistai.bmvp.model.UserStreak;
+import app.linguistai.bmvp.model.gamification.UserStreak;
 import app.linguistai.bmvp.repository.gamification.IUserStreakRepository;
 import app.linguistai.bmvp.utils.DateUtils;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,11 +35,11 @@ public class UserStreakService {
     private UserStreak checkUserStreakForUpdate(UserStreak userStreak) throws Exception {
         try {
             Date streakTime = DateUtils.convertSqlDateToUtilDate(userStreak.getLastLogin());
-            
+
             if (streakTime == null) {
                 throw new Exception("StreakTime is null");
             }
-            
+
             LocalDate lastLoginLocalDate = streakTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             LocalDate currentDate = LocalDate.now();
             long daysDifference = ChronoUnit.DAYS.between(lastLoginLocalDate, currentDate);
@@ -135,7 +135,7 @@ public class UserStreakService {
             if (userStreakRepository.findByUserEmail(user.getEmail()).isPresent()) {
                 return false; // UserStreak already exists
             }
-            
+
             // Otherwise, create new "blank" UserStreak
             UserStreak newUserStreak = new UserStreak();
             newUserStreak.setCurrentStreak(1);
@@ -161,5 +161,5 @@ public class UserStreakService {
             throw e;
         }
     }
-    
+
 }

@@ -23,7 +23,7 @@
  import org.springframework.boot.test.context.SpringBootTest;
  import app.linguistai.bmvp.exception.NotFoundException;
  import app.linguistai.bmvp.model.User;
- import app.linguistai.bmvp.model.UserStreak;
+ import app.linguistai.bmvp.model.gamification.UserStreak;
  import app.linguistai.bmvp.repository.gamification.IUserStreakRepository;
  import app.linguistai.bmvp.security.JWTUtils;
 

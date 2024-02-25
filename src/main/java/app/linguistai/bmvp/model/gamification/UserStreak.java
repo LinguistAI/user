@@ -1,7 +1,9 @@
-package app.linguistai.bmvp.model;
+package app.linguistai.bmvp.model.gamification;
 
 import java.util.UUID;
 import java.sql.Date;
+
+import app.linguistai.bmvp.model.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
