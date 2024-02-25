@@ -1,38 +1,38 @@
- package app.linguistai.bmvp.service;
+package app.linguistai.bmvp.service;
 
- import app.linguistai.bmvp.exception.NotFoundException;
- import app.linguistai.bmvp.model.ResetToken;
- import app.linguistai.bmvp.model.User;
- import app.linguistai.bmvp.repository.IAccountRepository;
- import app.linguistai.bmvp.repository.IResetTokenRepository;
- import org.junit.jupiter.api.DisplayName;
- import org.junit.jupiter.api.Test;
- import org.mockito.InjectMocks;
- import org.mockito.Mock;
- import org.springframework.boot.test.context.SpringBootTest;
- import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import app.linguistai.bmvp.exception.NotFoundException;
+import app.linguistai.bmvp.model.ResetToken;
+import app.linguistai.bmvp.model.User;
+import app.linguistai.bmvp.repository.IAccountRepository;
+import app.linguistai.bmvp.repository.IResetTokenRepository;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
- import java.sql.Timestamp;
- import java.util.Arrays;
- import java.util.Calendar;
- import java.util.Collections;
- import java.util.List;
- import java.util.Optional;
+import java.sql.Timestamp;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
- import static org.junit.jupiter.api.Assertions.*;
- import static org.mockito.ArgumentMatchers.any;
- import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
- @SpringBootTest
- public class AccountServiceTest {
- 	@InjectMocks
- 	private AccountService accountService;
- 	@Mock
- 	private IAccountRepository accountRepository;
- 	@Mock
- 	private IResetTokenRepository resetTokenRepository;
- 	@Mock
- 	private BCryptPasswordEncoder bCryptPasswordEncoder;
+@SpringBootTest
+public class AccountServiceTest {
+	@InjectMocks
+	private AccountService accountService;
+	@Mock
+	private IAccountRepository accountRepository;
+	@Mock
+	private IResetTokenRepository resetTokenRepository;
+	@Mock
+	private BCryptPasswordEncoder bCryptPasswordEncoder;
 
  	// Password Reset Tests
  	@DisplayName("When a non-existent user is provided for token generation, throw a NotFoundException")
@@ -209,6 +209,6 @@
  			assertEquals(hashedPassword, user.getPassword());
  		} catch (Exception e) {
  			fail("TEST FAILED: " + e.getMessage());
- 		}
- 	}
- }
+		}
+	}
+}
