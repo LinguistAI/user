@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.request.QChangePassword;
+import app.linguistai.bmvp.request.QUser;
 import app.linguistai.bmvp.request.QUserLogin;
 import app.linguistai.bmvp.response.RLoginUser;
 import app.linguistai.bmvp.response.RRefreshToken;
@@ -32,7 +33,6 @@ public class AccountService {
     @Autowired
     final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    // @Autowired
     private final IAccountRepository accountRepository;
     private final IResetTokenRepository resetTokenRepository;
     private final JWTUserService jwtUserService;
@@ -117,27 +117,26 @@ public class AccountService {
     }
 
     @Transactional
-    public User addUser(User user) throws Exception {
+    public User addUser(QUser requestUser) throws Exception {
         try {
-            System.out.println("user that will be saved: " + user);
-            boolean userExist = accountRepository.existsByEmail(user.getEmail());
+            System.out.println("user that will be saved: " + requestUser);
+            boolean userExist = accountRepository.existsByEmail(requestUser.getEmail());
             
             if (userExist) {
                 throw new Exception("User already exists");
             } else {
                 // generate uuid and hash password if user does not exist in the system
-                user.setId(UUID.randomUUID());
-                user.setPassword(encodePassword(user.getPassword()));
+                requestUser.setId(UUID.randomUUID());
+                requestUser.setPassword(encodePassword(requestUser.getPassword()));
 
-                System.out.println("user_id: " + user.getId());
-                User newUser = accountRepository.save(user);
+                System.out.println("user_id: " + requestUser.getId());
+                User newUser = accountRepository.save(new User(requestUser));
 
                 // Create UserStreak for the new user
                 if (!userStreakService.createUserStreak(newUser)) {
                     throw new Exception("ERROR: Could not generate UserStreak for user with ID: [" + newUser.getId() + "]. Perhaps UserStreak already exists?");
                 }
 
-                System.out.println("user_id after register: " + accountRepository.findUserByEmail(user.getEmail()).get().getId());
                 return newUser;
             }
         } catch (Exception e) {
@@ -147,6 +146,7 @@ public class AccountService {
 
     public List<User> getUsers() {
         try {
+            // return accountRepository.findAll().stream().map(user -> new RUser(user)).collect(Collectors.toList());
             return accountRepository.findAll();
         } catch (Exception e) {
             throw e;
@@ -164,16 +164,20 @@ public class AccountService {
     public ResetToken generateEmailToken(String email) throws Exception {
         try {
             User user = accountRepository.findUserByEmail(email).orElse(null);
+
             if (user == null) {
                 throw new NotFoundException("User with email [" + email + "] not found");
             }
+
             // invalidate previous reset tokens of user
             List<ResetToken> resetTokens = resetTokenRepository.findAllByUser(user);
             for (ResetToken resetToken: resetTokens) {
                 resetToken.setUsed(true);
             }
+
             // create a new reset token
             ResetToken resetToken = new ResetToken(user);
+            
             return resetTokenRepository.save(resetToken);
         } catch (Exception e) {
             System.out.println("Email token generation exception for email");
@@ -215,12 +219,16 @@ public class AccountService {
 
     public boolean setPassword(String email, String password) throws Exception {
         User user = accountRepository.findUserByEmail(email).orElse(null);
+
         if (user == null) {
             throw new NotFoundException("User with email [" + email + "] not found");
         }
+
         String hashedPassword = encodePassword(password);
         user.setPassword(hashedPassword);
+
         int rowsAffected = accountRepository.updatePassword(hashedPassword, user.getId());
+
         return rowsAffected > 0;
     }
 
