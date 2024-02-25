@@ -14,7 +14,7 @@ import app.linguistai.bmvp.response.RUserStreak;
 import org.springframework.stereotype.Service;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.model.User;
-import app.linguistai.bmvp.model.UserStreak;
+import app.linguistai.bmvp.model.gamification.UserStreak;
 import app.linguistai.bmvp.repository.gamification.IUserStreakRepository;
 import app.linguistai.bmvp.utils.DateUtils;
 import org.springframework.transaction.annotation.Transactional;
