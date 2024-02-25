@@ -22,17 +22,11 @@ public class FriendshipService {
     private final IAccountRepository accountRepository;
     private final IFriendshipRepository friendshipRepository;
 
-    // TODO cannot send request to themselves add
     public Friendship sendFriendRequest(String user1Email, UUID user2Id) throws Exception {
         try {
             User dbUser1 = accountRepository.findUserByEmail(user1Email).orElseThrow(() -> new Exception("User is not found"));
             User dbUser2 = accountRepository.findUserById(user2Id).orElseThrow(() -> new Exception("Requested user is not found"));
 
-            // if (dbUser1 == null) {
-            //     throw new Exception("User is not found");
-            // } else if (dbUser2 == null) {
-            //     throw new Exception("Requested user is not found");
-            // } else 
             if (dbUser1.getId().equals(dbUser2.getId())) {
                 throw new Exception("User cannot send friend request to themselves");
             }
@@ -50,7 +44,7 @@ public class FriendshipService {
             friendship = friendshipRepository.save(new Friendship(dbUser1, dbUser2, now, FriendshipStatus.PENDING));
 
             return friendship;
-        } catch (Exception e) { // TODO check what happens if same friendship request is send, or other person sends request
+        } catch (Exception e) {
             System.out.println(e.getLocalizedMessage());
             throw e;
         }
@@ -124,7 +118,8 @@ public class FriendshipService {
         }
     }
 
-    @Transactional // TODO also add sender removes their request
+    // user can reject the request or the sender can remove their request using this method
+    @Transactional
     public Friendship rejectRequest(String user2Email, UUID user1Id) throws Exception {
         try {
             // the user who sends the request is saved to the db as user1

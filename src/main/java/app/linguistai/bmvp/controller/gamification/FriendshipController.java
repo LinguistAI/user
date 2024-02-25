@@ -33,7 +33,7 @@ public class FriendshipController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "request")
     public ResponseEntity<Object> sendFriendRequest(@RequestHeader(Header.USER_EMAIL) String email, @Valid @RequestBody QFriendRequest friendRequest) {
         try {
-            Friendship request = friendshipService.sendFriendRequest(email, friendRequest.getFriendId()); // TODO check what happens if id is null
+            Friendship request = friendshipService.sendFriendRequest(email, friendRequest.getFriendId());
             return Response.create("Frined request is sent successfuly", HttpStatus.OK, request);
         } catch (Exception e) {
             return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
@@ -53,7 +53,7 @@ public class FriendshipController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "request/accept")
     public ResponseEntity<Object> acceptFriendRequest(@RequestHeader(Header.USER_EMAIL) String email, @Valid @RequestBody QFriendRequest friendRequest) {
         try {
-            Friendship request = friendshipService.acceptRequest(email, friendRequest.getFriendId()); // TODO check what happens if id is null
+            Friendship request = friendshipService.acceptRequest(email, friendRequest.getFriendId());
             return Response.create("Frined request is accepted successfuly", HttpStatus.OK, request);
         } catch (Exception e) {
             return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
@@ -63,7 +63,7 @@ public class FriendshipController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "request/reject")
     public ResponseEntity<Object> rejectFriendRequest(@RequestHeader(Header.USER_EMAIL) String email, @Valid @RequestBody QFriendRequest friendRequest) {
         try {
-            Friendship request = friendshipService.rejectRequest(email, friendRequest.getFriendId()); // TODO check what happens if id is null
+            Friendship request = friendshipService.rejectRequest(email, friendRequest.getFriendId());
             return Response.create("Frined request is rejected successfuly", HttpStatus.OK, request);
         } catch (Exception e) {
             return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
@@ -73,7 +73,7 @@ public class FriendshipController {
     @DeleteMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> removeFriend(@RequestHeader(Header.USER_EMAIL) String email, @Valid @RequestBody QFriendRequest friendRequest) {
         try {
-            Friendship request = friendshipService.removeFriend(email, friendRequest.getFriendId()); // TODO check what happens if id is null
+            Friendship request = friendshipService.removeFriend(email, friendRequest.getFriendId());
             return Response.create("Frined is removed successfuly", HttpStatus.OK, request);
         } catch (Exception e) {
             return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);

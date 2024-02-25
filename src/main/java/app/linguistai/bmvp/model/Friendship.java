@@ -30,7 +30,7 @@ public class Friendship {
     private User user1;
 
     @Id
-    @ManyToOne(fetch = FetchType.EAGER) // if the fetch type is eager than delete operation does not work TODO check if smth doesnt work
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user2", referencedColumnName = "id", nullable = false)
     private User user2;
 
