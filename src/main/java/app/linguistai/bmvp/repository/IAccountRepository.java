@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 // @Qualifier("accountjpa")
 @Repository
-// @Transactional
 public interface IAccountRepository extends JpaRepository<User, UUID> {
     List<User> findAllById(UUID id);
     Optional<User> findUserById(UUID id);

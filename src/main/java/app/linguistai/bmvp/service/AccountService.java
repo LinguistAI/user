@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import app.linguistai.bmvp.exception.ExceptionLogger;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
@@ -18,10 +19,10 @@ import app.linguistai.bmvp.request.QChangePassword;
 import app.linguistai.bmvp.request.QUserLogin;
 import app.linguistai.bmvp.response.RLoginUser;
 import app.linguistai.bmvp.response.RRefreshToken;
-import app.linguistai.bmvp.security.JWTFilter;
 import app.linguistai.bmvp.security.JWTUserService;
 import app.linguistai.bmvp.security.JWTUtils;
 import app.linguistai.bmvp.service.gamification.UserStreakService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -49,7 +50,7 @@ public class AccountService {
             if (dbUser == null) {
                 throw new Exception("User is not found");
             }
-            
+
             String hashedPassword = dbUser.getPassword();
             boolean passwordMatch = bCryptPasswordEncoder.matches(user.getPassword(), hashedPassword);
 
@@ -57,47 +58,51 @@ public class AccountService {
                 throw new Exception("Passwords do not match");
             }
 
-            System.out.println("Passwords are matched");
-
             final UserDetails userDetails = jwtUserService.loadUserByUsername(user.getEmail());
             final String accessToken = jwtUtils.createAccessToken(userDetails);
             final String refreshToken = jwtUtils.createRefreshToken(userDetails);
 
             // If login is successful, check whether to increase user streak or not
-            // MIGRATED TO MESSAGE SERVICE: userStreakService.updateUserStreak(dbUser.getEmail());
+            // ALSO IN MESSAGE SERVICE: userStreakService.updateUserStreak(dbUser.getEmail());
+            try {
+                userStreakService.updateUserStreak(dbUser.getEmail());
+            }
+            catch (Exception e1) {
+                // Intentionally not thrown to not cause login exception for users without UserStreak
+                System.out.println(ExceptionLogger.log(e1));
+            }
 
             return new RLoginUser(dbUser, accessToken, refreshToken);
-        } catch (Exception e) {
+        } catch (Exception e2) {
             System.out.println("login exception");
-            throw e;
+            throw e2;
         }
     }
 
     public RRefreshToken refreshToken(String auth) throws Exception {
         try {
-            String username = jwtUtils.extractRefreshUsername(JWTFilter.getTokenWithoutBearer(auth));
+            String username = jwtUtils.extractRefreshUsername(JWTUtils.getTokenWithoutBearer(auth));
 
             final UserDetails userDetails = jwtUserService.loadUserByUsername(username);
             final String accessToken = jwtUtils.createAccessToken(userDetails);
             return new RRefreshToken(accessToken);
-            
+
         } catch (Exception e) {
             System.out.println("refresh token exception");
             throw e;
         }
     }
 
-    public boolean changePassword(String auth, QChangePassword passwords) throws Exception {
+    public boolean changePassword(String email, QChangePassword passwords) throws Exception {
         try {
-            String email = jwtUtils.extractAccessUsername(JWTFilter.getTokenWithoutBearer(auth));
             User dbUser = accountRepository.findUserByEmail(email).orElse(null);
 
             if (dbUser == null) {
                 throw new Exception("User is not found");
             }
-            
+
             String hashedPassword = dbUser.getPassword();
-            
+
             boolean passwordMatch = bCryptPasswordEncoder.matches(passwords.getOldPassword(), hashedPassword);
 
             if (!passwordMatch) {
@@ -105,26 +110,25 @@ public class AccountService {
                 throw new Exception("pasword no match");
             }
 
-            System.out.println("passwords are matched");
             // hash new password
             String hashedNewPassword = bCryptPasswordEncoder.encode(passwords.getNewPassword());
-            
+
             dbUser.setPassword(hashedNewPassword);
-            int result = accountRepository.updatePassword(hashedNewPassword, dbUser.getId());
-            System.out.println("result: " + result);
-           
-            return true;            
+            accountRepository.updatePassword(hashedNewPassword, dbUser.getId());
+
+            return true;
         } catch (Exception e) {
             System.out.println("password change exception exception");
             throw e;
         }
     }
 
+    @Transactional
     public User addUser(User user) throws Exception {
         try {
             System.out.println("user that will be saved: " + user);
             boolean userExist = accountRepository.existsByEmail(user.getEmail());
-            
+
             if (userExist) {
                 throw new Exception("User already exists");
             } else {
@@ -161,7 +165,7 @@ public class AccountService {
             return bCryptPasswordEncoder.encode(plainPassword);
         } catch (Exception e) {
             throw e;
-        }       
+        }
     }
 
     public ResetToken generateEmailToken(String email) throws Exception {

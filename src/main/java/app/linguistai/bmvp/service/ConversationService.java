@@ -7,16 +7,12 @@ import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.IConversationRepository;
 import app.linguistai.bmvp.repository.IMessageRepository;
 import app.linguistai.bmvp.response.RConversation;
-import app.linguistai.bmvp.security.JWTFilter;
-import app.linguistai.bmvp.security.JWTUtils;
 import app.linguistai.bmvp.utils.DateUtils;
 import app.linguistai.bmvp.utils.mapper.ConversationMapper;
 import app.linguistai.bmvp.utils.mapper.MessageMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Optional;
@@ -30,12 +26,8 @@ public class ConversationService {
 
     private final IAccountRepository accountRepository;
 
-    @Autowired
-    private final JWTUtils jwtUtils;
-
-    public RConversation getConversationByToken(String token) throws Exception {
+    public RConversation getConversationByToken(String email) throws Exception {
         try {
-            String email = jwtUtils.extractAccessUsername(JWTFilter.getTokenWithoutBearer(token));
             return getConversationByUserEmail(email);
         }
         catch (NotFoundException e1) {
@@ -47,7 +39,7 @@ public class ConversationService {
         }
     }
 
-    private RConversation getConversationByUserEmail(String email) throws Exception {
+    public RConversation getConversationByUserEmail(String email) throws Exception {
         try {
             Optional<User> optionalUser = accountRepository.findUserByEmail(email);
 

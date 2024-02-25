@@ -21,7 +21,12 @@ public class Message {
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "conversation_id", referencedColumnName = "conversation_id", foreignKey = @ForeignKey())
+    @JoinColumn(
+            name = "conversation_id",
+            referencedColumnName = "conversation_id",
+            foreignKey = @ForeignKey(),
+            nullable = false
+    )
     private Conversation conversation;
 
     @NotBlank

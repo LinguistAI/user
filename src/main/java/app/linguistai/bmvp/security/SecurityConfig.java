@@ -1,5 +1,6 @@
 package app.linguistai.bmvp.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,7 +12,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -19,11 +19,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-	final private JWTUserService jwtUserService;
-	final private JWTFilter jwtFilter;
-
-	// @Autowired
-	// private final BCryptPasswordEncoder bCryptPasswordEncoder;
+	@Autowired
+	private JWTUserService jwtUserService;
 
 	private static final String[] AUTH_WHITELIST = {
 			"/v3/api-docs/**",
@@ -45,9 +42,7 @@ public class SecurityConfig {
 				.authorizeHttpRequests((request) -> {
 					try {
 						request
-								.requestMatchers(AUTH_WHITELIST)
-								.permitAll()
-								.anyRequest().authenticated()
+								.anyRequest().permitAll()
 								.and()
 								.sessionManagement()
 								.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -56,10 +51,7 @@ public class SecurityConfig {
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-
 				});
-		// http.addFilterAfter(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-		http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}
@@ -82,9 +74,4 @@ public class SecurityConfig {
 	public BCryptPasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder(10);
 	}
-
-	// @Bean
-	// public PasswordEncoder passwordEncoder(int strength) {
-	// return new BCryptPasswordEncoder(strength);
-	// }
 }
