@@ -67,7 +67,7 @@ public class XPService implements IXPService {
             return RUserXP.builder()
                 .username(user.getUsername())
                 .experience(updated.getExperience())
-                .level(this.determineLevel(updated.getExperience()))
+                .level(this.determineProceduralLevel(updated.getExperience()))
                 .build();
         }
         catch (UserXPNotFoundException e1) {
@@ -89,7 +89,7 @@ public class XPService implements IXPService {
             return RUserXP.builder()
                 .username(user.getUsername())
                 .experience(userXP.getExperience())
-                .level(this.determineLevel(userXP.getExperience()))
+                .level(this.determineProceduralLevel(userXP.getExperience()))
                 .build();
         }
         catch (UserXPNotFoundException e1) {
@@ -119,7 +119,8 @@ public class XPService implements IXPService {
         return new UserXPWithUser(user, userXP);
     }
 
-    private Long determineLevel(Long points) throws Exception {
+    @Deprecated
+    private Long determineHardcodedLevel(Long points) throws Exception {
         TreeMap<Long, String> sortedLevels = new TreeMap<>();
         xp.getLevels().forEach((key, value) -> sortedLevels.put(value.longValue(), key));
 
@@ -138,5 +139,20 @@ public class XPService implements IXPService {
 
         return 1L;
     }
+
+    private Long determineProceduralLevel(Long points) {
+        Long baseLevel = xp.getBaseLevel();
+        Long levelCoefficient = xp.getLevelCoefficient();
+        Long level = 1L;
+        Double xpThreshold = Double.valueOf(baseLevel);
+
+        while (points >= xpThreshold) {
+            level++;
+            xpThreshold *= levelCoefficient;
+        }
+
+        return level;
+    }
+
 }
 
