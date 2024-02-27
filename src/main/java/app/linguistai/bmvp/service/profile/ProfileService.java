@@ -9,8 +9,6 @@ import app.linguistai.bmvp.consts.Header;
 import app.linguistai.bmvp.consts.ServiceUris;
 import app.linguistai.bmvp.repository.IUserHobbyRepository;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -33,8 +31,6 @@ public class ProfileService {
     private final IUserHobbyRepository userHobbyRepository;
     private final IAccountRepository accountRepository;
     private final HobbyService hobbyService;
-    private final Logger logger = LoggerFactory.getLogger(ProfileService.class);
-
     private WebClient webClient;
     private final WebClient.Builder webClientBuilder;
 
@@ -106,7 +102,7 @@ public class ProfileService {
                 .build();
 
             if (ML_SERVICE_BASE_URL == null || ML_SERVICE_BASE_URL.isEmpty()) {
-                logger.warn("ML Service Base URL is not set!");
+                System.out.println("ML Service Base URL is not set!");
                 return userProfile;
             }
 
@@ -114,7 +110,7 @@ public class ProfileService {
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("profile", userProfile);
 
-            getWebClient().put()
+            this.getWebClient().put()
                 .uri(ServiceUris.ML_SERVICE_UPDATE_PROFILE)
                 .header(Header.USER_EMAIL, email)
                 .body(Mono.just(requestBody), Map.class)
@@ -122,11 +118,11 @@ public class ProfileService {
                 .bodyToMono(String.class)
                 .subscribe(response -> {
                     if (response != null) {
-                        logger.info("updateProfile - Response from ML service: " + response);
+                        System.out.println("updateProfile - Response from ML service: " + response);
                     }
                 }, error -> {
                     if (error != null) {
-                        logger.error("updateProfile - Error from ML service: " + error.getMessage());
+                        System.out.println("updateProfile - Error from ML service: " + error.getMessage());
                     }
                 });
 
