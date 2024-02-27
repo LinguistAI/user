@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import app.linguistai.bmvp.exception.ExceptionLogger;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
@@ -49,7 +50,7 @@ public class AccountService {
             if (dbUser == null) {
                 throw new Exception("User is not found");
             }
-            
+
             String hashedPassword = dbUser.getPassword();
             boolean passwordMatch = bCryptPasswordEncoder.matches(user.getPassword(), hashedPassword);
 
@@ -63,12 +64,18 @@ public class AccountService {
 
             // If login is successful, check whether to increase user streak or not
             // ALSO IN MESSAGE SERVICE: userStreakService.updateUserStreak(dbUser.getEmail());
-            userStreakService.updateUserStreak(dbUser.getEmail());
+            try {
+                userStreakService.updateUserStreak(dbUser.getEmail());
+            }
+            catch (Exception e1) {
+                // Intentionally not thrown to not cause login exception for users without UserStreak
+                System.out.println(ExceptionLogger.log(e1));
+            }
 
             return new RLoginUser(dbUser, accessToken, refreshToken);
-        } catch (Exception e) {
+        } catch (Exception e2) {
             System.out.println("login exception");
-            throw e;
+            throw e2;
         }
     }
 
@@ -79,7 +86,7 @@ public class AccountService {
             final UserDetails userDetails = jwtUserService.loadUserByUsername(username);
             final String accessToken = jwtUtils.createAccessToken(userDetails);
             return new RRefreshToken(accessToken);
-            
+
         } catch (Exception e) {
             System.out.println("refresh token exception");
             throw e;
@@ -93,9 +100,9 @@ public class AccountService {
             if (dbUser == null) {
                 throw new Exception("User is not found");
             }
-            
+
             String hashedPassword = dbUser.getPassword();
-            
+
             boolean passwordMatch = bCryptPasswordEncoder.matches(passwords.getOldPassword(), hashedPassword);
 
             if (!passwordMatch) {
@@ -105,11 +112,11 @@ public class AccountService {
 
             // hash new password
             String hashedNewPassword = bCryptPasswordEncoder.encode(passwords.getNewPassword());
-            
+
             dbUser.setPassword(hashedNewPassword);
             accountRepository.updatePassword(hashedNewPassword, dbUser.getId());
-           
-            return true;            
+
+            return true;
         } catch (Exception e) {
             System.out.println("password change exception exception");
             throw e;
@@ -119,7 +126,6 @@ public class AccountService {
     @Transactional
     public User addUser(QUser requestUser) throws Exception {
         try {
-            System.out.println("user that will be saved: " + requestUser);
             boolean userExist = accountRepository.existsByEmail(requestUser.getEmail());
             
             if (userExist) {
@@ -129,7 +135,6 @@ public class AccountService {
                 requestUser.setId(UUID.randomUUID());
                 requestUser.setPassword(encodePassword(requestUser.getPassword()));
 
-                System.out.println("user_id: " + requestUser.getId());
                 User newUser = accountRepository.save(new User(requestUser));
 
                 // Create UserStreak for the new user
@@ -158,7 +163,7 @@ public class AccountService {
             return bCryptPasswordEncoder.encode(plainPassword);
         } catch (Exception e) {
             throw e;
-        }       
+        }
     }
 
     public ResetToken generateEmailToken(String email) throws Exception {
