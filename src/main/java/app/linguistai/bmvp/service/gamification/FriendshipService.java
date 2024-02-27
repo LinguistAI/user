@@ -8,11 +8,11 @@ import app.linguistai.bmvp.model.Friendship;
 import app.linguistai.bmvp.repository.gamification.IFriendshipRepository;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.enums.FriendshipStatus;
 import app.linguistai.bmvp.repository.IAccountRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -22,6 +22,7 @@ public class FriendshipService {
     private final IAccountRepository accountRepository;
     private final IFriendshipRepository friendshipRepository;
 
+    @Transactional
     public Friendship sendFriendRequest(String user1Email, UUID user2Id) throws Exception {
         try {
             User dbUser1 = accountRepository.findUserByEmail(user1Email).orElseThrow(() -> new Exception("User is not found"));
