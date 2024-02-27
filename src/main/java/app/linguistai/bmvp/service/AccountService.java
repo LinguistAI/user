@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import app.linguistai.bmvp.exception.ExceptionLogger;
+import app.linguistai.bmvp.exception.Logger;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
@@ -14,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import app.linguistai.bmvp.model.User;
+import app.linguistai.bmvp.model.enums.LogType;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.request.QChangePassword;
 import app.linguistai.bmvp.request.QUser;
@@ -72,6 +74,8 @@ public class AccountService {
                 System.out.println(ExceptionLogger.log(e1));
             }
 
+            Logger.log(String.format("User %s logged in.", dbUser.getId()), LogType.INFO);
+
             return new RLoginUser(dbUser, accessToken, refreshToken);
         } catch (Exception e2) {
             System.out.println("login exception");
@@ -116,6 +120,8 @@ public class AccountService {
             dbUser.setPassword(hashedNewPassword);
             accountRepository.updatePassword(hashedNewPassword, dbUser.getId());
 
+            Logger.log(String.format("User %s changed their password.", dbUser.getId()), LogType.INFO);
+
             return true;
         } catch (Exception e) {
             System.out.println("password change exception exception");
@@ -130,20 +136,22 @@ public class AccountService {
             
             if (userExist) {
                 throw new Exception("User already exists");
-            } else {
-                // generate uuid and hash password if user does not exist in the system
-                requestUser.setId(UUID.randomUUID());
-                requestUser.setPassword(encodePassword(requestUser.getPassword()));
-
-                User newUser = accountRepository.save(new User(requestUser));
-
-                // Create UserStreak for the new user
-                if (!userStreakService.createUserStreak(newUser)) {
-                    throw new Exception("ERROR: Could not generate UserStreak for user with ID: [" + newUser.getId() + "]. Perhaps UserStreak already exists?");
-                }
-
-                return newUser;
             }
+
+            // generate uuid and hash password if user does not exist in the system
+            requestUser.setId(UUID.randomUUID());
+            requestUser.setPassword(encodePassword(requestUser.getPassword()));
+
+            User newUser = accountRepository.save(new User(requestUser));
+
+            // Create UserStreak for the new user
+            if (!userStreakService.createUserStreak(newUser)) {
+                throw new Exception("ERROR: Could not generate UserStreak for user with ID: [" + newUser.getId() + "]. Perhaps UserStreak already exists?");
+            }
+
+            Logger.log(String.format("User %s registered.", newUser.getId()), LogType.INFO);
+
+            return newUser;            
         } catch (Exception e) {
             throw e;
         }
@@ -158,7 +166,7 @@ public class AccountService {
         }
     }
 
-    private String encodePassword(String plainPassword) {
+    private String encodePassword(String plainPassword) { // TODO no need for this method
         try {
             return bCryptPasswordEncoder.encode(plainPassword);
         } catch (Exception e) {
@@ -182,6 +190,8 @@ public class AccountService {
 
             // create a new reset token
             ResetToken resetToken = new ResetToken(user);
+
+            Logger.log(String.format("Email token is generated for user %s.", user.getId()), LogType.INFO);
             
             return resetTokenRepository.save(resetToken);
         } catch (Exception e) {
@@ -210,8 +220,10 @@ public class AccountService {
                 resetToken.setUsed(true);
                 resetTokenRepository.save(resetToken);
             }
-            return true;
 
+            Logger.log(String.format("Reset code is validated for usre %s.", user.getId()), LogType.INFO);
+
+            return true;
         } catch (Exception e) {
             System.out.println("Password reset token validation exception");
             throw e;
@@ -234,7 +246,8 @@ public class AccountService {
 
         int rowsAffected = accountRepository.updatePassword(hashedPassword, user.getId());
 
+        Logger.log(String.format("New password is set for user %s.", user.getId()), LogType.INFO);
+
         return rowsAffected > 0;
     }
-
 }

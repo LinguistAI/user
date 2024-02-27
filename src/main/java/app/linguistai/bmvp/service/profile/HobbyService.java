@@ -7,7 +7,9 @@ import jakarta.transaction.Transactional;
 
 import org.springframework.stereotype.Service;
 
+import app.linguistai.bmvp.exception.Logger;
 import app.linguistai.bmvp.model.User;
+import app.linguistai.bmvp.model.enums.LogType;
 import app.linguistai.bmvp.model.profile.Hobby;
 import app.linguistai.bmvp.model.profile.UserHobby;
 import app.linguistai.bmvp.repository.IHobbyRepository;
@@ -36,6 +38,8 @@ public class HobbyService {
             userHobbyRepository.saveAll(userHobbies);
 
             List<String> savedHobbies = userHobbyRepository.findHobbiesByUserId(user.getId());
+
+            Logger.log(String.format("User %s updated their hobbies.", user.getId()), LogType.INFO);
 
             return savedHobbies;
         } catch (Exception e) {

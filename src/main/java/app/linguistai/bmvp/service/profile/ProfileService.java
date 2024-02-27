@@ -8,7 +8,9 @@ import app.linguistai.bmvp.repository.IUserHobbyRepository;
 import org.springframework.stereotype.Service;
 
 import app.linguistai.bmvp.consts.EnglishLevels;
+import app.linguistai.bmvp.exception.Logger;
 import app.linguistai.bmvp.model.User;
+import app.linguistai.bmvp.model.enums.LogType;
 import app.linguistai.bmvp.model.profile.UserProfile;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.IProfileRepository;
@@ -73,6 +75,9 @@ public class ProfileService {
             }
 
             List<String> userHobbies = hobbyService.updateUserHobby(dbUser, profile.getHobbies());
+
+            Logger.log(String.format("User %s updated their profile.", dbUser.getId()), LogType.INFO);
+
             return new RUserProfile(dbUser.getId(), dbProfile.getName(), dbProfile.getBirhtDate(), dbProfile.getEnglishLevel(), userHobbies);
         } catch (Exception e) {
             System.out.println("Something is wrong in update user profile");
@@ -99,6 +104,8 @@ public class ProfileService {
             if (dbProfile == null) {
                 return new RUserProfile(dbUser.getId(), "", null, EnglishLevels.DONT_KNOW, hobbies);
             }
+
+            Logger.log(String.format("User %s viewed their profile.", dbUser.getId()), LogType.INFO);
 
             return new RUserProfile(dbProfile.getUserId(), dbProfile.getName(), dbProfile.getBirhtDate(), dbProfile.getEnglishLevel(), hobbies);
         } catch (Exception e) {
