@@ -1,10 +1,17 @@
 package app.linguistai.bmvp.service.profile;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import app.linguistai.bmvp.consts.Header;
+import app.linguistai.bmvp.consts.ServiceUris;
 import app.linguistai.bmvp.repository.IUserHobbyRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import app.linguistai.bmvp.consts.EnglishLevels;
@@ -16,6 +23,8 @@ import app.linguistai.bmvp.request.QUserProfile;
 import app.linguistai.bmvp.response.RUserProfile;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 @Service
@@ -24,6 +33,20 @@ public class ProfileService {
     private final IUserHobbyRepository userHobbyRepository;
     private final IAccountRepository accountRepository;
     private final HobbyService hobbyService;
+    private final Logger logger = LoggerFactory.getLogger(ProfileService.class);
+
+    private WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
+
+    @Value("${ml.service.base.url}")
+    private String ML_SERVICE_BASE_URL;
+
+    private WebClient getWebClient() {
+        if (webClient == null) {
+            webClient = webClientBuilder.baseUrl(ML_SERVICE_BASE_URL).build();
+        }
+        return webClient;
+    }
 
     // this method should be called only when a new user is created
     public boolean createEmptyProfile(UUID userId) throws Exception {
@@ -73,7 +96,41 @@ public class ProfileService {
             }
 
             List<String> userHobbies = hobbyService.updateUserHobby(dbUser, profile.getHobbies());
-            return new RUserProfile(dbUser.getId(), dbProfile.getName(), dbProfile.getBirhtDate(), dbProfile.getEnglishLevel(), userHobbies);
+
+            RUserProfile userProfile = RUserProfile.builder()
+                .id(dbUser.getId())
+                .name(dbProfile.getName())
+                .birhtDate(dbProfile.getBirhtDate())
+                .englishLevel(dbProfile.getEnglishLevel())
+                .hobbies(userHobbies)
+                .build();
+
+            if (ML_SERVICE_BASE_URL == null || ML_SERVICE_BASE_URL.isEmpty()) {
+                logger.warn("ML Service Base URL is not set!");
+                return userProfile;
+            }
+
+            // Create request body for the request to ML service
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("profile", userProfile);
+
+            getWebClient().put()
+                .uri(ServiceUris.ML_SERVICE_UPDATE_PROFILE)
+                .header(Header.USER_EMAIL, email)
+                .body(Mono.just(requestBody), Map.class)
+                .retrieve()
+                .bodyToMono(String.class)
+                .subscribe(response -> {
+                    if (response != null) {
+                        logger.info("updateProfile - Response from ML service: " + response);
+                    }
+                }, error -> {
+                    if (error != null) {
+                        logger.error("updateProfile - Error from ML service: " + error.getMessage());
+                    }
+                });
+
+            return userProfile;
         } catch (Exception e) {
             System.out.println("Something is wrong in update user profile");
             e.printStackTrace();

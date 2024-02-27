@@ -1,6 +1,7 @@
 package app.linguistai.bmvp.response;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import java.time.LocalDate;
 import java.util.List;
@@ -10,6 +11,7 @@ import app.linguistai.bmvp.model.profile.Hobby;
 import app.linguistai.bmvp.model.profile.UserHobby;
 
 @Data
+@Builder
 @AllArgsConstructor
 public class RUserProfile {
     private UUID id;
