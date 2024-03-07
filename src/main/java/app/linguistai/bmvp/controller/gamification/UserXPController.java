@@ -16,32 +16,17 @@ public class UserXPController {
     private final IXPService xpService;
 
     @GetMapping
-    public ResponseEntity<Object> getUserXPByEmail(@RequestHeader(Header.USER_EMAIL) String email) {
-        try {
-            return Response.create("Successfully fetched UserXP", HttpStatus.OK, xpService.getUserXP(email));
-        }
-        catch (Exception e1) {
-            return Response.create(e1.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Object> getUserXPByEmail(@RequestHeader(Header.USER_EMAIL) String email) throws Exception {
+        return Response.create("Successfully fetched UserXP", HttpStatus.OK, xpService.getUserXP(email));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Object> incrementUserXPLoginTest(@RequestHeader(Header.USER_EMAIL) String email) {
-        try {
-            return Response.create("Successfully fetched UserXP", HttpStatus.OK, xpService.increaseUserXP(email, XPAction.LOGIN));
-        }
-        catch (Exception e1) {
-            return Response.create(e1.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Object> incrementUserXPLoginTest(@RequestHeader(Header.USER_EMAIL) String email) throws Exception {
+        return Response.create("Successfully fetched UserXP", HttpStatus.OK, xpService.increaseUserXP(email, XPAction.LOGIN));
     }
 
     @PostMapping("/streak")
-    public ResponseEntity<Object> incrementUserXPStreakTest(@RequestHeader(Header.USER_EMAIL) String email) {
-        try {
-            return Response.create("Successfully fetched UserXP", HttpStatus.OK, xpService.increaseUserXP(email, XPAction.STREAK));
-        }
-        catch (Exception e1) {
-            return Response.create(e1.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Object> incrementUserXPStreakTest(@RequestHeader(Header.USER_EMAIL) String email) throws Exception {
+        return Response.create("Successfully fetched UserXP", HttpStatus.OK, xpService.increaseUserXP(email, XPAction.STREAK));
     }
 }

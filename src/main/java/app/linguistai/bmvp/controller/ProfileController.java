@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import app.linguistai.bmvp.consts.Header;
-import app.linguistai.bmvp.exception.ExceptionLogger;
 import app.linguistai.bmvp.request.QUserProfile;
 import app.linguistai.bmvp.response.RUserProfile;
 import app.linguistai.bmvp.response.Response;
@@ -29,24 +28,15 @@ public class ProfileController {
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> updateProfile(@Valid @RequestBody QUserProfile profile,
-        @RequestHeader(Header.USER_EMAIL) String email) {
-
-        try {
-            RUserProfile userProfile = profileService.updateUserProfile(email, profile);
-            return Response.create("Profile is updated", HttpStatus.OK, userProfile);
-        } catch (Exception e) {
-            return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
-        }        
+        @RequestHeader(Header.USER_EMAIL) String email) throws Exception {
+        RUserProfile userProfile = profileService.updateUserProfile(email, profile);
+        return Response.create("Profile is updated", HttpStatus.OK, userProfile);       
     }
 
     @GetMapping
-    public ResponseEntity<Object> getProfile(@RequestHeader(Header.USER_EMAIL) String email) {
-        try {
-            RUserProfile userProfile = profileService.getUserProfile(email);
-            return Response.create("OK", HttpStatus.OK, userProfile);
-        } catch (Exception e) {
-            return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
-        }        
+    public ResponseEntity<Object> getProfile(@RequestHeader(Header.USER_EMAIL) String email) throws Exception {
+        RUserProfile userProfile = profileService.getUserProfile(email);
+        return Response.create("OK", HttpStatus.OK, userProfile);        
     }
 
 }

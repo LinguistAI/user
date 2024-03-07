@@ -12,6 +12,7 @@ import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.PasswordNotMatchException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.exception.StreakException;
+import app.linguistai.bmvp.exception.TokenException;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,7 +81,7 @@ public class AccountService {
 
             return new RLoginUser(dbUser, accessToken, refreshToken);
         } catch (CustomException e2) {
-            log.error("User login failed for email {}", user.getEmail());
+            log.error("User login failed due to wrong email or password for email {}", user.getEmail());
             throw e2;
         } catch (Exception e2) {
             log.error("User login failed for email {}", user.getEmail(), e2);
@@ -219,7 +220,7 @@ public class AccountService {
             ResetToken resetToken = resetTokenRepository.findByUserAndResetCode(user, resetCode).orElseThrow(() -> new NotFoundException("Reset token", true));
 
             if (!isResetTokenValid(resetToken)) {
-                return false;
+                throw new TokenException("Invalid password reset token");
             }
 
             if (invalidate) {
@@ -237,6 +238,9 @@ public class AccountService {
                 log.error("Reset token for user with email {} with code {} not found.", email, resetCode);
             }
 
+            throw e;
+        } catch (TokenException e) {
+            log.error("Reset token is invalid for user with email {}.", email);
             throw e;
         } catch (Exception e) {
             log.error("Validate reset code failed for email {}", email, e);

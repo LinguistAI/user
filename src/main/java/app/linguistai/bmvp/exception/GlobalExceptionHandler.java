@@ -12,6 +12,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import app.linguistai.bmvp.response.Response;
 
@@ -19,12 +20,33 @@ import app.linguistai.bmvp.response.Response;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class GlobalExceptionHandler {
 
-    // Handle 404 Not Found (Endpoint not found)
-    @ExceptionHandler(NotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ResponseEntity<Object> handleNotFoundException(NotFoundException e) {
-        return Response.create("Endpoint not found", HttpStatus.NOT_FOUND);
+    @ExceptionHandler(LoginException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ResponseBody
+    public ResponseEntity<Object> handleLoginException(LoginException ex) {
+        return Response.create(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
+
+    @ExceptionHandler(SomethingWentWrongException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseBody
+    public ResponseEntity<Object> handleSomethingWentWrongException(SomethingWentWrongException ex) {
+        return Response.create(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    
+    @ExceptionHandler(CustomException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseBody
+    public ResponseEntity<Object> handleCustomException(CustomException ex) {
+        return Response.create(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    // // Handle 404 Not Found (Endpoint not found)
+    // @ExceptionHandler(NotFoundException.class)
+    // @ResponseStatus(HttpStatus.NOT_FOUND)
+    // public ResponseEntity<Object> handleNotFoundException(NotFoundException e) {
+    //     return Response.create("Endpoint not found", HttpStatus.NOT_FOUND);
+    // }
 
     // Handle 400 Bad Request (Invalid request body)
     @ExceptionHandler(MethodArgumentNotValidException.class)

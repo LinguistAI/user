@@ -42,7 +42,11 @@ public class FriendshipService {
             Friendship friendship = friendshipRepository.findByUserPair(dbUser1.getId(), user2Id).orElse(null);
 
             if (friendship != null) {
-                throw new AlreadyFoundException("Friendship or request", true);
+                if (friendship.getStatus() == FriendshipStatus.PENDING) {
+                    throw new AlreadyFoundException("Friendship request", true);
+                } else {
+                    throw new AlreadyFoundException("Friendship", true);
+                }                
             }
             
             LocalDateTime now = LocalDateTime.now();
@@ -64,7 +68,12 @@ public class FriendshipService {
             log.error("Friend request failed since user with email {} tried to send request to themselves", user1Email);
             throw e;
         } catch (AlreadyFoundException e) {
-            log.error("Friend request failed since request already exists between user with email {} and user with id {}", user1Email, user2Id);
+            if (e.getObject().equals("Friendship")) {
+                log.error("Friend request failed since friendship already exists between user with email {} and user with id {}", user1Email, user2Id);
+            } else {
+                log.error("Friend request failed since request already exists between user with email {} and user with id {}", user1Email, user2Id);
+            }
+            
             throw e;
         } catch (Exception e) {
             log.error("Friend request failed between user with email {} and user with id {}", user1Email, user2Id, e);
