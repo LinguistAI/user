@@ -4,8 +4,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import app.linguistai.bmvp.exception.AlreadyFoundException;
+import app.linguistai.bmvp.exception.CustomException;
 import app.linguistai.bmvp.exception.ExceptionLogger;
+import app.linguistai.bmvp.exception.LoginException;
 import app.linguistai.bmvp.exception.NotFoundException;
+import app.linguistai.bmvp.exception.PasswordNotMatchException;
+import app.linguistai.bmvp.exception.SomethingWentWrongException;
+import app.linguistai.bmvp.exception.StreakException;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,17 +53,13 @@ public class AccountService {
 
     public RLoginUser login(QUserLogin user) throws Exception {
         try {
-            User dbUser = accountRepository.findUserByEmail(user.getEmail()).orElse(null);
-
-            if (dbUser == null) {
-                throw new Exception("User is not found");
-            }
+            User dbUser = accountRepository.findUserByEmail(user.getEmail()).orElseThrow(() -> new LoginException());
 
             String hashedPassword = dbUser.getPassword();
             boolean passwordMatch = bCryptPasswordEncoder.matches(user.getPassword(), hashedPassword);
 
             if (!passwordMatch) {
-                throw new Exception("Passwords do not match");
+                throw new LoginException();
             }
 
             final UserDetails userDetails = jwtUserService.loadUserByUsername(user.getEmail());
@@ -71,15 +73,18 @@ public class AccountService {
             }
             catch (Exception e1) {
                 // Intentionally not thrown to not cause login exception for users without UserStreak
-                System.out.println(ExceptionLogger.log(e1));
+                System.out.println(ExceptionLogger.log(e1)); // TODO what is this
             }
 
-            log.info(String.format("User %s logged in.", dbUser.getId()));
+            log.info("User {} logged in.", dbUser.getId());
 
             return new RLoginUser(dbUser, accessToken, refreshToken);
-        } catch (Exception e2) {
-            System.out.println("login exception");
+        } catch (CustomException e2) {
+            log.error("User login failed for email {}", user.getEmail());
             throw e2;
+        } catch (Exception e2) {
+            log.error("User login failed for email {}", user.getEmail(), e2);
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -89,29 +94,24 @@ public class AccountService {
 
             final UserDetails userDetails = jwtUserService.loadUserByUsername(username);
             final String accessToken = jwtUtils.createAccessToken(userDetails);
-            return new RRefreshToken(accessToken);
 
+            return new RRefreshToken(accessToken);
         } catch (Exception e) {
-            System.out.println("refresh token exception");
-            throw e;
+            log.error("Error in generating new token with refresh token", e);
+            throw new SomethingWentWrongException();
         }
     }
 
     public boolean changePassword(String email, QChangePassword passwords) throws Exception {
         try {
-            User dbUser = accountRepository.findUserByEmail(email).orElse(null);
-
-            if (dbUser == null) {
-                throw new Exception("User is not found");
-            }
+            User dbUser = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException("User", true));
 
             String hashedPassword = dbUser.getPassword();
 
             boolean passwordMatch = bCryptPasswordEncoder.matches(passwords.getOldPassword(), hashedPassword);
 
             if (!passwordMatch) {
-                System.out.println("passwords does not match");
-                throw new Exception("pasword no match");
+                throw new PasswordNotMatchException();
             }
 
             // hash new password
@@ -120,12 +120,18 @@ public class AccountService {
             dbUser.setPassword(hashedNewPassword);
             accountRepository.updatePassword(hashedNewPassword, dbUser.getId());
 
-            log.info(String.format("User %s changed their password.", dbUser.getId()));
+            log.info("User {} changed their password.", dbUser.getId());
 
             return true;
-        } catch (Exception e) {
-            System.out.println("password change exception exception");
+        } catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
             throw e;
+        } catch (PasswordNotMatchException e) {
+            log.error("User password did not match for email {}", email);
+            throw e;
+        } catch (Exception e) {
+            log.error("Change password failed for email {}", email, e);
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -135,7 +141,7 @@ public class AccountService {
             boolean userExist = accountRepository.existsByEmail(requestUser.getEmail());
             
             if (userExist) {
-                throw new Exception("User already exists");
+                throw new AlreadyFoundException("User already exists with the provided email address. Please use a different email or sign in.");
             }
 
             // generate uuid and hash password if user does not exist in the system
@@ -146,14 +152,21 @@ public class AccountService {
 
             // Create UserStreak for the new user
             if (!userStreakService.createUserStreak(newUser)) {
-                throw new Exception("ERROR: Could not generate UserStreak for user with ID: [" + newUser.getId() + "]. Perhaps UserStreak already exists?");
+                throw new StreakException();
             }
 
-            log.info(String.format("User %s registered.", newUser.getId()));
+            log.info("User registered with email {}.", newUser.getId());
 
             return newUser;            
-        } catch (Exception e) {
+        } catch (AlreadyFoundException e) {
+            log.error("User register fail since email already exists for email {}", requestUser.getEmail());
             throw e;
+        } catch (StreakException e) {
+            log.error("Could not generate UserStreak for user with email {}.", requestUser.getEmail());
+            throw e;
+        } catch (Exception e) {
+            log.error("User register failed for email {}", requestUser.getEmail(), e);
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -176,11 +189,7 @@ public class AccountService {
 
     public ResetToken generateEmailToken(String email) throws Exception {
         try {
-            User user = accountRepository.findUserByEmail(email).orElse(null);
-
-            if (user == null) {
-                throw new NotFoundException("User with email [" + email + "] not found");
-            }
+            User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException("User", true));
 
             // invalidate previous reset tokens of user
             List<ResetToken> resetTokens = resetTokenRepository.findAllByUser(user);
@@ -191,26 +200,23 @@ public class AccountService {
             // create a new reset token
             ResetToken resetToken = new ResetToken(user);
 
-            log.info(String.format("Email token is generated for user %s.", user.getId()));
+            log.info("Email token is generated for user with email {}.", email);
             
             return resetTokenRepository.save(resetToken);
-        } catch (Exception e) {
-            System.out.println("Email token generation exception for email");
+        } catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
             throw e;
+        } catch (Exception e) {
+            log.error("Generate email token failed for email {}", email, e);
+            throw new SomethingWentWrongException();
         }
     }
 
     public boolean validateResetCode(String email, String resetCode, boolean invalidate) throws Exception {
         try {
-            User user = accountRepository.findUserByEmail(email).orElse(null);
-            if (user == null) {
-                throw new NotFoundException("User with email [" + email + "] not found");
-            }
+            User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException("User", true));
 
-            ResetToken resetToken = resetTokenRepository.findByUserAndResetCode(user, resetCode).orElse(null);
-            if (resetToken == null) {
-                throw new NotFoundException("Reset token for user with email [" + user.getEmail() + "] with code [" + resetCode + "] not found.");
-            }
+            ResetToken resetToken = resetTokenRepository.findByUserAndResetCode(user, resetCode).orElseThrow(() -> new NotFoundException("Reset token", true));
 
             if (!isResetTokenValid(resetToken)) {
                 return false;
@@ -221,12 +227,20 @@ public class AccountService {
                 resetTokenRepository.save(resetToken);
             }
 
-            log.info(String.format("Reset code is validated for usre %s.", user.getId()));
+            log.info("Reset code is validated for usre {}", user.getId());
 
             return true;
-        } catch (Exception e) {
-            System.out.println("Password reset token validation exception");
+        } catch (NotFoundException e) {
+            if (e.getObject().equals("User")) {
+                log.error("User is not found for email {}", email);
+            } else {
+                log.error("Reset token for user with email {} with code  not found.", email, resetCode);
+            }
+
             throw e;
+        } catch (Exception e) {
+            log.error("Validate reset code failed for email {}", email, e);
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -235,19 +249,23 @@ public class AccountService {
     }
 
     public boolean setPassword(String email, String password) throws Exception {
-        User user = accountRepository.findUserByEmail(email).orElse(null);
+        try {
+            User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException("User", true));
 
-        if (user == null) {
-            throw new NotFoundException("User with email [" + email + "] not found");
+            String hashedPassword = encodePassword(password);
+            user.setPassword(hashedPassword);
+
+            int rowsAffected = accountRepository.updatePassword(hashedPassword, user.getId());
+
+            log.info("New password is set for user %s.", user.getId());
+
+            return rowsAffected > 0;
+        } catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        } catch (Exception e) {
+            log.error("Set password failed for email {}", email, e);
+            throw new SomethingWentWrongException();
         }
-
-        String hashedPassword = encodePassword(password);
-        user.setPassword(hashedPassword);
-
-        int rowsAffected = accountRepository.updatePassword(hashedPassword, user.getId());
-
-        log.info(String.format("New password is set for user %s.", user.getId()));
-
-        return rowsAffected > 0;
     }
 }
