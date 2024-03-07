@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 
 import app.linguistai.bmvp.exception.ExceptionLogger;
-import app.linguistai.bmvp.exception.Logger;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
@@ -15,7 +14,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import app.linguistai.bmvp.model.User;
-import app.linguistai.bmvp.model.enums.LogType;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.request.QChangePassword;
 import app.linguistai.bmvp.request.QUser;
@@ -27,7 +25,9 @@ import app.linguistai.bmvp.security.JWTUtils;
 import app.linguistai.bmvp.service.gamification.UserStreakService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class AccountService {
@@ -74,7 +74,7 @@ public class AccountService {
                 System.out.println(ExceptionLogger.log(e1));
             }
 
-            Logger.log(String.format("User %s logged in.", dbUser.getId()), LogType.INFO);
+            log.info(String.format("User %s logged in.", dbUser.getId()));
 
             return new RLoginUser(dbUser, accessToken, refreshToken);
         } catch (Exception e2) {
@@ -120,7 +120,7 @@ public class AccountService {
             dbUser.setPassword(hashedNewPassword);
             accountRepository.updatePassword(hashedNewPassword, dbUser.getId());
 
-            Logger.log(String.format("User %s changed their password.", dbUser.getId()), LogType.INFO);
+            log.info(String.format("User %s changed their password.", dbUser.getId()));
 
             return true;
         } catch (Exception e) {
@@ -149,7 +149,7 @@ public class AccountService {
                 throw new Exception("ERROR: Could not generate UserStreak for user with ID: [" + newUser.getId() + "]. Perhaps UserStreak already exists?");
             }
 
-            Logger.log(String.format("User %s registered.", newUser.getId()), LogType.INFO);
+            log.info(String.format("User %s registered.", newUser.getId()));
 
             return newUser;            
         } catch (Exception e) {
@@ -191,7 +191,7 @@ public class AccountService {
             // create a new reset token
             ResetToken resetToken = new ResetToken(user);
 
-            Logger.log(String.format("Email token is generated for user %s.", user.getId()), LogType.INFO);
+            log.info(String.format("Email token is generated for user %s.", user.getId()));
             
             return resetTokenRepository.save(resetToken);
         } catch (Exception e) {
@@ -221,7 +221,7 @@ public class AccountService {
                 resetTokenRepository.save(resetToken);
             }
 
-            Logger.log(String.format("Reset code is validated for usre %s.", user.getId()), LogType.INFO);
+            log.info(String.format("Reset code is validated for usre %s.", user.getId()));
 
             return true;
         } catch (Exception e) {
@@ -246,7 +246,7 @@ public class AccountService {
 
         int rowsAffected = accountRepository.updatePassword(hashedPassword, user.getId());
 
-        Logger.log(String.format("New password is set for user %s.", user.getId()), LogType.INFO);
+        log.info(String.format("New password is set for user %s.", user.getId()));
 
         return rowsAffected > 0;
     }

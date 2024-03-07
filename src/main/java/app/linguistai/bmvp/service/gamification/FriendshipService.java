@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import app.linguistai.bmvp.exception.Logger;
 import app.linguistai.bmvp.model.Friendship;
 import app.linguistai.bmvp.repository.gamification.IFriendshipRepository;
 
@@ -13,10 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.enums.FriendshipStatus;
-import app.linguistai.bmvp.model.enums.LogType;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class FriendshipService {
@@ -46,7 +46,7 @@ public class FriendshipService {
             // save friendship to the db with pending status
             friendship = friendshipRepository.save(new Friendship(dbUser1, dbUser2, now, FriendshipStatus.PENDING));
 
-            Logger.log(String.format("Friend request is sent from %s to %s", dbUser1.getId(), dbUser2.getId()), LogType.INFO);
+            log.info(String.format("Friend request is sent from %s to %s", dbUser1.getId(), dbUser2.getId()));
 
             return friendship;
         } catch (Exception e) {
@@ -65,7 +65,7 @@ public class FriendshipService {
 
             List<Friendship> friends = friendshipRepository.findByUser1OrUser2AndStatus(dbUser1.getId(), FriendshipStatus.ACCEPTED);
 
-            Logger.log(String.format("User %s viewed their friends.", dbUser1.getId()), LogType.INFO);
+            log.info(String.format("User %s viewed their friends.", dbUser1.getId()));
 
             return friends;
         } catch (Exception e) {
@@ -84,7 +84,7 @@ public class FriendshipService {
 
             List<Friendship> friends = friendshipRepository.findByUser1OrUser2AndStatus(dbUser1.getId(), FriendshipStatus.PENDING);
 
-            Logger.log(String.format("User %s viewed their friend requests.", dbUser1.getId()), LogType.INFO);
+            log.info(String.format("User %s viewed their friend requests.", dbUser1.getId()));
 
             return friends;
         } catch (Exception e) {
@@ -120,7 +120,7 @@ public class FriendshipService {
             // save friendship to the db with pending status
             friendship = friendshipRepository.save(friendship);
 
-            Logger.log(String.format("User %s accepted friend request of %s.", dbUser2.getId(), dbUser1.getId()), LogType.INFO);
+            log.info(String.format("User %s accepted friend request of %s.", dbUser2.getId(), dbUser1.getId()));
 
             return friendship;
         } catch (Exception e) {
@@ -151,7 +151,7 @@ public class FriendshipService {
 
             friendshipRepository.delete(friendship);
 
-            Logger.log(String.format("User %s rejected friend request of %s.", dbUser2.getId(), dbUser1.getId()), LogType.INFO);
+            log.info(String.format("User %s rejected friend request of %s.", dbUser2.getId(), dbUser1.getId()));
 
             return friendship;
         } catch (Exception e) {
@@ -181,7 +181,7 @@ public class FriendshipService {
 
             friendshipRepository.delete(friendship);
 
-            Logger.log(String.format("User %s removed their friend %s.", dbUser1.getId(), dbUser2.getId()), LogType.INFO);
+            log.info(String.format("User %s removed their friend %s.", dbUser1.getId(), dbUser2.getId()));
 
             return friendship;
         } catch (Exception e) {

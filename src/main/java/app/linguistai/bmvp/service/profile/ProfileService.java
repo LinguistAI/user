@@ -8,9 +8,7 @@ import app.linguistai.bmvp.repository.IUserHobbyRepository;
 import org.springframework.stereotype.Service;
 
 import app.linguistai.bmvp.consts.EnglishLevels;
-import app.linguistai.bmvp.exception.Logger;
 import app.linguistai.bmvp.model.User;
-import app.linguistai.bmvp.model.enums.LogType;
 import app.linguistai.bmvp.model.profile.UserProfile;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.IProfileRepository;
@@ -18,7 +16,9 @@ import app.linguistai.bmvp.request.QUserProfile;
 import app.linguistai.bmvp.response.RUserProfile;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ProfileService {
@@ -76,7 +76,7 @@ public class ProfileService {
 
             List<String> userHobbies = hobbyService.updateUserHobby(dbUser, profile.getHobbies());
 
-            Logger.log(String.format("User %s updated their profile.", dbUser.getId()), LogType.INFO);
+            log.info(String.format("User %s updated their profile.", dbUser.getId()));
 
             return new RUserProfile(dbUser.getId(), dbProfile.getName(), dbProfile.getBirhtDate(), dbProfile.getEnglishLevel(), userHobbies);
         } catch (Exception e) {
@@ -105,7 +105,7 @@ public class ProfileService {
                 return new RUserProfile(dbUser.getId(), "", null, EnglishLevels.DONT_KNOW, hobbies);
             }
 
-            Logger.log(String.format("User %s viewed their profile.", dbUser.getId()), LogType.INFO);
+            log.info(String.format("User %s viewed their profile.", dbUser.getId()));
 
             return new RUserProfile(dbProfile.getUserId(), dbProfile.getName(), dbProfile.getBirhtDate(), dbProfile.getEnglishLevel(), hobbies);
         } catch (Exception e) {
