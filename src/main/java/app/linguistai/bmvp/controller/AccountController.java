@@ -54,7 +54,7 @@ public class AccountController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "register")
     public ResponseEntity<Object> register(@Valid @RequestBody QUser userInfo) {
         try {
-            User ids = accountService.addUser(userInfo);
+            RLoginUser ids = accountService.addUser(userInfo);
             return Response.create("Account is created", HttpStatus.OK, ids);
         } catch (Exception e) {
             e.printStackTrace();
