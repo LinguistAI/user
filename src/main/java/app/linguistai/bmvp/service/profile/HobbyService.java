@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 
 import org.springframework.stereotype.Service;
 
+import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.profile.Hobby;
 import app.linguistai.bmvp.model.profile.UserHobby;
@@ -39,13 +40,12 @@ public class HobbyService {
 
             List<String> savedHobbies = userHobbyRepository.findHobbiesByUserId(user.getId());
 
-            log.info(String.format("User %s updated their hobbies.", user.getId()));
+            log.info("User {} updated their hobbies.", user.getId());
 
             return savedHobbies;
         } catch (Exception e) {
-            System.out.println("Something is wrong in update user hobbies");
-            e.printStackTrace();
-            throw e;
+            log.error("Update user hobby failed for email {}", user.getEmail(), e);
+            throw e; // this method is only called profile service and its error is handled there
         }
     }
 

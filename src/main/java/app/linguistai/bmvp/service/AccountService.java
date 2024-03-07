@@ -227,14 +227,14 @@ public class AccountService {
                 resetTokenRepository.save(resetToken);
             }
 
-            log.info("Reset code is validated for usre {}", user.getId());
+            log.info("Reset code is validated for user {}", user.getId());
 
             return true;
         } catch (NotFoundException e) {
             if (e.getObject().equals("User")) {
                 log.error("User is not found for email {}", email);
             } else {
-                log.error("Reset token for user with email {} with code  not found.", email, resetCode);
+                log.error("Reset token for user with email {} with code {} not found.", email, resetCode);
             }
 
             throw e;
