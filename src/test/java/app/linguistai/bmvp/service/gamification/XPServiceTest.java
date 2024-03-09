@@ -9,7 +9,6 @@ import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.gamification.IUserXPRepository;
 import app.linguistai.bmvp.request.QUser;
 import app.linguistai.bmvp.response.gamification.RUserXP;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -38,17 +37,12 @@ class XPServiceTest {
     @InjectMocks
     private XPService xpServiceUnderTest;
 
-    @BeforeEach
-    void setUp() {
-        xpServiceUnderTest = new XPService(mockXp, mockAccountRepository, mockXpRepository);
-    }
-
     @Test
     void testCreateUserXP() throws Exception {
         // Setup
         final RUserXP expectedResult = RUserXP.builder()
             .username("username")
-            .experience(0L)
+            .currentExperience(0L)
             .level(1L)
             .build();
 
@@ -109,7 +103,7 @@ class XPServiceTest {
         // Setup
         final RUserXP expectedResult = RUserXP.builder()
             .username("username")
-            .experience(0L)
+            .currentExperience(0L)
             .level(1L)
             .build();
 
@@ -190,7 +184,7 @@ class XPServiceTest {
         // Setup
         final RUserXP expectedResult = RUserXP.builder()
             .username("username")
-            .experience(0L)
+            .currentExperience(0L)
             .level(1L)
             .build();
 
