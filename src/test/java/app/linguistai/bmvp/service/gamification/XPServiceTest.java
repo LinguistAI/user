@@ -43,6 +43,7 @@ class XPServiceTest {
         final RUserXP expectedResult = RUserXP.builder()
             .username("username")
             .currentExperience(0L)
+            .totalExperienceToNextLevel(30L)
             .level(1L)
             .build();
 
@@ -71,6 +72,8 @@ class XPServiceTest {
         entity.setUser(user2);
         entity.setExperience(0L);
         when(mockXpRepository.save(any(UserXP.class))).thenReturn(userXP);
+        when(mockXp.getBaseLevel()).thenReturn(30L);
+        when(mockXp.getLevelCoefficient()).thenReturn(2L);
 
         // Run the test
         final RUserXP result = xpServiceUnderTest.createUserXP("email");
@@ -104,6 +107,7 @@ class XPServiceTest {
         final RUserXP expectedResult = RUserXP.builder()
             .username("username")
             .currentExperience(0L)
+            .totalExperienceToNextLevel(30L)
             .level(1L)
             .build();
 
@@ -135,6 +139,8 @@ class XPServiceTest {
         entity.setUser(user2);
         entity.setExperience(0L);
         when(mockXpRepository.save(any(UserXP.class))).thenReturn(userXP);
+        when(mockXp.getBaseLevel()).thenReturn(30L);
+        when(mockXp.getLevelCoefficient()).thenReturn(2L);
 
         // Run the test
         final RUserXP result = xpServiceUnderTest.increaseUserXP("email", XPAction.MESSAGE);
@@ -185,6 +191,7 @@ class XPServiceTest {
         final RUserXP expectedResult = RUserXP.builder()
             .username("username")
             .currentExperience(0L)
+            .totalExperienceToNextLevel(30L)
             .level(1L)
             .build();
 
@@ -216,6 +223,8 @@ class XPServiceTest {
         entity.setUser(user2);
         entity.setExperience(0L);
         when(mockXpRepository.save(any(UserXP.class))).thenReturn(userXP);
+        when(mockXp.getBaseLevel()).thenReturn(30L);
+        when(mockXp.getLevelCoefficient()).thenReturn(2L);
 
         // Run the test
         final RUserXP result = xpServiceUnderTest.getUserXP("email");
