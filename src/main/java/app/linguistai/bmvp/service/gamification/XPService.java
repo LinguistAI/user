@@ -140,11 +140,18 @@ public class XPService implements IXPService {
         return 1L;
     }
 
+    /**
+     * Calculates the current level of the user.
+     * Each level requires more xp to progress to based on the following equation:
+     * xp required to progress to next level = baseLevel * (levelCoefficient)^(currentLevel - 1)
+     * @param points current xp of user
+     * @return current level of user
+     */
     private Long determineProceduralLevel(Long points) {
-        Long baseLevel = xp.getBaseLevel();
-        Long levelCoefficient = xp.getLevelCoefficient();
-        Long level = 1L;
-        Double xpThreshold = Double.valueOf(baseLevel);
+        Long baseLevel = xp.getBaseLevel(); // level required to progress from level 1 to level 2
+        Long levelCoefficient = xp.getLevelCoefficient(); // the coefficient for increasing required xp after each level
+        Long level = 1L; // current level
+        Double xpThreshold = Double.valueOf(baseLevel); // converted to double for multiplication
 
         while (points >= xpThreshold) {
             level++;
