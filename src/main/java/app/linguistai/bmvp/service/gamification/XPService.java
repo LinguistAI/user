@@ -6,6 +6,7 @@ import app.linguistai.bmvp.exception.UserXPNotFoundException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.enums.XPAction;
 import app.linguistai.bmvp.model.gamification.UserXP;
+import app.linguistai.bmvp.model.gamification.UserXPWithLevel;
 import app.linguistai.bmvp.model.gamification.UserXPWithUser;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.gamification.IUserXPRepository;
@@ -41,10 +42,15 @@ public class XPService implements IXPService {
             // Create and save new UserXP
             UserXP saved = xpRepository.save(toSave);
 
+            UserXPWithLevel levelInfo = this.determineProceduralLevel(saved.getExperience());
+            Long userLevel = levelInfo.level();
+            Long xpToNextLevel = levelInfo.totalExperienceToNextLevel();
+
             return RUserXP.builder()
                 .username(user.getUsername())
-                .experience(saved.getExperience())
-                .level(1L)
+                .currentExperience(saved.getExperience())
+                .totalExperienceToNextLevel(xpToNextLevel)
+                .level(userLevel)
                 .build();
         }
         catch (Exception e1) {
@@ -64,10 +70,15 @@ public class XPService implements IXPService {
 
             UserXP updated = xpRepository.save(userXP);
 
+            UserXPWithLevel levelInfo = this.determineProceduralLevel(updated.getExperience());
+            Long userLevel = levelInfo.level();
+            Long xpToNextLevel = levelInfo.totalExperienceToNextLevel();
+
             return RUserXP.builder()
                 .username(user.getUsername())
-                .experience(updated.getExperience())
-                .level(this.determineProceduralLevel(updated.getExperience()))
+                .currentExperience(updated.getExperience())
+                .totalExperienceToNextLevel(xpToNextLevel)
+                .level(userLevel)
                 .build();
         }
         catch (UserXPNotFoundException e1) {
@@ -86,10 +97,15 @@ public class XPService implements IXPService {
             UserXP userXP = info.userXP();
             User user = info.user();
 
+            UserXPWithLevel levelInfo = this.determineProceduralLevel(userXP.getExperience());
+            Long userLevel = levelInfo.level();
+            Long xpToNextLevel = levelInfo.totalExperienceToNextLevel();
+
             return RUserXP.builder()
                 .username(user.getUsername())
-                .experience(userXP.getExperience())
-                .level(this.determineProceduralLevel(userXP.getExperience()))
+                .currentExperience(userXP.getExperience())
+                .totalExperienceToNextLevel(xpToNextLevel)
+                .level(userLevel)
                 .build();
         }
         catch (UserXPNotFoundException e1) {
@@ -147,7 +163,7 @@ public class XPService implements IXPService {
      * @param points current xp of user
      * @return current level of user
      */
-    private Long determineProceduralLevel(Long points) {
+    private UserXPWithLevel determineProceduralLevel(Long points) {
         Long baseLevel = xp.getBaseLevel(); // level required to progress from level 1 to level 2
         Long levelCoefficient = xp.getLevelCoefficient(); // the coefficient for increasing required xp after each level
         Long level = 1L; // current level
@@ -158,7 +174,7 @@ public class XPService implements IXPService {
             xpThreshold *= levelCoefficient;
         }
 
-        return level;
+        return new UserXPWithLevel(level, points, xpThreshold.longValue());
     }
 
 }

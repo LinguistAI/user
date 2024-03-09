@@ -9,7 +9,6 @@ import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.gamification.IUserXPRepository;
 import app.linguistai.bmvp.request.QUser;
 import app.linguistai.bmvp.response.gamification.RUserXP;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -38,17 +37,13 @@ class XPServiceTest {
     @InjectMocks
     private XPService xpServiceUnderTest;
 
-    @BeforeEach
-    void setUp() {
-        xpServiceUnderTest = new XPService(mockXp, mockAccountRepository, mockXpRepository);
-    }
-
     @Test
     void testCreateUserXP() throws Exception {
         // Setup
         final RUserXP expectedResult = RUserXP.builder()
             .username("username")
-            .experience(0L)
+            .currentExperience(0L)
+            .totalExperienceToNextLevel(30L)
             .level(1L)
             .build();
 
@@ -77,6 +72,8 @@ class XPServiceTest {
         entity.setUser(user2);
         entity.setExperience(0L);
         when(mockXpRepository.save(any(UserXP.class))).thenReturn(userXP);
+        when(mockXp.getBaseLevel()).thenReturn(30L);
+        when(mockXp.getLevelCoefficient()).thenReturn(2L);
 
         // Run the test
         final RUserXP result = xpServiceUnderTest.createUserXP("email");
@@ -109,7 +106,8 @@ class XPServiceTest {
         // Setup
         final RUserXP expectedResult = RUserXP.builder()
             .username("username")
-            .experience(0L)
+            .currentExperience(0L)
+            .totalExperienceToNextLevel(30L)
             .level(1L)
             .build();
 
@@ -141,6 +139,8 @@ class XPServiceTest {
         entity.setUser(user2);
         entity.setExperience(0L);
         when(mockXpRepository.save(any(UserXP.class))).thenReturn(userXP);
+        when(mockXp.getBaseLevel()).thenReturn(30L);
+        when(mockXp.getLevelCoefficient()).thenReturn(2L);
 
         // Run the test
         final RUserXP result = xpServiceUnderTest.increaseUserXP("email", XPAction.MESSAGE);
@@ -190,7 +190,8 @@ class XPServiceTest {
         // Setup
         final RUserXP expectedResult = RUserXP.builder()
             .username("username")
-            .experience(0L)
+            .currentExperience(0L)
+            .totalExperienceToNextLevel(30L)
             .level(1L)
             .build();
 
@@ -222,6 +223,8 @@ class XPServiceTest {
         entity.setUser(user2);
         entity.setExperience(0L);
         when(mockXpRepository.save(any(UserXP.class))).thenReturn(userXP);
+        when(mockXp.getBaseLevel()).thenReturn(30L);
+        when(mockXp.getLevelCoefficient()).thenReturn(2L);
 
         // Run the test
         final RUserXP result = xpServiceUnderTest.getUserXP("email");
