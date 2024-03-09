@@ -10,6 +10,10 @@ public class XPConfiguration {
     private Map<String, Integer> values;
     private Map<String, Integer> levels;
 
+    private Long baselevel;
+
+    private Long levelcoefficient;
+
     public int getXP(String action) {
         return values.getOrDefault(action, 0);
     }
@@ -26,11 +30,27 @@ public class XPConfiguration {
         return levels;
     }
 
+    public Long getBaseLevel() {
+        return baselevel;
+    }
+
+    public Long getLevelCoefficient() {
+        return levelcoefficient;
+    }
+
     public void setValues(Map<String, Integer> values) {
         this.values = values;
     }
 
     public void setLevels(Map<String, Integer> levels) {
         this.levels = levels;
+    }
+
+    public void setBaseLevel(Long baselevel) {
+        this.baselevel = baselevel;
+    }
+
+    public void setLevelCoefficient(Long levelcoefficient) {
+        this.levelcoefficient = levelcoefficient;
     }
 }

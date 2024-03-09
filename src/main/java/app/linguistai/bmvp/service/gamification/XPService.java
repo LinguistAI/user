@@ -67,7 +67,7 @@ public class XPService implements IXPService {
             return RUserXP.builder()
                 .username(user.getUsername())
                 .experience(updated.getExperience())
-                .level(this.determineLevel(updated.getExperience()))
+                .level(this.determineProceduralLevel(updated.getExperience()))
                 .build();
         }
         catch (UserXPNotFoundException e1) {
@@ -89,7 +89,7 @@ public class XPService implements IXPService {
             return RUserXP.builder()
                 .username(user.getUsername())
                 .experience(userXP.getExperience())
-                .level(this.determineLevel(userXP.getExperience()))
+                .level(this.determineProceduralLevel(userXP.getExperience()))
                 .build();
         }
         catch (UserXPNotFoundException e1) {
@@ -119,7 +119,8 @@ public class XPService implements IXPService {
         return new UserXPWithUser(user, userXP);
     }
 
-    private Long determineLevel(Long points) throws Exception {
+    @Deprecated
+    private Long determineHardcodedLevel(Long points) throws Exception {
         TreeMap<Long, String> sortedLevels = new TreeMap<>();
         xp.getLevels().forEach((key, value) -> sortedLevels.put(value.longValue(), key));
 
@@ -138,5 +139,27 @@ public class XPService implements IXPService {
 
         return 1L;
     }
+
+    /**
+     * Calculates the current level of the user.
+     * Each level requires more xp to progress to based on the following equation:
+     * xp required to progress to next level = baseLevel * (levelCoefficient)^(currentLevel - 1)
+     * @param points current xp of user
+     * @return current level of user
+     */
+    private Long determineProceduralLevel(Long points) {
+        Long baseLevel = xp.getBaseLevel(); // level required to progress from level 1 to level 2
+        Long levelCoefficient = xp.getLevelCoefficient(); // the coefficient for increasing required xp after each level
+        Long level = 1L; // current level
+        Double xpThreshold = Double.valueOf(baseLevel); // converted to double for multiplication
+
+        while (points >= xpThreshold) {
+            level++;
+            xpThreshold *= levelCoefficient;
+        }
+
+        return level;
+    }
+
 }
 

@@ -5,6 +5,7 @@ import java.util.List;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.request.QResetPassword;
 import app.linguistai.bmvp.request.QResetPasswordVerification;
+import app.linguistai.bmvp.request.QUser;
 import app.linguistai.bmvp.request.QResetPasswordSave;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -51,9 +52,9 @@ public class AccountController {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "register")
-    public ResponseEntity<Object> register(@Valid @RequestBody User userInfo) {
+    public ResponseEntity<Object> register(@Valid @RequestBody QUser userInfo) {
         try {
-            User ids = accountService.addUser(userInfo);
+            RLoginUser ids = accountService.addUser(userInfo);
             return Response.create("Account is created", HttpStatus.OK, ids);
         } catch (Exception e) {
             e.printStackTrace();
