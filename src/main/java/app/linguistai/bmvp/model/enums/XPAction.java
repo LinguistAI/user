@@ -1,8 +1,12 @@
 package app.linguistai.bmvp.model.enums;
 
 public enum XPAction {
-    LOGIN("login"),
-    STREAK("streak");
+    MESSAGE("message"),
+    STREAK("streak"),
+    ACHIEVEMENT("achievement"),
+    QUEST("quest"),
+    FRIEND("friend"),
+    CELEBRATE("celebrate");
 
     private final String key;
 
