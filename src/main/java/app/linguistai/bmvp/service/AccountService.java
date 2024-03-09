@@ -124,7 +124,7 @@ public class AccountService {
     }
 
     @Transactional
-    public User addUser(QUser requestUser) throws Exception {
+    public RLoginUser addUser(QUser requestUser) throws Exception {
         try {
             boolean userExist = accountRepository.existsByEmail(requestUser.getEmail());
             
@@ -142,7 +142,12 @@ public class AccountService {
                     throw new Exception("ERROR: Could not generate UserStreak for user with ID: [" + newUser.getId() + "]. Perhaps UserStreak already exists?");
                 }
 
-                return newUser;
+                // create access and resset tokens so that user does not have to login after registering
+                final UserDetails userDetails = jwtUserService.loadUserByUsername(newUser.getEmail());
+                final String accessToken = jwtUtils.createAccessToken(userDetails);
+                final String refreshToken = jwtUtils.createRefreshToken(userDetails);
+
+                return new RLoginUser(newUser, accessToken, refreshToken);
             }
         } catch (Exception e) {
             throw e;
