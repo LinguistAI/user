@@ -9,6 +9,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class RUserXP {
     private String username;
-    private Long experience;
+    private Long currentExperience;
+    private Long totalExperienceToNextLevel;
     private Long level;
 }
