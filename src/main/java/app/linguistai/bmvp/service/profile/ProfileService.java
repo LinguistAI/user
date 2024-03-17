@@ -80,12 +80,12 @@ public class ProfileService {
                 UserProfile.builder()
                     .user(dbUser)
                     .name(profile.getName())
-                    .birhtDate(profile.getBirhtDate())
+                    .birthDate(profile.getBirthDate())
                     .englishLevel(profile.getEnglishLevel())
                     .build());
             } else {
                 dbProfile.setName(profile.getName());
-                dbProfile.setBirhtDate(profile.getBirhtDate());
+                dbProfile.setBirthDate(profile.getBirthDate());
                 dbProfile.setEnglishLevel(profile.getEnglishLevel());
 
                 dbProfile = profileRepository.save(dbProfile);
@@ -96,7 +96,7 @@ public class ProfileService {
             RUserProfile userProfile = RUserProfile.builder()
                 .id(dbUser.getId())
                 .name(dbProfile.getName())
-                .birhtDate(dbProfile.getBirhtDate())
+                .birthDate(dbProfile.getBirthDate())
                 .englishLevel(dbProfile.getEnglishLevel())
                 .hobbies(userHobbies)
                 .build();
@@ -153,7 +153,7 @@ public class ProfileService {
                 return new RUserProfile(dbUser.getId(), "", null, EnglishLevels.DONT_KNOW, hobbies);
             }
 
-            return new RUserProfile(dbProfile.getUserId(), dbProfile.getName(), dbProfile.getBirhtDate(), dbProfile.getEnglishLevel(), hobbies);
+            return new RUserProfile(dbProfile.getUserId(), dbProfile.getName(), dbProfile.getBirthDate(), dbProfile.getEnglishLevel(), hobbies);
         } catch (Exception e) {
             System.out.println("Something is wrong in get profile");
             e.printStackTrace();
