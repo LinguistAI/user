@@ -1,7 +1,7 @@
 package app.linguistai.bmvp.consts;
 
 public enum EnglishLevels {
-    DONT_KNOW(0, "Don't Knowww"),
+    DONT_KNOW(0, "Don't Know"),
     BEGINNER(1, "Beginner"),
     INTERMEDIATE(2, "Intermediate"),
     ADVANCED(3, "Advanced"),
