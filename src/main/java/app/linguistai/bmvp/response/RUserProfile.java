@@ -15,7 +15,7 @@ import app.linguistai.bmvp.consts.EnglishLevels;
 public class RUserProfile {
     private UUID id;
     private String name;
-    private LocalDate birhtDate;
+    private LocalDate birthDate;
     private EnglishLevels englishLevel;
     private List<String> hobbies;
 }

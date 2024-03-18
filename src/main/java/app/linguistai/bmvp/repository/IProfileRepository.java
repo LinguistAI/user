@@ -18,6 +18,6 @@ public interface IProfileRepository extends JpaRepository<UserProfile, UUID> {
 
     @Transactional
     @Modifying
-    @Query("UPDATE UserProfile u SET u.name = :name, u.birhtDate = :birthDate, u.englishLevel = :englishLevel WHERE u.id = :id")
+    @Query("UPDATE UserProfile u SET u.name = :name, u.birthDate = :birthDate, u.englishLevel = :englishLevel WHERE u.id = :id")
     UserProfile updateUserProfile(UUID id, String name, LocalDate birthDate, Integer englishLevel);
 }

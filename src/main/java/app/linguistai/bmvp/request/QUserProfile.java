@@ -14,7 +14,7 @@ public class QUserProfile {
     private String name;
 
     @NotNull
-    private LocalDate birhtDate;
+    private LocalDate birthDate;
 
     @NotNull
     private EnglishLevels englishLevel;
