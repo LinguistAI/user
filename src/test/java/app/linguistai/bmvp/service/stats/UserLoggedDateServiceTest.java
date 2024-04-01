@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -74,7 +75,7 @@ public class UserLoggedDateServiceTest {
 		loggedDates.add(new UserLoggedDate(user, date3));
 
 		when(userLoggedDateRepository.findByUserEmailOrderByLoggedDateDesc(user.getEmail()))
-				.thenReturn(Optional.of(loggedDates));
+				.thenReturn(loggedDates);
 
 		RUserLoggedDate returnedUserLoggedDates = userLoggedDateService.getLoggedDates(user.getEmail(), "desc", null);
 
@@ -139,9 +140,9 @@ public class UserLoggedDateServiceTest {
 		loggedDates.add(new UserLoggedDate(user, date2));
 
 		when(userLoggedDateRepository.findByUserEmailOrderByLoggedDateAsc(user.getEmail()))
-				.thenReturn(Optional.of(loggedDates.stream()
+				.thenReturn(loggedDates.stream()
 						.sorted(Comparator.comparing(UserLoggedDate::getLoggedDate))
-						.collect(Collectors.toList())));
+						.collect(Collectors.toList()));
 
 		RUserLoggedDate returnedUserLoggedDates = userLoggedDateService.getLoggedDates(user.getEmail(), sort, null);
 
@@ -154,4 +155,17 @@ public class UserLoggedDateServiceTest {
 		assertEquals(loggedDates.size(), returnedDates.size());
 	}
 
+	@DisplayName("When getting logged dates for a user who never logged in, verify empty list is returned")
+	@Test
+	void whenGettingLoggedDatesForUserNeverLoggedInThenVerifyEmptyList() throws NotFoundException {
+		User user = new User();
+		user.setEmail("test@test.com");
+		user.setId(UUID.randomUUID());
+
+		when(userLoggedDateRepository.findByUserEmailOrderByLoggedDateDesc(user.getEmail())).thenReturn(Collections.emptyList());
+
+		RUserLoggedDate rUserLoggedDate = userLoggedDateService.getLoggedDates(user.getEmail(), null, null);
+
+		assertTrue(rUserLoggedDate.getLoggedDates().isEmpty());
+	}
 }

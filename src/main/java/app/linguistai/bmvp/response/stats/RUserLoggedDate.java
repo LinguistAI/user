@@ -3,7 +3,6 @@ package app.linguistai.bmvp.response.stats;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-
 import java.sql.Date;
 import java.util.List;
 

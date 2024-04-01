@@ -79,7 +79,7 @@ public class AccountService {
 
             return new RLoginUser(dbUser, accessToken, refreshToken);
         } catch (Exception e2) {
-            System.out.println("login exception");
+            System.out.println("Login exception");
             throw e2;
         }
     }
@@ -93,7 +93,7 @@ public class AccountService {
             return new RRefreshToken(accessToken);
 
         } catch (Exception e) {
-            System.out.println("refresh token exception");
+            System.out.println("Refresh token exception");
             throw e;
         }
     }
@@ -111,8 +111,8 @@ public class AccountService {
             boolean passwordMatch = bCryptPasswordEncoder.matches(passwords.getOldPassword(), hashedPassword);
 
             if (!passwordMatch) {
-                System.out.println("Passwords does not match");
-                throw new Exception("Passwords does not match");
+                System.out.println("Passwords do not match");
+                throw new Exception("Passwords do not match");
             }
 
             // hash new password
@@ -123,7 +123,7 @@ public class AccountService {
 
             return true;
         } catch (Exception e) {
-            System.out.println("password change exception exception");
+            System.out.println("Password change exception exception");
             throw e;
         }
     }

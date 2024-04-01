@@ -10,10 +10,8 @@ import app.linguistai.bmvp.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.sql.Date;
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -25,6 +23,7 @@ public class UserLoggedDateService {
 	private final IUserLoggedDateRepository userLoggedDateRepository;
 	private final IAccountRepository accountRepository;
 
+	@Transactional
 	public RUserLoggedDate getLoggedDates(String email, String sort, Integer numDays) {
 		// Validate numDays
 		if (numDays != null && numDays < 0) {
@@ -38,18 +37,17 @@ public class UserLoggedDateService {
 		}
 
 		// Retrieve user logged dates based on sort order and startDate
-		Optional<List<UserLoggedDate>> optionalUserLoggedDates;
+		List<UserLoggedDate> loggedDates;
 		if ("asc".equalsIgnoreCase(sort)) {
-			optionalUserLoggedDates = (startDate != null) ?
+			loggedDates = (startDate != null) ?
 					userLoggedDateRepository.findByUserEmailAndLoggedDateGreaterThanEqualOrderByLoggedDateAsc(email, startDate) :
 					userLoggedDateRepository.findByUserEmailOrderByLoggedDateAsc(email);
 		} else { // Default is descending order
-			optionalUserLoggedDates = (startDate != null) ?
+			loggedDates = (startDate != null) ?
 					userLoggedDateRepository.findByUserEmailAndLoggedDateGreaterThanEqualOrderByLoggedDateDesc(email, startDate) :
 					userLoggedDateRepository.findByUserEmailOrderByLoggedDateDesc(email);
 		}
 
-		List<UserLoggedDate> loggedDates = optionalUserLoggedDates.orElse(Collections.emptyList());
 		List<Date> dateList = loggedDates.stream()
 				.map(UserLoggedDate::getLoggedDate)
 				.collect(Collectors.toList());
