@@ -14,17 +14,17 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("stats")
 public class UserLoggedDateController {
 
-	private final UserLoggedDateService loggedDateService;
+    private final UserLoggedDateService loggedDateService;
 
-	@GetMapping("/logged-date")
-	public ResponseEntity<Object> getLoggedDate(@RequestHeader(Header.USER_EMAIL) String email,
-	                                            @RequestParam(required = false, defaultValue = "desc") String sort,
-	                                            @RequestParam(required = false) Integer daysLimit) {
-		try {
-			RUserLoggedDate loggedDates = loggedDateService.getLoggedDates(email, sort, daysLimit);
-			return Response.create("Successfully fetched logged dates", HttpStatus.OK, loggedDates);
-		} catch (Exception e) {
-			return Response.create("Could not fetch logged dates", HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-	}
+    @GetMapping("/logged-date")
+    public ResponseEntity<Object> getLoggedDate(@RequestHeader(Header.USER_EMAIL) String email,
+                                                @RequestParam(required = false, defaultValue = "desc") String sort,
+                                                @RequestParam(required = false) Integer daysLimit) {
+        try {
+            RUserLoggedDate loggedDates = loggedDateService.getLoggedDates(email, sort, daysLimit);
+            return Response.create("Successfully fetched logged dates", HttpStatus.OK, loggedDates);
+        } catch (Exception e) {
+            return Response.create("Could not fetch logged dates", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

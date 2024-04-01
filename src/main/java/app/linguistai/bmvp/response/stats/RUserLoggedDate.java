@@ -10,5 +10,5 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class RUserLoggedDate {
-	private List<Date> loggedDates;
+    private List<Date> loggedDates;
 }

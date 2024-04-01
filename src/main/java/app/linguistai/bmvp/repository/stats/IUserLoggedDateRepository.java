@@ -11,9 +11,9 @@ import java.util.Optional;
 
 @Repository
 public interface IUserLoggedDateRepository extends JpaRepository<UserLoggedDate, UserLoggedDateId> {
-	Optional<UserLoggedDate> findByUserAndLoggedDate(User user, Date loggedDate);
-	List<UserLoggedDate> findByUserEmailOrderByLoggedDateDesc(String email);
-	List<UserLoggedDate> findByUserEmailOrderByLoggedDateAsc(String email);
-	List<UserLoggedDate> findByUserEmailAndLoggedDateGreaterThanEqualOrderByLoggedDateDesc(String email, Date startDate);
-	List<UserLoggedDate> findByUserEmailAndLoggedDateGreaterThanEqualOrderByLoggedDateAsc(String email, Date startDate);
+    Optional<UserLoggedDate> findByUserAndLoggedDate(User user, Date loggedDate);
+    List<UserLoggedDate> findByUserEmailOrderByLoggedDateDesc(String email);
+    List<UserLoggedDate> findByUserEmailOrderByLoggedDateAsc(String email);
+    List<UserLoggedDate> findByUserEmailAndLoggedDateGreaterThanEqualOrderByLoggedDateDesc(String email, Date startDate);
+    List<UserLoggedDate> findByUserEmailAndLoggedDateGreaterThanEqualOrderByLoggedDateAsc(String email, Date startDate);
 }

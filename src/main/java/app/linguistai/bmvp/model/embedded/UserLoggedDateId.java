@@ -13,6 +13,6 @@ import java.sql.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserLoggedDateId implements Serializable {
-	private User user;
-	private Date loggedDate;
+    private User user;
+    private Date loggedDate;
 }

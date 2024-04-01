@@ -17,15 +17,15 @@ import java.sql.Date;
 @AllArgsConstructor
 @IdClass(UserLoggedDateId.class)
 public class UserLoggedDate {
-	@Id
-	@NotNull
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
-	@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-	private User user;
+    @Id
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private User user;
 
-	@Id
-	@NotNull
-	@Column(name = "logged_date", nullable = false)
-	private Date loggedDate;
+    @Id
+    @NotNull
+    @Column(name = "logged_date", nullable = false)
+    private Date loggedDate;
 }
