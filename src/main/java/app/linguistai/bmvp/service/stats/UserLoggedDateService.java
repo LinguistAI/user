@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import app.linguistai.bmvp.consts.Parameter;
 
 @RequiredArgsConstructor
 @Service
@@ -38,7 +39,7 @@ public class UserLoggedDateService {
 
         // Retrieve user logged dates based on sort order and startDate
         List<UserLoggedDate> loggedDates;
-        if ("asc".equalsIgnoreCase(sort)) {
+        if (Parameter.ASCENDING_ORDER.equalsIgnoreCase(sort)) {
             loggedDates = (startDate != null) ?
                     userLoggedDateRepository.findByUserEmailAndLoggedDateGreaterThanEqualOrderByLoggedDateAsc(email, startDate) :
                     userLoggedDateRepository.findByUserEmailOrderByLoggedDateAsc(email);

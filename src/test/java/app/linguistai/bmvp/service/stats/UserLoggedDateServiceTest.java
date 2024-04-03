@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import app.linguistai.bmvp.consts.Parameter;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.stats.UserLoggedDate;
@@ -124,7 +125,7 @@ public class UserLoggedDateServiceTest {
     @Test
     @DisplayName("When fetching logged dates in ascending order, verify sorting")
     void testGetLoggedDatesAscendingOrderWithNullDaysLimit() {
-        String sort = "asc";
+        String sort = Parameter.ASCENDING_ORDER;
 
         User user = new User();
         user.setEmail("test@test.com");
