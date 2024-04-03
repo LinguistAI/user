@@ -2,10 +2,12 @@ package app.linguistai.bmvp.request.gamification;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
-public class QQuestSendMessage {
+@Getter
+@Setter
+public class QQuestSendMessage extends QQuestTypeAction {
     @NotBlank
     private String message;
 
