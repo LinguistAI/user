@@ -44,11 +44,11 @@ public class UserProfile {
 
     @NotNull
     @Column(name = "birthdate", nullable = true)
-    private LocalDate birhtDate;
+    private LocalDate birthDate;
 
     @NotNull
     @Column(name = "english_level", nullable = true)
-    private Integer englishLevel;
+    private EnglishLevels englishLevel;
 
     public UserProfile() {
         this.englishLevel = EnglishLevels.DONT_KNOW;

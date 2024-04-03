@@ -1,26 +1,35 @@
 package app.linguistai.bmvp.consts;
 
-public class EnglishLevels {
-    public static final int DONT_KNOW = 0;
-    public static final int BEGINNER = 1;
-    public static final int INTERMEDIATE = 2;
-    public static final int ADVANCED = 3;
-    public static final int NATIVE = 4;
+public enum EnglishLevels {
+    DONT_KNOW(0, "Don't Know"),
+    BEGINNER(1, "Beginner"),
+    INTERMEDIATE(2, "Intermediate"),
+    ADVANCED(3, "Advanced"),
+    NATIVE(4, "Native"),
+    UNKNOWN(-1, "Unknown");
 
-    public static String getLevelString(int level) {
-        switch (level) {
-            case BEGINNER:
-                return "Beginner";
-            case INTERMEDIATE:
-                return "Intermediate";
-            case ADVANCED:
-                return "Advanced";
-            case NATIVE:
-                return "Native";
-            case DONT_KNOW:
-                return "Don't Know";
-            default:
-                return "Unknown";
+    private final int level;
+    private final String levelString;
+
+    EnglishLevels(int level, String levelString) {
+        this.level = level;
+        this.levelString = levelString;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public String getLevelString() {
+        return levelString;
+    }
+
+    public static EnglishLevels fromInt(int level) {
+        for (EnglishLevels englishLevel : EnglishLevels.values()) {
+            if (englishLevel.level == level) {
+                return englishLevel;
+            }
         }
+        return UNKNOWN;
     }
 }
