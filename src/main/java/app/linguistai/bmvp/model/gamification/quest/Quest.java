@@ -2,14 +2,12 @@ package app.linguistai.bmvp.model.gamification.quest;
 
 import app.linguistai.bmvp.model.gamification.quest.types.QuestCompletionCriteria;
 import app.linguistai.bmvp.utils.QuestCompletionCriteriaConverter;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+
+import java.util.Date;
 
 @Data
 @Entity
@@ -19,8 +17,8 @@ import lombok.*;
 @AllArgsConstructor
 public class Quest {
     @Id
-    @NotNull
     @Column(name = "quest_id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long questId;
 
     @NotBlank
@@ -42,6 +40,10 @@ public class Quest {
     @NotNull
     @Column(name = "reward", nullable = false)
     private Long reward;
+
+    @NotNull
+    @Column(name = "assigned_date", nullable = false)
+    private Date assignedDate;
 
     @NotNull
     @Convert(converter = QuestCompletionCriteriaConverter.class)
