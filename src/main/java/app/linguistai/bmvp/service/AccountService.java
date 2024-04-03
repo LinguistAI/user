@@ -8,6 +8,7 @@ import app.linguistai.bmvp.exception.ExceptionLogger;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
+import app.linguistai.bmvp.service.stats.UserLoggedDateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -42,6 +43,7 @@ public class AccountService {
     private final JWTUtils jwtUtils;
 
     private final UserStreakService userStreakService;
+    private final UserLoggedDateService userLoggedDateService;
 
     public RLoginUser login(QUserLogin user) throws Exception {
         try {
@@ -72,9 +74,12 @@ public class AccountService {
                 System.out.println(ExceptionLogger.log(e1));
             }
 
+            // Add the current date as a logged date
+            userLoggedDateService.addLoggedDateByEmailAndDate(dbUser.getEmail(), new Date());
+
             return new RLoginUser(dbUser, accessToken, refreshToken);
         } catch (Exception e2) {
-            System.out.println("login exception");
+            System.out.println("Login exception");
             throw e2;
         }
     }
@@ -88,7 +93,7 @@ public class AccountService {
             return new RRefreshToken(accessToken);
 
         } catch (Exception e) {
-            System.out.println("refresh token exception");
+            System.out.println("Refresh token exception");
             throw e;
         }
     }
@@ -106,8 +111,8 @@ public class AccountService {
             boolean passwordMatch = bCryptPasswordEncoder.matches(passwords.getOldPassword(), hashedPassword);
 
             if (!passwordMatch) {
-                System.out.println("passwords does not match");
-                throw new Exception("pasword no match");
+                System.out.println("Passwords do not match");
+                throw new Exception("Passwords do not match");
             }
 
             // hash new password
@@ -118,7 +123,7 @@ public class AccountService {
 
             return true;
         } catch (Exception e) {
-            System.out.println("password change exception exception");
+            System.out.println("Password change exception exception");
             throw e;
         }
     }
@@ -131,7 +136,7 @@ public class AccountService {
             if (userExist) {
                 throw new Exception("User already exists");
             } else {
-                // generate uuid and hash password if user does not exist in the system
+                // Generate uuid and hash password if user does not exist in the system
                 requestUser.setId(UUID.randomUUID());
                 requestUser.setPassword(encodePassword(requestUser.getPassword()));
 
@@ -142,7 +147,7 @@ public class AccountService {
                     throw new Exception("ERROR: Could not generate UserStreak for user with ID: [" + newUser.getId() + "]. Perhaps UserStreak already exists?");
                 }
 
-                // create access and resset tokens so that user does not have to login after registering
+                // Create access and reset tokens so that user does not have to log in after registering
                 final UserDetails userDetails = jwtUserService.loadUserByUsername(newUser.getEmail());
                 final String accessToken = jwtUtils.createAccessToken(userDetails);
                 final String refreshToken = jwtUtils.createRefreshToken(userDetails);
