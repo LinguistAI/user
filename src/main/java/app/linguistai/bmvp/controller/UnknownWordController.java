@@ -171,4 +171,13 @@ public class UnknownWordController {
             return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/lists/stats")
+    public ResponseEntity<Object> getListStats(@RequestHeader(Header.USER_EMAIL) String email) {
+        try {
+            return Response.create("Successfully retrieved statistics for all word lists.", HttpStatus.OK, unknownWordService.getAllListStats(email));
+        } catch (Exception e) {
+            return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

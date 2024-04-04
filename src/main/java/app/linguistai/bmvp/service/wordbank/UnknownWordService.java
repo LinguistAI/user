@@ -428,19 +428,33 @@ public class UnknownWordService implements IUnknownWordService {
         List<UnknownWord> words = wordRepository.findByOwnerListListId(listId);
 
         for (UnknownWord word : words) {
-            switch (word.getConfidence()) {
-                // Learning
-                case LOWEST, LOW -> stats.setLearning(stats.getLearning() + 1L);
-
-                // Reviewing
-                case MODERATE, HIGH -> stats.setReviewing(stats.getReviewing() + 1L);
-
-                // Mastered
-                case HIGHEST -> stats.setMastered(stats.getMastered() + 1L);
-            }
+            updateStatsBasedOnConfidence(stats, word.getConfidence(), 1L);
         }
 
         return stats;
+    }
+
+    @Transactional
+    public RUnknownWordListsStats getAllListStats(String email) throws Exception {
+        User user = accountRepository.findUserByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+
+        ListStats stats = new ListStats(0L, 0L, 0L);
+
+        // Get word counts by confidence level
+        List<Object[]> wordCountsByConfidenceLevel = wordRepository.countWordsByConfidenceLevel(user.getId());
+
+        // Update list stats based on confidence levels
+        for (Object[] result : wordCountsByConfidenceLevel) {
+            ConfidenceEnum confidence = (ConfidenceEnum) result[0];
+            Long count = (Long) result[1];
+
+            updateStatsBasedOnConfidence(stats, confidence, count);
+        }
+
+        return RUnknownWordListsStats.builder()
+                .listStats(stats)
+                .build();
     }
 
     private ConfidenceEnum increaseConfidence(ConfidenceEnum currentConfidence) {
@@ -453,5 +467,18 @@ public class UnknownWordService implements IUnknownWordService {
         return (currentConfidence.ordinal() > 0)
             ? ConfidenceEnum.values()[currentConfidence.ordinal() - 1]
             : currentConfidence;
+    }
+
+    private void updateStatsBasedOnConfidence(ListStats stats, ConfidenceEnum confidence, Long count) {
+        switch (confidence) {
+            // Learning
+            case LOWEST, LOW -> stats.setLearning(stats.getLearning() + count);
+
+            // Reviewing
+            case MODERATE, HIGH -> stats.setReviewing(stats.getReviewing() + count);
+
+            // Mastered
+            case HIGHEST -> stats.setMastered(stats.getMastered() + count);
+        }
     }
 }
