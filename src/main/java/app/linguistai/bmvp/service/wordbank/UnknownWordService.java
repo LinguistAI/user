@@ -9,6 +9,7 @@ import app.linguistai.bmvp.model.wordbank.UnknownWord;
 import app.linguistai.bmvp.model.wordbank.UnknownWordList;
 import app.linguistai.bmvp.model.wordbank.UnknownWordListWithUser;
 import app.linguistai.bmvp.repository.IAccountRepository;
+import app.linguistai.bmvp.model.wordbank.IConfidenceCount;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordListRepository;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordRepository;
 import app.linguistai.bmvp.request.wordbank.QAddUnknownWord;
@@ -428,7 +429,7 @@ public class UnknownWordService implements IUnknownWordService {
         List<UnknownWord> words = wordRepository.findByOwnerListListId(listId);
 
         for (UnknownWord word : words) {
-            updateStatsBasedOnConfidence(stats, word.getConfidence(), 1L);
+            stats = updateStatsBasedOnConfidence(stats, word.getConfidence(), 1L);
         }
 
         return stats;
@@ -442,14 +443,14 @@ public class UnknownWordService implements IUnknownWordService {
         ListStats stats = new ListStats(0L, 0L, 0L);
 
         // Get word counts by confidence level
-        List<Object[]> wordCountsByConfidenceLevel = wordRepository.countWordsByConfidenceLevel(user.getId());
+        List<IConfidenceCount> wordCountsByConfidenceLevel = wordRepository.countWordsByConfidenceLevel(user.getId());
 
         // Update list stats based on confidence levels
-        for (Object[] result : wordCountsByConfidenceLevel) {
-            ConfidenceEnum confidence = (ConfidenceEnum) result[0];
-            Long count = (Long) result[1];
+        for (IConfidenceCount confidenceCount : wordCountsByConfidenceLevel) {
+            ConfidenceEnum confidence = confidenceCount.getConfidence();
+            Long count = confidenceCount.getCount();
 
-            updateStatsBasedOnConfidence(stats, confidence, count);
+            stats = updateStatsBasedOnConfidence(stats, confidence, count);
         }
 
         return RUnknownWordListsStats.builder()
@@ -469,7 +470,7 @@ public class UnknownWordService implements IUnknownWordService {
             : currentConfidence;
     }
 
-    private void updateStatsBasedOnConfidence(ListStats stats, ConfidenceEnum confidence, Long count) {
+    private ListStats updateStatsBasedOnConfidence(ListStats stats, ConfidenceEnum confidence, Long count) {
         switch (confidence) {
             // Learning
             case LOWEST, LOW -> stats.setLearning(stats.getLearning() + count);
@@ -480,5 +481,7 @@ public class UnknownWordService implements IUnknownWordService {
             // Mastered
             case HIGHEST -> stats.setMastered(stats.getMastered() + count);
         }
+
+        return stats;
     }
 }
