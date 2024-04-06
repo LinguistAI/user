@@ -12,6 +12,7 @@ import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordListRepository;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordRepository;
 import app.linguistai.bmvp.request.wordbank.QAddUnknownWord;
+import app.linguistai.bmvp.request.wordbank.QPredefinedWordList;
 import app.linguistai.bmvp.request.wordbank.QUnknownWordList;
 import app.linguistai.bmvp.response.wordbank.*;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import static app.linguistai.bmvp.utils.FileUtils.readPredefinedWordListFromYamlFile;
 
 @RequiredArgsConstructor
 @Service
@@ -340,6 +342,60 @@ public class UnknownWordService implements IUnknownWordService {
         catch (Exception e1) {
             System.out.println("ERROR: Could not delete list.");
             throw e1;
+        }
+    }
+
+    @Transactional
+    public ROwnerUnknownWordList addPredefinedWordList(String wordListYamlFile, String email) throws Exception {
+        try {
+            User user = accountRepository.findUserByEmail(email)
+                    .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+
+            QPredefinedWordList predefinedWordList = readPredefinedWordListFromYamlFile(wordListYamlFile);
+
+            // Create new unknown word list
+            UnknownWordList wordList = UnknownWordList.builder()
+                    .listId(UUID.randomUUID())
+                    .user(user)
+                    .title(predefinedWordList.getTitle())
+                    .description(predefinedWordList.getDescription())
+                    .isActive(predefinedWordList.getIsActive())
+                    .isFavorite(predefinedWordList.getIsFavorite())
+                    .isPinned(predefinedWordList.getIsPinned())
+                    .imageUrl(predefinedWordList.getImageUrl())
+                    .build();
+
+            UnknownWordList savedList = listRepository.save(wordList);
+
+            // Add predefined words
+            List<UnknownWord> unknownWords = new ArrayList<>();
+            for (String word : predefinedWordList.getWords()) {
+                UnknownWord newWord = UnknownWord.builder()
+                        .ownerList(savedList)
+                        .word(word)
+                        .confidence(ConfidenceEnum.LOWEST)
+                        .build();
+                unknownWords.add(newWord);
+            }
+
+            // Bulk insert all words
+            wordRepository.saveAll(unknownWords);
+
+            return ROwnerUnknownWordList.builder()
+                    .listId(wordList.getListId())
+                    .ownerUsername(user.getUsername())
+                    .title(wordList.getTitle())
+                    .description(wordList.getDescription())
+                    .isActive(wordList.getIsActive())
+                    .isFavorite(wordList.getIsFavorite())
+                    .isPinned(wordList.getIsPinned())
+                    .imageUrl(wordList.getImageUrl())
+                    .listStats(this.getListStats(wordList.getListId()))
+                    .build();
+
+        } catch (Exception e) {
+            System.out.println("ERROR: Could not add predefined word list.");
+            throw e;
         }
     }
 

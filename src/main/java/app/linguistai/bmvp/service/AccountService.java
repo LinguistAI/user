@@ -16,6 +16,7 @@ import app.linguistai.bmvp.exception.TokenException;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
 import app.linguistai.bmvp.service.stats.UserLoggedDateService;
+import app.linguistai.bmvp.service.wordbank.UnknownWordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -34,6 +35,7 @@ import app.linguistai.bmvp.service.gamification.UserStreakService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import static app.linguistai.bmvp.consts.FilePaths.DEFAULT_WORD_LIST_FILE;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -53,6 +55,7 @@ public class AccountService {
 
     private final UserStreakService userStreakService;
     private final UserLoggedDateService userLoggedDateService;
+    private final UnknownWordService unknownWordService;
 
     public RLoginUser login(QUserLogin user) throws Exception {
         try {
@@ -160,6 +163,8 @@ public class AccountService {
             if (!userStreakService.createUserStreak(newUser)) {
                 throw new StreakException();
             }
+          
+            unknownWordService.addPredefinedWordList(DEFAULT_WORD_LIST_FILE, newUser.getEmail());
           
             // Create access and reset tokens so that user does not have to log in after registering
             final UserDetails userDetails = jwtUserService.loadUserByUsername(newUser.getEmail());
