@@ -76,7 +76,7 @@ public class AccountService {
             }
             catch (Exception e1) {
                 // Intentionally not thrown to not cause login exception for users without UserStreak
-                System.out.println(ExceptionLogger.log(e1)); // TODO what is this
+                System.out.println(ExceptionLogger.log(e1));
             }
 
             log.info("User {} logged in.", dbUser.getId());
@@ -110,7 +110,7 @@ public class AccountService {
 
     public boolean changePassword(String email, QChangePassword passwords) throws Exception {
         try {
-            User dbUser = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException("User", true));
+            User dbUser = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
 
             String hashedPassword = dbUser.getPassword();
 
@@ -190,7 +190,7 @@ public class AccountService {
         }
     }
 
-    private String encodePassword(String plainPassword) { // TODO no need for this method
+    private String encodePassword(String plainPassword) {
         try {
             return bCryptPasswordEncoder.encode(plainPassword);
         } catch (Exception e) {
@@ -200,7 +200,7 @@ public class AccountService {
 
     public ResetToken generateEmailToken(String email) throws Exception {
         try {
-            User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException("User", true));
+            User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
 
             // invalidate previous reset tokens of user
             List<ResetToken> resetTokens = resetTokenRepository.findAllByUser(user);
@@ -225,7 +225,7 @@ public class AccountService {
 
     public boolean validateResetCode(String email, String resetCode, boolean invalidate) throws Exception {
         try {
-            User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException("User", true));
+            User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
 
             ResetToken resetToken = resetTokenRepository.findByUserAndResetCode(user, resetCode).orElseThrow(() -> new NotFoundException("Reset token", true));
 
@@ -242,7 +242,7 @@ public class AccountService {
 
             return true;
         } catch (NotFoundException e) {
-            if (e.getObject().equals("User")) {
+            if (e.getObject().equals(User.class.getSimpleName())) {
                 log.error("User is not found for email {}", email);
             } else {
                 log.error("Reset token for user with email {} with code {} not found.", email, resetCode);

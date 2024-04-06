@@ -28,14 +28,16 @@ public class FriendshipService {
     private final IAccountRepository accountRepository;
     private final IFriendshipRepository friendshipRepository;
 
+    private final String REQ_USER_STR = "Requested user";
+
     @Transactional
     public Friendship sendFriendRequest(String user1Email, UUID user2Id) throws Exception {
         try {
             User dbUser1 = accountRepository.findUserByEmail(user1Email).orElseThrow(() -> new NotFoundException("User", true));
-            User dbUser2 = accountRepository.findUserById(user2Id).orElseThrow(() -> new NotFoundException("Requested user", true));
+            User dbUser2 = accountRepository.findUserById(user2Id).orElseThrow(() -> new NotFoundException(REQ_USER_STR, true));
 
             if (dbUser1.getId().equals(dbUser2.getId())) {
-                throw new FriendException("You cannot send friend request to yourself");
+                throw new FriendException("You cannot send a friend request to yourself");
             }
 
             // check if friend request exists
@@ -45,7 +47,7 @@ public class FriendshipService {
                 if (friendship.getStatus() == FriendshipStatus.PENDING) {
                     throw new AlreadyFoundException("Friendship request", true);
                 } else {
-                    throw new AlreadyFoundException("Friendship", true);
+                    throw new AlreadyFoundException(friendship.getStatus().toString(), true);
                 }                
             }
             
@@ -68,10 +70,10 @@ public class FriendshipService {
             log.error("Friend request failed since user with email {} tried to send request to themselves", user1Email);
             throw e;
         } catch (AlreadyFoundException e) {
-            if (e.getObject().equals("Friendship")) {
-                log.error("Friend request failed since friendship already exists between user with email {} and user with id {}", user1Email, user2Id);
-            } else {
+            if (e.getObject().equals(FriendshipStatus.PENDING.toString())) {
                 log.error("Friend request failed since request already exists between user with email {} and user with id {}", user1Email, user2Id);
+            } else {
+                log.error("Friend request failed since friendship already exists between user with email {} and user with id {}", user1Email, user2Id);
             }
             
             throw e;
@@ -101,7 +103,7 @@ public class FriendshipService {
 
     public List<Friendship> getFriendRequests(String userEmail) throws Exception {
         try {
-            User dbUser1 = accountRepository.findUserByEmail(userEmail).orElseThrow(() -> new NotFoundException("User", true));
+            User dbUser1 = accountRepository.findUserByEmail(userEmail).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
 
             List<Friendship> friends = friendshipRepository.findByUser1OrUser2AndStatus(dbUser1.getId(), FriendshipStatus.PENDING);
 
@@ -121,10 +123,10 @@ public class FriendshipService {
     public Friendship acceptRequest(String user2Email, UUID user1Id) throws Exception {
         try {
             // the user who sends the request is saved to the db as user1
-            User dbUser1 = accountRepository.findUserById(user1Id).orElseThrow(() -> new NotFoundException("User", true));
-            User dbUser2 = accountRepository.findUserByEmail(user2Email).orElseThrow(() -> new NotFoundException("Requested user", true));
+            User dbUser1 = accountRepository.findUserById(user1Id).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
+            User dbUser2 = accountRepository.findUserByEmail(user2Email).orElseThrow(() -> new NotFoundException(REQ_USER_STR, true));
 
-            Friendship friendship = friendshipRepository.findByUser1IdAndUser2IdAndStatus(dbUser1.getId(), dbUser2.getId(), FriendshipStatus.PENDING).orElseThrow(() -> new NotFoundException("Friendship", true));
+            Friendship friendship = friendshipRepository.findByUser1IdAndUser2IdAndStatus(dbUser1.getId(), dbUser2.getId(), FriendshipStatus.PENDING).orElseThrow(() -> new NotFoundException(Friendship.class.getSimpleName(), true));
 
             friendship.setStatus(FriendshipStatus.ACCEPTED);
 
@@ -138,11 +140,11 @@ public class FriendshipService {
 
             return friendship;
         } catch (NotFoundException e) {
-            if (e.getObject().equals("User")) {
+            if (e.getObject().equals(User.class.getSimpleName())) {
                 log.error("Accept friend request failed since user does not exists for id {}", user1Id);
-            } else if (e.getObject().equals("Requested user")) {
+            } else if (e.getObject().equals(REQ_USER_STR)) {
                 log.error("Accept friend request failed since requested user does not exists for email {}", user2Email);
-            } else if (e.getObject().equals("Friendship")) {
+            } else if (e.getObject().equals(Friendship.class.getSimpleName())) {
                 log.error("Accept friend request failed since friendship request does not exist between users {} and {}", user1Id, user2Email);
             }
 
@@ -159,7 +161,7 @@ public class FriendshipService {
         try {
             // the user who sends the request is saved to the db as user1
             User dbUser1 = accountRepository.findUserById(user1Id).orElseThrow(() -> new NotFoundException("User", true));
-            User dbUser2 = accountRepository.findUserByEmail(user2Email).orElseThrow(() -> new NotFoundException("Requested user", true));
+            User dbUser2 = accountRepository.findUserByEmail(user2Email).orElseThrow(() -> new NotFoundException(REQ_USER_STR, true));
 
             Friendship friendship = friendshipRepository
                                     .findByUserPairAndStatus(dbUser1.getId(), dbUser2.getId(), FriendshipStatus.PENDING)
@@ -171,11 +173,11 @@ public class FriendshipService {
 
             return friendship;
         } catch (NotFoundException e) {
-            if (e.getObject().equals("User")) {
+            if (e.getObject().equals(User.class.getSimpleName())) {
                 log.error("Reject friend request failed since user does not exists for id {}", user1Id);
-            } else if (e.getObject().equals("Requested user")) {
+            } else if (e.getObject().equals(REQ_USER_STR)) {
                 log.error("Reject friend request failed since requested user does not exists for email {}", user2Email);
-            } else if (e.getObject().equals("Friendship")) {
+            } else if (e.getObject().equals(Friendship.class.getSimpleName())) {
                 log.error("Reject friend request failed since friendship request does not exist between users {} and {}", user1Id, user2Email);
             }
 
@@ -191,7 +193,7 @@ public class FriendshipService {
         try {
             // the user who sends the request is saved to the db as user1
             User dbUser1 = accountRepository.findUserById(user1Id).orElseThrow(() -> new NotFoundException("User", true));
-            User dbUser2 = accountRepository.findUserByEmail(user2Email).orElseThrow(() -> new NotFoundException("Requested user", true));
+            User dbUser2 = accountRepository.findUserByEmail(user2Email).orElseThrow(() -> new NotFoundException(REQ_USER_STR, true));
 
             Friendship friendship = friendshipRepository
                                     .findByUserPairAndStatus(dbUser1.getId(), dbUser2.getId(), FriendshipStatus.ACCEPTED)
@@ -203,11 +205,11 @@ public class FriendshipService {
 
             return friendship;
         } catch (NotFoundException e) {
-            if (e.getObject().equals("User")) {
+            if (e.getObject().equals(User.class.getSimpleName())) {
                 log.error("Remove friend failed since user does not exists for id {}", user1Id);
-            } else if (e.getObject().equals("Requested user")) {
+            } else if (e.getObject().equals(REQ_USER_STR)) {
                 log.error("Remove friend failed since requested user does not exists for email {}", user2Email);
-            } else if (e.getObject().equals("Friendship")) {
+            } else if (e.getObject().equals(Friendship.class.getSimpleName())) {
                 log.error("Remove friend failed since friendship request does not exist between users {} and {}", user1Id, user2Email);
             }
 

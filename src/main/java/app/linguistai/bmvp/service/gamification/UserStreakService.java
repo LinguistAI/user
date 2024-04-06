@@ -14,6 +14,7 @@ import app.linguistai.bmvp.response.RUserStreak;
 import org.springframework.stereotype.Service;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
+import app.linguistai.bmvp.exception.StreakException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.gamification.UserStreak;
 import app.linguistai.bmvp.repository.gamification.IUserStreakRepository;
@@ -46,7 +47,7 @@ public class UserStreakService {
             Date streakTime = DateUtils.convertSqlDateToUtilDate(rUserStreak.getLastLogin());
 
             if (streakTime == null) {
-                throw new NotFoundException("StreakTime", true);
+                throw new StreakException();
             }
 
             LocalDate lastLoginLocalDate = streakTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -56,7 +57,7 @@ public class UserStreakService {
             UserStreak userStreak = userStreakRepository.findByUserId(rUserStreak.getUserId())
                 .orElseThrow(() -> new NotFoundException("User streak is not found"));
 
-            log.info("User streak is checked for user with email {}.",  rUserStreak.getUsername());
+            log.info("User streak is checked for user with username {}.",  rUserStreak.getUsername());
 
             return switch ((int) daysDifference) {
                 // if (daysDifference == 0), Do nothing. Maybe later add hello again message?
@@ -72,16 +73,14 @@ public class UserStreakService {
                 // Streak must be reset (edge case, if last login is after current time) Streak must be reset
                 default -> resetUserStreak(userStreak);
             };
-        } catch (NotFoundException e) {
-            if (e.getObject().equals("StreakTime")) {
-                log.error("StreakTime is null for email {}", rUserStreak.getUsername());
-            } else  {
-                log.error("User streak is not found for email {}", rUserStreak.getUsername());
-            }
-            
+        } catch (NotFoundException e) {            
+            log.error("User streak is not found for username {}", rUserStreak.getUsername());            
+            throw e;
+        } catch (StreakException e) {            
+            log.error("Streak time is null for username {}", rUserStreak.getUsername());            
             throw e;
         } catch (Exception e) {
-            log.error("Check user streak for update fail for email {}", rUserStreak.getUsername(), e);
+            log.error("Check user streak for update fail for username {}", rUserStreak.getUsername(), e);
             throw new SomethingWentWrongException();
         }
     }

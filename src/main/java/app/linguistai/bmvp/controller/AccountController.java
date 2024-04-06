@@ -48,7 +48,7 @@ public class AccountController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "register")
     public ResponseEntity<Object> register(@Valid @RequestBody QUser userInfo) throws Exception {
-        User ids = accountService.addUser(userInfo);
+        RLoginUser ids = accountService.addUser(userInfo);
         return Response.create("Account is created", HttpStatus.OK, ids);
     }
 
@@ -97,11 +97,31 @@ public class AccountController {
 
     @PostMapping("/validate-reset")
     public ResponseEntity<Object> validateResetPassword(@Valid @RequestBody QResetPasswordVerification verificationInfo) {
-        return Response.create("Validated password reset token", HttpStatus.OK);
+        try {
+            boolean tokenValid = accountService.validateResetCode(verificationInfo.getEmail(), verificationInfo.getResetCode(), false);
+            if (!tokenValid) {
+                return Response.create("Invalid password reset token", HttpStatus.BAD_REQUEST);
+            }
+            return Response.create("Validated password reset token", HttpStatus.OK);
+        } catch (Exception e) {
+            return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/reset-password")
     public ResponseEntity<Object> saveResetPassword(@Valid @RequestBody QResetPasswordSave passwordInfo) {
-        return Response.create("Password is changed", HttpStatus.OK);
+        try {
+            boolean tokenValid = accountService.validateResetCode(passwordInfo.getEmail(), passwordInfo.getResetCode(), true);
+            if (!tokenValid) {
+                return Response.create("Invalid password reset token", HttpStatus.BAD_REQUEST);
+            }
+            boolean passwordChanged = accountService.setPassword(passwordInfo.getEmail(), passwordInfo.getNewPassword());
+            if (!passwordChanged) {
+                return Response.create("Failed to change the password", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            return Response.create("Password is changed", HttpStatus.OK);
+        } catch (Exception e) {
+            return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

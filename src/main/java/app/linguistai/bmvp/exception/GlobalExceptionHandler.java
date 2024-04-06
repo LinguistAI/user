@@ -44,13 +44,6 @@ public class GlobalExceptionHandler {
         return Response.create(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    // // Handle 404 Not Found (Endpoint not found)
-    // @ExceptionHandler(NotFoundException.class)
-    // @ResponseStatus(HttpStatus.NOT_FOUND)
-    // public ResponseEntity<Object> handleNotFoundException(NotFoundException e) {
-    //     return Response.create("Endpoint not found", HttpStatus.NOT_FOUND);
-    // }
-
     // Handle 400 Bad Request (Invalid request body)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

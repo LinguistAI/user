@@ -1,22 +1,20 @@
 package app.linguistai.bmvp.model.enums;
 
 public enum EnglishLevel {
-    DONT_KNOW(0, "Don't Know"),
-    BEGINNER(1, "Beginner"),
-    INTERMEDIATE(2, "Intermediate"),
-    ADVANCED(3, "Advanced"),
-    NATIVE(4, "Native");
+    DONT_KNOW("Don't Know"),
+    BEGINNER("Beginner"),
+    INTERMEDIATE("Intermediate"),
+    ADVANCED("Advanced"),
+    NATIVE("Native");
 
-    private final int level;
     private final String levelString;
 
-    private EnglishLevel(int level, String levelString) {
-        this.level = level;
+    private EnglishLevel(String levelString) {
         this.levelString = levelString;
     }
 
     public int getLevel() {
-        return level;
+        return this.ordinal();
     }
 
     public String getLevelString() {
@@ -25,7 +23,7 @@ public enum EnglishLevel {
 
     public static EnglishLevel getLevel(int level) {
         for (EnglishLevel englishLevel : EnglishLevel.values()) {
-            if (englishLevel.level == level) {
+            if (englishLevel.ordinal() == level) {
                 return englishLevel;
             }
         }

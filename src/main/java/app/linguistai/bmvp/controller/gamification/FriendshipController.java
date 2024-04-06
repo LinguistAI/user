@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import app.linguistai.bmvp.consts.Header;
-import app.linguistai.bmvp.exception.ExceptionLogger;
 import app.linguistai.bmvp.request.QFriendRequest;
 import app.linguistai.bmvp.response.Response;
 import app.linguistai.bmvp.service.gamification.FriendshipService;

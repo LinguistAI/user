@@ -12,11 +12,11 @@ import app.linguistai.bmvp.repository.IUserHobbyRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import app.linguistai.bmvp.consts.EnglishLevels;
 import app.linguistai.bmvp.exception.AlreadyFoundException;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.model.User;
+import app.linguistai.bmvp.model.enums.EnglishLevel;
 import app.linguistai.bmvp.model.profile.UserProfile;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.IProfileRepository;
@@ -128,7 +128,7 @@ public class ProfileService {
 
             log.info("User {} updated their profile.", dbUser.getId());
 
-            return new RUserProfile(dbUser.getId(), dbProfile.getName(), dbProfile.getBirhtDate(), dbProfile.getEnglishLevel(), userHobbies);
+            return new RUserProfile(dbUser.getId(), dbProfile.getName(), dbProfile.getBirthDate(), dbProfile.getEnglishLevel(), userHobbies);
         } catch (NotFoundException e) {
             log.error("Update profile failed since user does not exist for email {}", email);
             throw e;
@@ -150,7 +150,7 @@ public class ProfileService {
             List<String> hobbies = userHobbyRepository.findHobbiesByUserId(dbUser.getId());
 
             if (dbProfile == null) {
-                return new RUserProfile(dbUser.getId(), "", null, EnglishLevels.DONT_KNOW, hobbies);
+                return new RUserProfile(dbUser.getId(), "", null, EnglishLevel.DONT_KNOW, hobbies);
             }
 
             log.info("User {} viewed their profile.", dbUser.getId());
