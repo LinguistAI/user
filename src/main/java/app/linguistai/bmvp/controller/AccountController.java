@@ -50,7 +50,6 @@ public class AccountController {
     public ResponseEntity<Object> register(@Valid @RequestBody QUser userInfo) throws Exception {
         User ids = accountService.addUser(userInfo);
         return Response.create("Account is created", HttpStatus.OK, ids);
-     
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/change-password")

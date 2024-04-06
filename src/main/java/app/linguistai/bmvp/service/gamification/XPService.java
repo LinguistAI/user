@@ -6,6 +6,7 @@ import app.linguistai.bmvp.exception.UserXPNotFoundException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.enums.XPAction;
 import app.linguistai.bmvp.model.gamification.UserXP;
+import app.linguistai.bmvp.model.gamification.UserXPWithLevel;
 import app.linguistai.bmvp.model.gamification.UserXPWithUser;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.gamification.IUserXPRepository;
@@ -41,10 +42,15 @@ public class XPService implements IXPService {
             // Create and save new UserXP
             UserXP saved = xpRepository.save(toSave);
 
+            UserXPWithLevel levelInfo = this.determineProceduralLevel(saved.getExperience());
+            Long userLevel = levelInfo.level();
+            Long xpToNextLevel = levelInfo.totalExperienceToNextLevel();
+
             return RUserXP.builder()
                 .username(user.getUsername())
-                .experience(saved.getExperience())
-                .level(1L)
+                .currentExperience(saved.getExperience())
+                .totalExperienceToNextLevel(xpToNextLevel)
+                .level(userLevel)
                 .build();
         }
         catch (Exception e1) {
@@ -64,10 +70,15 @@ public class XPService implements IXPService {
 
             UserXP updated = xpRepository.save(userXP);
 
+            UserXPWithLevel levelInfo = this.determineProceduralLevel(updated.getExperience());
+            Long userLevel = levelInfo.level();
+            Long xpToNextLevel = levelInfo.totalExperienceToNextLevel();
+
             return RUserXP.builder()
                 .username(user.getUsername())
-                .experience(updated.getExperience())
-                .level(this.determineLevel(updated.getExperience()))
+                .currentExperience(updated.getExperience())
+                .totalExperienceToNextLevel(xpToNextLevel)
+                .level(userLevel)
                 .build();
         }
         catch (UserXPNotFoundException e1) {
@@ -86,10 +97,15 @@ public class XPService implements IXPService {
             UserXP userXP = info.userXP();
             User user = info.user();
 
+            UserXPWithLevel levelInfo = this.determineProceduralLevel(userXP.getExperience());
+            Long userLevel = levelInfo.level();
+            Long xpToNextLevel = levelInfo.totalExperienceToNextLevel();
+
             return RUserXP.builder()
                 .username(user.getUsername())
-                .experience(userXP.getExperience())
-                .level(this.determineLevel(userXP.getExperience()))
+                .currentExperience(userXP.getExperience())
+                .totalExperienceToNextLevel(xpToNextLevel)
+                .level(userLevel)
                 .build();
         }
         catch (UserXPNotFoundException e1) {
@@ -119,7 +135,8 @@ public class XPService implements IXPService {
         return new UserXPWithUser(user, userXP);
     }
 
-    private Long determineLevel(Long points) throws Exception {
+    @Deprecated
+    private Long determineHardcodedLevel(Long points) throws Exception {
         TreeMap<Long, String> sortedLevels = new TreeMap<>();
         xp.getLevels().forEach((key, value) -> sortedLevels.put(value.longValue(), key));
 
@@ -138,5 +155,27 @@ public class XPService implements IXPService {
 
         return 1L;
     }
+
+    /**
+     * Calculates the current level of the user.
+     * Each level requires more xp to progress to based on the following equation:
+     * xp required to progress to next level = baseLevel * (levelCoefficient)^(currentLevel - 1)
+     * @param points current xp of user
+     * @return current level of user
+     */
+    private UserXPWithLevel determineProceduralLevel(Long points) {
+        Long baseLevel = xp.getBaseLevel(); // level required to progress from level 1 to level 2
+        Long levelCoefficient = xp.getLevelCoefficient(); // the coefficient for increasing required xp after each level
+        Long level = 1L; // current level
+        Double xpThreshold = Double.valueOf(baseLevel); // converted to double for multiplication
+
+        while (points >= xpThreshold) {
+            level++;
+            xpThreshold *= levelCoefficient;
+        }
+
+        return new UserXPWithLevel(level, points, xpThreshold.longValue());
+    }
+
 }
 

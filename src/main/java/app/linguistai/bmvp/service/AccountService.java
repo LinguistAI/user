@@ -15,6 +15,7 @@ import app.linguistai.bmvp.exception.StreakException;
 import app.linguistai.bmvp.exception.TokenException;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
+import app.linguistai.bmvp.service.stats.UserLoggedDateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -51,6 +52,7 @@ public class AccountService {
     private final JWTUtils jwtUtils;
 
     private final UserStreakService userStreakService;
+    private final UserLoggedDateService userLoggedDateService;
 
     public RLoginUser login(QUserLogin user) throws Exception {
         try {
@@ -78,10 +80,13 @@ public class AccountService {
             }
 
             log.info("User {} logged in.", dbUser.getId());
+            // Add the current date as a logged date
+            userLoggedDateService.addLoggedDateByEmailAndDate(dbUser.getEmail(), new Date());
 
             return new RLoginUser(dbUser, accessToken, refreshToken);
         } catch (CustomException e2) {
             log.error("User login failed due to wrong email or password for email {}", user.getEmail());
+
             throw e2;
         } catch (Exception e2) {
             log.error("User login failed for email {}", user.getEmail(), e2);
@@ -137,7 +142,7 @@ public class AccountService {
     }
 
     @Transactional
-    public User addUser(QUser requestUser) throws Exception {
+    public RLoginUser addUser(QUser requestUser) throws Exception {
         try {
             boolean userExist = accountRepository.existsByEmail(requestUser.getEmail());
             
@@ -145,7 +150,7 @@ public class AccountService {
                 throw new AlreadyFoundException("User already exists with the provided email address. Please use a different email or sign in.");
             }
 
-            // generate uuid and hash password if user does not exist in the system
+            // Generate uuid and hash password if user does not exist in the system
             requestUser.setId(UUID.randomUUID());
             requestUser.setPassword(encodePassword(requestUser.getPassword()));
 
@@ -155,10 +160,15 @@ public class AccountService {
             if (!userStreakService.createUserStreak(newUser)) {
                 throw new StreakException();
             }
+          
+            // Create access and reset tokens so that user does not have to log in after registering
+            final UserDetails userDetails = jwtUserService.loadUserByUsername(newUser.getEmail());
+            final String accessToken = jwtUtils.createAccessToken(userDetails);
+            final String refreshToken = jwtUtils.createRefreshToken(userDetails);
 
             log.info("User registered with email {}.", newUser.getId());
 
-            return newUser;            
+            return new RLoginUser(newUser, accessToken, refreshToken);          
         } catch (AlreadyFoundException e) {
             log.error("User register fail since email already exists for email {}", requestUser.getEmail());
             throw e;

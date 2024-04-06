@@ -90,16 +90,15 @@ public class UserStreakService {
     protected RUserStreak incrementUserStreak(UserStreak userStreak) throws Exception {
         try {
             // Assume user streak increment operation is correct
-            UserStreak newUserStreak = new UserStreak();
-            newUserStreak.setCurrentStreak(userStreak.getCurrentStreak() + 1);
-            newUserStreak.setHighestStreak(
-                userStreak.getHighestStreak() <= userStreak.getCurrentStreak()
-                ? userStreak.getHighestStreak() + 1
-                : userStreak.getHighestStreak()
-            );
-            newUserStreak.setLastLogin(DateUtils.convertUtilDateToSqlDate(Calendar.getInstance().getTime()));
+            userStreak.setCurrentStreak(userStreak.getCurrentStreak() + 1);
+            userStreak.setLastLogin(DateUtils.convertUtilDateToSqlDate(Calendar.getInstance().getTime()));
 
-            UserStreak streak = userStreakRepository.save(newUserStreak);
+            // If the user has achieved a new highest streak, update accordingly
+            if (userStreak.getCurrentStreak() > userStreak.getHighestStreak()) {
+                userStreak.setHighestStreak(userStreak.getCurrentStreak());
+            }
+
+            UserStreak streak = userStreakRepository.save(userStreak);
 
             log.info("User streak is incremented for user with id {}.",  userStreak.getUserId());
 
@@ -120,12 +119,10 @@ public class UserStreakService {
     protected RUserStreak resetUserStreak(UserStreak userStreak) throws Exception {
         try {
             // Assume user streak reset operation is correct
-            UserStreak newUserStreak = new UserStreak();
-            newUserStreak.setCurrentStreak(1);
-            newUserStreak.setHighestStreak(userStreak.getHighestStreak());
-            newUserStreak.setLastLogin(DateUtils.convertUtilDateToSqlDate(Calendar.getInstance().getTime()));
+            userStreak.setCurrentStreak(1);
+            userStreak.setLastLogin(DateUtils.convertUtilDateToSqlDate(Calendar.getInstance().getTime()));
 
-            UserStreak streak = userStreakRepository.save(newUserStreak);
+            UserStreak streak = userStreakRepository.save(userStreak);
 
             log.info("User streak is reset for user with id {}.",  userStreak.getUserId());
 
@@ -183,6 +180,7 @@ public class UserStreakService {
         }
     }
 
+    @Transactional
     public Boolean createUserStreak(String email) throws Exception {
         User user = accountRepository.findUserByEmail(email)
             .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
@@ -190,6 +188,7 @@ public class UserStreakService {
         return createUserStreak(user);
     }
 
+    @Transactional
     public Boolean createUserStreak(User user) throws Exception {
         try {
             if (userStreakRepository.findByUserEmail(user.getEmail()).isPresent()) {
