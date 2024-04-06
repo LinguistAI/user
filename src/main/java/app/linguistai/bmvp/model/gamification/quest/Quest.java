@@ -1,5 +1,6 @@
 package app.linguistai.bmvp.model.gamification.quest;
 
+import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.gamification.quest.types.QuestCompletionCriteria;
 import app.linguistai.bmvp.utils.QuestCompletionCriteriaConverter;
 import jakarta.persistence.*;
@@ -7,7 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.util.Date;
+import java.sql.Date;
 
 @Data
 @Entity
@@ -20,6 +21,11 @@ public class Quest {
     @Column(name = "quest_id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long questId;
+
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id", foreignKey = @ForeignKey())
+    private User user;
 
     @NotBlank
     @Column(name = "title", nullable = false)

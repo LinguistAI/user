@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -340,6 +341,45 @@ public class UnknownWordService implements IUnknownWordService {
         catch (Exception e1) {
             System.out.println("ERROR: Could not delete list.");
             throw e1;
+        }
+    }
+
+    @Override
+    @Transactional
+    public UnknownWordList getRandomActiveUnknownWordList(UUID userId) throws Exception {
+        try {
+            List<UnknownWordList> activeLists = listRepository.findByUserId(userId)
+                .stream()
+                .filter(UnknownWordList::getIsActive)
+                .toList();
+
+            if (activeLists.isEmpty()) {
+                throw new NotFoundException("No active unknown word lists found for user with ID: [" + userId + "].");
+            }
+
+            return activeLists.get(new Random().nextInt(activeLists.size()));
+        }
+        catch (Exception e) {
+            System.out.println("ERROR: Could not retrieve random active unknown word list.");
+            throw e;
+        }
+    }
+
+    @Override
+    @Transactional
+    public String getRandomWordFromList(UUID listId) throws Exception {
+        try {
+            List<UnknownWord> words = wordRepository.findByOwnerListListId(listId);
+
+            if (words.isEmpty()) {
+                throw new NotFoundException("No words found in the unknown word list with ID: [" + listId + "].");
+            }
+
+            return words.get(new Random().nextInt(words.size())).getWord();
+        }
+        catch (Exception e) {
+            System.out.println("ERROR: Could not retrieve a random word from the list.");
+            throw e;
         }
     }
 

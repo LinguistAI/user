@@ -1,5 +1,6 @@
 package app.linguistai.bmvp.service.wordbank;
 
+import app.linguistai.bmvp.model.wordbank.UnknownWordList;
 import app.linguistai.bmvp.request.wordbank.QAddUnknownWord;
 import app.linguistai.bmvp.request.wordbank.QUnknownWordList;
 import app.linguistai.bmvp.response.wordbank.ROwnerUnknownWordList;
@@ -24,4 +25,6 @@ public interface IUnknownWordService {
     ROwnerUnknownWordList pinList(UUID listId, String email) throws Exception;
     ROwnerUnknownWordList unpinList(UUID listId, String email) throws Exception;
     ROwnerUnknownWordList deleteList(UUID listId, String email) throws Exception;
+    UnknownWordList getRandomActiveUnknownWordList(UUID userId) throws Exception;
+    String getRandomWordFromList(UUID listId) throws Exception;
 }
