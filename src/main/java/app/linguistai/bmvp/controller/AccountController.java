@@ -1,5 +1,6 @@
 package app.linguistai.bmvp.controller;
 
+import java.util.Date;
 import java.util.List;
 
 import app.linguistai.bmvp.model.ResetToken;
@@ -7,6 +8,8 @@ import app.linguistai.bmvp.request.QResetPassword;
 import app.linguistai.bmvp.request.QResetPasswordVerification;
 import app.linguistai.bmvp.request.QUser;
 import app.linguistai.bmvp.request.QResetPasswordSave;
+import app.linguistai.bmvp.service.gamification.UserStreakService;
+import app.linguistai.bmvp.service.stats.UserLoggedDateService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -39,6 +42,8 @@ import lombok.AllArgsConstructor;
 public class AccountController {
     private final AccountService accountService;
     private final EmailService emailService;
+    private final UserLoggedDateService userLoggedDateService;
+    private final UserStreakService userStreakService;
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "login")
     public ResponseEntity<Object> login(@Valid @RequestBody QUserLogin userInfo) throws Exception {
@@ -66,9 +71,15 @@ public class AccountController {
     }
 
     @GetMapping("/test")
-    public ResponseEntity<Object> testAuth() {
-        String test = "Welcome to the authenticated endpoint!";
-        return Response.create("ok", HttpStatus.OK, test);      
+    public ResponseEntity<Object> testAuth(@RequestHeader(Header.USER_EMAIL) String email) {
+        try {
+            String test = "Welcome to the authenticated endpoint!";
+            userLoggedDateService.addLoggedDateByEmailAndDate(email, new Date());
+            userStreakService.updateUserStreak(email);
+            return Response.create("ok", HttpStatus.OK, test);
+        } catch (Exception e) {
+            return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
+        }     
     }
 
     @GetMapping("/")

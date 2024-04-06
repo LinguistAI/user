@@ -9,6 +9,7 @@ import app.linguistai.bmvp.model.wordbank.UnknownWord;
 import app.linguistai.bmvp.model.wordbank.UnknownWordList;
 import app.linguistai.bmvp.model.wordbank.UnknownWordListWithUser;
 import app.linguistai.bmvp.repository.IAccountRepository;
+import app.linguistai.bmvp.model.wordbank.IConfidenceCount;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordListRepository;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordRepository;
 import app.linguistai.bmvp.request.wordbank.QAddUnknownWord;
@@ -484,19 +485,33 @@ public class UnknownWordService implements IUnknownWordService {
         List<UnknownWord> words = wordRepository.findByOwnerListListId(listId);
 
         for (UnknownWord word : words) {
-            switch (word.getConfidence()) {
-                // Learning
-                case LOWEST, LOW -> stats.setLearning(stats.getLearning() + 1L);
-
-                // Reviewing
-                case MODERATE, HIGH -> stats.setReviewing(stats.getReviewing() + 1L);
-
-                // Mastered
-                case HIGHEST -> stats.setMastered(stats.getMastered() + 1L);
-            }
+            stats = updateStatsBasedOnConfidence(stats, word.getConfidence(), 1L);
         }
 
         return stats;
+    }
+
+    @Transactional
+    public RUnknownWordListsStats getAllListStats(String email) throws Exception {
+        User user = accountRepository.findUserByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+
+        ListStats stats = new ListStats(0L, 0L, 0L);
+
+        // Get word counts by confidence level
+        List<IConfidenceCount> wordCountsByConfidenceLevel = wordRepository.countWordsByConfidenceLevel(user.getId());
+
+        // Update list stats based on confidence levels
+        for (IConfidenceCount confidenceCount : wordCountsByConfidenceLevel) {
+            ConfidenceEnum confidence = confidenceCount.getConfidence();
+            Long count = confidenceCount.getCount();
+
+            stats = updateStatsBasedOnConfidence(stats, confidence, count);
+        }
+
+        return RUnknownWordListsStats.builder()
+                .listStats(stats)
+                .build();
     }
 
     private ConfidenceEnum increaseConfidence(ConfidenceEnum currentConfidence) {
@@ -509,5 +524,20 @@ public class UnknownWordService implements IUnknownWordService {
         return (currentConfidence.ordinal() > 0)
             ? ConfidenceEnum.values()[currentConfidence.ordinal() - 1]
             : currentConfidence;
+    }
+
+    private ListStats updateStatsBasedOnConfidence(ListStats stats, ConfidenceEnum confidence, Long count) {
+        switch (confidence) {
+            // Learning
+            case LOWEST, LOW -> stats.setLearning(stats.getLearning() + count);
+
+            // Reviewing
+            case MODERATE, HIGH -> stats.setReviewing(stats.getReviewing() + count);
+
+            // Mastered
+            case HIGHEST -> stats.setMastered(stats.getMastered() + count);
+        }
+
+        return stats;
     }
 }
