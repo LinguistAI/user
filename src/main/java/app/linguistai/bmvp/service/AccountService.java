@@ -266,7 +266,7 @@ public class AccountService {
 
     public boolean setPassword(String email, String password) throws Exception {
         try {
-            User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException("User", true));
+            User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
 
             String hashedPassword = encodePassword(password);
             user.setPassword(hashedPassword);

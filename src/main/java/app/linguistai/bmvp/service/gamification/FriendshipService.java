@@ -34,7 +34,7 @@ public class FriendshipService {
     @Transactional
     public Friendship sendFriendRequest(String user1Email, UUID user2Id) throws Exception {
         try {
-            User dbUser1 = accountRepository.findUserByEmail(user1Email).orElseThrow(() -> new NotFoundException("User", true));
+            User dbUser1 = accountRepository.findUserByEmail(user1Email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
             User dbUser2 = accountRepository.findUserById(user2Id).orElseThrow(() -> new NotFoundException(REQ_USER_STR, true));
 
             if (dbUser1.getId().equals(dbUser2.getId())) {
@@ -45,11 +45,7 @@ public class FriendshipService {
             Friendship friendship = friendshipRepository.findByUserPair(dbUser1.getId(), user2Id).orElse(null);
 
             if (friendship != null) {
-                if (friendship.getStatus() == FriendshipStatus.PENDING) {
-                    throw new AlreadyFoundException(REQ_FRIEND_STR, true);
-                } else {
-                    throw new AlreadyFoundException(friendship.getStatus().toString(), true);
-                }                
+                throw new AlreadyFoundException(friendship.getStatus().toString(), true);              
             }
             
             LocalDateTime now = LocalDateTime.now();
@@ -86,7 +82,7 @@ public class FriendshipService {
 
     public List<Friendship> getFriends(String userEmail) throws Exception {
         try {
-            User dbUser1 = accountRepository.findUserByEmail(userEmail).orElseThrow(() -> new NotFoundException("User", true));
+            User dbUser1 = accountRepository.findUserByEmail(userEmail).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
 
             List<Friendship> friends = friendshipRepository.findByUser1OrUser2AndStatus(dbUser1.getId(), FriendshipStatus.ACCEPTED);
 
@@ -161,12 +157,12 @@ public class FriendshipService {
     public Friendship rejectRequest(String user2Email, UUID user1Id) throws Exception {
         try {
             // the user who sends the request is saved to the db as user1
-            User dbUser1 = accountRepository.findUserById(user1Id).orElseThrow(() -> new NotFoundException("User", true));
+            User dbUser1 = accountRepository.findUserById(user1Id).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
             User dbUser2 = accountRepository.findUserByEmail(user2Email).orElseThrow(() -> new NotFoundException(REQ_USER_STR, true));
 
             Friendship friendship = friendshipRepository
                                     .findByUserPairAndStatus(dbUser1.getId(), dbUser2.getId(), FriendshipStatus.PENDING)
-                                    .orElseThrow(() -> new NotFoundException("Friendship", true));
+                                    .orElseThrow(() -> new NotFoundException(Friendship.class.getSimpleName(), true));
 
             friendshipRepository.delete(friendship);
 
@@ -193,12 +189,12 @@ public class FriendshipService {
     public Friendship removeFriend(String user2Email, UUID user1Id) throws Exception {
         try {
             // the user who sends the request is saved to the db as user1
-            User dbUser1 = accountRepository.findUserById(user1Id).orElseThrow(() -> new NotFoundException("User", true));
+            User dbUser1 = accountRepository.findUserById(user1Id).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
             User dbUser2 = accountRepository.findUserByEmail(user2Email).orElseThrow(() -> new NotFoundException(REQ_USER_STR, true));
 
             Friendship friendship = friendshipRepository
                                     .findByUserPairAndStatus(dbUser1.getId(), dbUser2.getId(), FriendshipStatus.ACCEPTED)
-                                    .orElseThrow(() -> new NotFoundException("Friendship", true));
+                                    .orElseThrow(() -> new NotFoundException(Friendship.class.getSimpleName(), true));
 
             friendshipRepository.delete(friendship);
 

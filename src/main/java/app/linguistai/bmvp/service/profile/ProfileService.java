@@ -141,7 +141,7 @@ public class ProfileService {
     public RUserProfile getUserProfile(String email) throws Exception {
         try {
             // check if user exists
-            User dbUser = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException("User", true));
+            User dbUser = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
 
             // get user profile
             UserProfile dbProfile = profileRepository.findByUserEmail(email).orElse(null);
