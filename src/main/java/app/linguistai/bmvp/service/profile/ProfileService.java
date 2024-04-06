@@ -12,8 +12,11 @@ import app.linguistai.bmvp.repository.IUserHobbyRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import app.linguistai.bmvp.consts.EnglishLevels;
+import app.linguistai.bmvp.exception.AlreadyFoundException;
+import app.linguistai.bmvp.exception.NotFoundException;
+import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.model.User;
+import app.linguistai.bmvp.model.enums.EnglishLevel;
 import app.linguistai.bmvp.model.profile.UserProfile;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.IProfileRepository;
@@ -21,9 +24,11 @@ import app.linguistai.bmvp.request.QUserProfile;
 import app.linguistai.bmvp.response.RUserProfile;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ProfileService {
@@ -47,30 +52,25 @@ public class ProfileService {
     // this method should be called only when a new user is created
     public boolean createEmptyProfile(UUID userId) throws Exception {
         try {
-            UserProfile dbProfile = profileRepository.findById(userId).orElse(null);
-
-            if (dbProfile == null) {
-                throw new Exception("User profile already exists!");
-            }
+            profileRepository.findById(userId).orElseThrow(() -> new AlreadyFoundException(UserProfile.class.getSimpleName(), true));
 
             // save empty profile to the db
             profileRepository.save(new UserProfile());
 
             return true;
-        } catch (Exception e) {
-            System.out.println("Something is wrong in create empty profile");
+        } catch (AlreadyFoundException e) {
+            log.error("Create empty profile failed since profile already exists for id {}", userId);
             throw e;
+        } catch (Exception e) {
+            log.error("Create empty profile failed for id {}", userId, e);
+            throw new SomethingWentWrongException();
         }
     }
 
     @Transactional
     public RUserProfile updateUserProfile(String email, QUserProfile profile) throws Exception {
         try {
-            User dbUser = accountRepository.findUserByEmail(email).orElse(null);
-
-            if (dbUser == null) {
-                throw new Exception("User does not exist");
-            }
+            User dbUser = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
 
             UserProfile dbProfile = profileRepository.findById(dbUser.getId()).orElse(null);
 
@@ -92,14 +92,14 @@ public class ProfileService {
             }
 
             List<String> userHobbies = hobbyService.updateUserHobby(dbUser, profile.getHobbies());
-
+          
             RUserProfile userProfile = RUserProfile.builder()
-                .id(dbUser.getId())
-                .name(dbProfile.getName())
-                .birthDate(dbProfile.getBirthDate())
-                .englishLevel(dbProfile.getEnglishLevel())
-                .hobbies(userHobbies)
-                .build();
+                  .id(dbUser.getId())
+                  .name(dbProfile.getName())
+                  .birthDate(dbProfile.getBirthDate())
+                  .englishLevel(dbProfile.getEnglishLevel())
+                  .hobbies(userHobbies)
+                  .build();
 
             if (ML_SERVICE_BASE_URL == null || ML_SERVICE_BASE_URL.isEmpty()) {
                 System.out.println("ML Service Base URL is not set!");
@@ -126,22 +126,22 @@ public class ProfileService {
                     }
                 });
 
-            return userProfile;
-        } catch (Exception e) {
-            System.out.println("Something is wrong in update user profile");
-            e.printStackTrace();
+            log.info("User {} updated their profile.", dbUser.getId());
+
+            return new RUserProfile(dbUser.getId(), dbProfile.getName(), dbProfile.getBirthDate(), dbProfile.getEnglishLevel(), userHobbies);
+        } catch (NotFoundException e) {
+            log.error("Update profile failed since user does not exist for email {}", email);
             throw e;
+        } catch (Exception e) {
+            log.error("Update profile failed for email {}", email, e);
+            throw new SomethingWentWrongException();
         }
     }
 
     public RUserProfile getUserProfile(String email) throws Exception {
         try {
             // check if user exists
-            User dbUser = accountRepository.findUserByEmail(email).orElse(null);
-
-            if (dbUser == null) {
-                throw new Exception("User does not exist!");
-            }
+            User dbUser = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
 
             // get user profile
             UserProfile dbProfile = profileRepository.findByUserEmail(email).orElse(null);
@@ -150,14 +150,18 @@ public class ProfileService {
             List<String> hobbies = userHobbyRepository.findHobbiesByUserId(dbUser.getId());
 
             if (dbProfile == null) {
-                return new RUserProfile(dbUser.getId(), "", null, EnglishLevels.DONT_KNOW, hobbies);
+                return new RUserProfile(dbUser.getId(), "", null, EnglishLevel.DONT_KNOW, hobbies);
             }
 
+            log.info("User {} viewed their profile.", dbUser.getId());
+
             return new RUserProfile(dbProfile.getUserId(), dbProfile.getName(), dbProfile.getBirthDate(), dbProfile.getEnglishLevel(), hobbies);
-        } catch (Exception e) {
-            System.out.println("Something is wrong in get profile");
-            e.printStackTrace();
+        } catch (NotFoundException e) {
+            log.error("Get profile failed since user does not exist for email {}", email);
             throw e;
+        } catch (Exception e) {
+            log.error("Get profile failed for email {}", email, e);
+            throw new SomethingWentWrongException();
         }
     }
 }

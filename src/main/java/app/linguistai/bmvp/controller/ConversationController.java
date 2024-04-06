@@ -9,12 +9,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Deprecated
 @AllArgsConstructor
 @RestController
 @RequestMapping("conversation")
 public class ConversationController {
     private final ConversationService conversationService;
-
+    
     @GetMapping
     public ResponseEntity<Object> getConversationByUser(@RequestHeader(Header.USER_EMAIL) String email) {
         try {

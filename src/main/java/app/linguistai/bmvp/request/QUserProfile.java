@@ -3,7 +3,7 @@ package app.linguistai.bmvp.request;
 import java.time.LocalDate;
 import java.util.List;
 
-import app.linguistai.bmvp.consts.EnglishLevels;
+import app.linguistai.bmvp.model.enums.EnglishLevel;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -17,7 +17,7 @@ public class QUserProfile {
     private LocalDate birthDate;
 
     @NotNull
-    private EnglishLevels englishLevel;
+    private EnglishLevel englishLevel;
 
     @NotNull
     private List<String> hobbies;

@@ -18,13 +18,8 @@ public class UserStreakController {
     private final UserStreakService userStreakService;
 
     @GetMapping(path = "/all")
-    public ResponseEntity<Object> getAllUserStreaks() {
-        try {
-            return Response.create("Successfully fetched all UserStreaks", HttpStatus.OK, userStreakService.getAllUserStreaks());
-        }
-        catch (Exception e) {
-            return Response.create(ExceptionLogger.log(e), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Object> getAllUserStreaks() throws Exception {
+        return Response.create("Successfully fetched all UserStreaks", HttpStatus.OK, userStreakService.getAllUserStreaks());
     }
 
     @GetMapping
@@ -41,12 +36,7 @@ public class UserStreakController {
     }
 
     @PostMapping
-    public ResponseEntity<Object> createUserStreak(@RequestHeader(Header.USER_EMAIL) String email) {
-        try {
-            return Response.create("Successfully created UserStreak", HttpStatus.OK, userStreakService.createUserStreak(email));
-        }
-        catch (Exception e1) {
-            return Response.create("Could not create UserStreak", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Object> createUserStreak(@RequestHeader(Header.USER_EMAIL) String email) throws Exception {
+        return Response.create("Successfully created UserStreak", HttpStatus.OK, userStreakService.createUserStreak(email));
     }
 }
