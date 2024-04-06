@@ -92,8 +92,8 @@ public class AccountController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/test-reset")
     public ResponseEntity<Object> requestResetPasswordWithoutEmail(@Valid @RequestBody QResetPassword resetPasswordInfo) throws Exception {
-            ResetToken resetToken = accountService.generateEmailToken(resetPasswordInfo.getEmail());
-            return Response.create("Reset token is generated", HttpStatus.OK, resetToken);
+        ResetToken resetToken = accountService.generateEmailToken(resetPasswordInfo.getEmail());
+        return Response.create("Reset token is generated", HttpStatus.OK, resetToken);
     }
 
     @PostMapping("/validate-reset")
