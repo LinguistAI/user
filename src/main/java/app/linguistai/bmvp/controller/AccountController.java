@@ -78,7 +78,7 @@ public class AccountController {
             userStreakService.updateUserStreak(email);
             return Response.create("ok", HttpStatus.OK, test);
         } catch (Exception e) {
-            return Response.create(ExceptionLogger.log(e), HttpStatus.BAD_REQUEST);
+            return Response.create(e.getMessage(), HttpStatus.BAD_REQUEST);
         }     
     }
 
