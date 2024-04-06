@@ -1,9 +1,16 @@
 package app.linguistai.bmvp.controller;
 
 import app.linguistai.bmvp.consts.Header;
+import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.request.wordbank.*;
 import app.linguistai.bmvp.response.Response;
+import app.linguistai.bmvp.response.wordbank.RUnknownWordListsStats;
 import app.linguistai.bmvp.service.wordbank.IUnknownWordService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
@@ -166,6 +173,27 @@ public class UnknownWordController {
     public ResponseEntity<Object> deleteList(@Valid @PathVariable("listId") UUID listId, @RequestHeader(Header.USER_EMAIL) String email) {
         try {
             return Response.create("Successfully deleted list.", HttpStatus.OK, unknownWordService.deleteList(listId, email));
+        }
+        catch (Exception e) {
+            return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Operation(summary = "Get Word Stats", description = "Returns the mastered/reviewing/learning stats for words in all word lists")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "OK", content =
+                    { @Content(mediaType = "application/json", schema =
+                    @Schema(implementation = RUnknownWordListsStats.class)) }),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/lists/stats")
+    public ResponseEntity<Object> getAllListStats(@RequestHeader(Header.USER_EMAIL) String email) {
+        try {
+            return Response.create("Successfully retrieved statistics for all word lists.", HttpStatus.OK, unknownWordService.getAllListStats(email));
+        }
+        catch (NotFoundException e) {
+            return Response.create(e.getMessage(), HttpStatus.NOT_FOUND);
         }
         catch (Exception e) {
             return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

@@ -6,6 +6,7 @@ import app.linguistai.bmvp.response.wordbank.ROwnerUnknownWordList;
 import app.linguistai.bmvp.response.wordbank.RUnknownWord;
 import app.linguistai.bmvp.response.wordbank.RUnknownWordListWords;
 import app.linguistai.bmvp.response.wordbank.RUnknownWordLists;
+import app.linguistai.bmvp.response.wordbank.RUnknownWordListsStats;
 
 import java.util.UUID;
 
@@ -25,4 +26,5 @@ public interface IUnknownWordService {
     ROwnerUnknownWordList unpinList(UUID listId, String email) throws Exception;
     ROwnerUnknownWordList deleteList(UUID listId, String email) throws Exception;
     ROwnerUnknownWordList addPredefinedWordList(String wordListYamlFile, String email) throws Exception;
+    RUnknownWordListsStats getAllListStats(String email) throws Exception;
 }
