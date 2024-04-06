@@ -62,12 +62,12 @@ public class ProfileService {
                     .user(dbUser)
                     .name(profile.getName())
                     .birhtDate(profile.getBirhtDate())
-                    .englishLevel(profile.getEnglishLevel())
+                    .englishLevel(profile.getEnglishLevel().getLevel())
                     .build());
             } else {
                 dbProfile.setName(profile.getName());
                 dbProfile.setBirhtDate(profile.getBirhtDate());
-                dbProfile.setEnglishLevel(profile.getEnglishLevel());
+                dbProfile.setEnglishLevel(profile.getEnglishLevel().getLevel());
 
                 dbProfile = profileRepository.save(dbProfile);
             }
