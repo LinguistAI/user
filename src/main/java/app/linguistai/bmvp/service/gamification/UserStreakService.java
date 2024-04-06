@@ -146,7 +146,7 @@ public class UserStreakService {
             throw e1;
         }
         catch (Exception e2) {
-            System.out.println("ERROR: Could not fetch UserStreak."); // TODO what is this
+            System.out.println("ERROR: Could not fetch UserStreak.");
             throw e2;
         }
     }

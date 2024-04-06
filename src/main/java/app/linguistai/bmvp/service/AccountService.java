@@ -230,7 +230,7 @@ public class AccountService {
             ResetToken resetToken = resetTokenRepository.findByUserAndResetCode(user, resetCode).orElseThrow(() -> new NotFoundException("Reset token", true));
 
             if (!isResetTokenValid(resetToken)) {
-                throw new TokenException("Invalid password reset token");
+                return false;
             }
 
             if (invalidate) {
@@ -248,9 +248,6 @@ public class AccountService {
                 log.error("Reset token for user with email {} with code {} not found.", email, resetCode);
             }
 
-            throw e;
-        } catch (TokenException e) {
-            log.error("Reset token is invalid for user with email {}.", email);
             throw e;
         } catch (Exception e) {
             log.error("Validate reset code failed for email {}", email, e);

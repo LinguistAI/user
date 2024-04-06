@@ -52,7 +52,7 @@ public class ProfileService {
     // this method should be called only when a new user is created
     public boolean createEmptyProfile(UUID userId) throws Exception {
         try {
-            profileRepository.findById(userId).orElseThrow(() -> new AlreadyFoundException("User profile", true));
+            profileRepository.findById(userId).orElseThrow(() -> new AlreadyFoundException(UserProfile.class.getSimpleName(), true));
 
             // save empty profile to the db
             profileRepository.save(new UserProfile());
@@ -70,7 +70,7 @@ public class ProfileService {
     @Transactional
     public RUserProfile updateUserProfile(String email, QUserProfile profile) throws Exception {
         try {
-            User dbUser = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException("User", true));
+            User dbUser = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
 
             UserProfile dbProfile = profileRepository.findById(dbUser.getId()).orElse(null);
 

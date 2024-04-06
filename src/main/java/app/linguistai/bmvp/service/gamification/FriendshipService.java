@@ -29,6 +29,7 @@ public class FriendshipService {
     private final IFriendshipRepository friendshipRepository;
 
     private final String REQ_USER_STR = "Requested user";
+    private final String REQ_FRIEND_STR = "Friendship request";
 
     @Transactional
     public Friendship sendFriendRequest(String user1Email, UUID user2Id) throws Exception {
@@ -45,7 +46,7 @@ public class FriendshipService {
 
             if (friendship != null) {
                 if (friendship.getStatus() == FriendshipStatus.PENDING) {
-                    throw new AlreadyFoundException("Friendship request", true);
+                    throw new AlreadyFoundException(REQ_FRIEND_STR, true);
                 } else {
                     throw new AlreadyFoundException(friendship.getStatus().toString(), true);
                 }                
@@ -60,7 +61,7 @@ public class FriendshipService {
 
             return friendship;
         } catch (NotFoundException e) {
-            if (e.getObject().equals("User")) {
+            if (e.getObject().equals(User.class.getSimpleName())) {
                 log.error("User is not found for email {}", user1Email);
             } else {
                 log.error("Requested user with id {} not found.", user2Id);
