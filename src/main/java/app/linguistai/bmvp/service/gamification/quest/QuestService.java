@@ -192,7 +192,7 @@ public class QuestService implements IQuestService {
     private Boolean userHasActiveQuests(User user) {
         List<Quest> userQuests = questRepository.findAllByUserId(user.getId());
         java.sql.Date today = DateUtils.convertUtilDateToSqlDate(Calendar.getInstance().getTime());
-        return userQuests.stream().anyMatch(quest -> Objects.equals(quest.getAssignedDate(), today));
+        return userQuests.stream().anyMatch(quest -> DateUtils.isSqlDatesEqual(quest.getAssignedDate(), today));
     }
 
     private void deleteInactiveQuests(User user) {
