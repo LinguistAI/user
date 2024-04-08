@@ -18,6 +18,8 @@ import app.linguistai.bmvp.repository.IResetTokenRepository;
 import app.linguistai.bmvp.service.stats.UserLoggedDateService;
 import app.linguistai.bmvp.service.wordbank.UnknownWordService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.request.QChangePassword;
 import app.linguistai.bmvp.request.QUser;
 import app.linguistai.bmvp.request.QUserLogin;
+import app.linguistai.bmvp.request.QUserSearch;
 import app.linguistai.bmvp.response.RLoginUser;
 import app.linguistai.bmvp.response.RRefreshToken;
 import app.linguistai.bmvp.security.JWTUserService;
@@ -93,6 +96,22 @@ public class AccountService {
             throw e2;
         } catch (Exception e2) {
             log.error("User login failed for email {}", user.getEmail(), e2);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    public Page<User> searchUser(QUserSearch userSearch, String userEmail) throws Exception {
+        try {
+            // Create a page request using the request body
+            PageRequest pageable = PageRequest.of(userSearch.getPage(), userSearch.getSize());
+
+            Page<User> users = accountRepository.findByUsernameStartingWithAndEmailNot(userSearch.getUsername(), userEmail, pageable);
+
+            log.info("User {} searched for users {}.", userEmail, userSearch.getUsername());
+
+            return users;
+        } catch (Exception e) {
+            log.error("User {} search for users {} failed.", userEmail, userSearch.getUsername(), e);
             throw new SomethingWentWrongException();
         }
     }
