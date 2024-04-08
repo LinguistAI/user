@@ -147,10 +147,17 @@ public class AccountService {
     @Transactional
     public RLoginUser addUser(QUser requestUser) throws Exception {
         try {
+            // check if email or username is already used before
             boolean userExist = accountRepository.existsByEmail(requestUser.getEmail());
             
             if (userExist) {
                 throw new AlreadyFoundException("User already exists with the provided email address. Please use a different email or sign in.");
+            }
+
+            userExist = accountRepository.existsByUsername(requestUser.getUsername());
+
+            if (userExist) {
+                throw new AlreadyFoundException("User already exists with the provided username. Please use a different username or sign in.");
             }
 
             // Generate uuid and hash password if user does not exist in the system

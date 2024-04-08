@@ -20,6 +20,7 @@ public interface IAccountRepository extends JpaRepository<User, UUID> {
     Optional<User> findUserById(UUID id);
     Optional<User> findUserByEmail(String email);
     boolean existsByEmail(String email);
+    boolean existsByUsername(String username);
 
     @Modifying
     @Transactional
