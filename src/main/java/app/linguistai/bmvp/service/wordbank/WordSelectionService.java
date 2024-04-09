@@ -119,7 +119,7 @@ public class WordSelectionService {
             selectedWords = unknownWordRepository.findRandomByOwnerListUserIdAndOwnerListIsActiveAndConfidence(
                 userId, true, confidences, selectSize);
 
-            if (selectedWords.size() == initialSelectSize) {
+            if (selectedWords.size() >= initialSelectSize) {
                 return selectedWords;
             }
 
@@ -131,7 +131,7 @@ public class WordSelectionService {
             selectedWords.addAll(unknownWordRepository.findRandomByOwnerListUserIdAndOwnerListIsActiveAndConfidence(
                 userId, true, confidences, selectSize));
 
-            if (selectedWords.size() == initialSelectSize) {
+            if (selectedWords.size() >= initialSelectSize) {
                 return selectedWords;
             }
 
