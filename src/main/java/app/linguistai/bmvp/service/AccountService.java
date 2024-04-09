@@ -72,20 +72,9 @@ public class AccountService {
             final String accessToken = jwtUtils.createAccessToken(userDetails);
             final String refreshToken = jwtUtils.createRefreshToken(userDetails);
 
-            // If login is successful, check whether to increase user streak or not
-            // ALSO IN MESSAGE SERVICE: userStreakService.updateUserStreak(dbUser.getEmail());
-            try {
-                userStreakService.updateUserStreak(dbUser.getEmail());
-            }
-            catch (Exception e1) {
-                // Intentionally not thrown to not cause login exception for users without UserStreak
-                System.out.println(ExceptionLogger.log(e1));
-            }
+            initiateUserSession(dbUser.getEmail());
 
             log.info("User {} logged in.", dbUser.getId());
-            // Add the current date as a logged date
-            userLoggedDateService.addLoggedDateByEmailAndDate(dbUser.getEmail(), new Date());
-
             return new RLoginUser(dbUser, accessToken, refreshToken);
         } catch (CustomException e2) {
             log.error("User login failed due to wrong email or password for email {}", user.getEmail());
@@ -93,6 +82,17 @@ public class AccountService {
             throw e2;
         } catch (Exception e2) {
             log.error("User login failed for email {}", user.getEmail(), e2);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    public void loginWithValidToken(String email) throws Exception {
+        // This method is only reached if the user already has a valid token
+        try {
+            initiateUserSession(email);
+            log.info("User with email {} logged in with a valid token.", email);
+        } catch (Exception e) {
+            log.error("User login with valid token failed for email {}", email, e);
             throw new SomethingWentWrongException();
         }
     }
@@ -283,5 +283,19 @@ public class AccountService {
             log.error("Set password failed for email {}", email, e);
             throw new SomethingWentWrongException();
         }
+    }
+
+    private void initiateUserSession(String email) throws Exception {
+        // Upon successful user entry, check whether to increase user streak or not
+        // ALSO IN MESSAGE SERVICE: userStreakService.updateUserStreak(dbUser.getEmail());
+        try {
+            userStreakService.updateUserStreak(email);
+        }
+        catch (Exception e1) {
+            // Intentionally not thrown to not cause login exception for users without UserStreak
+            System.out.println(ExceptionLogger.log(e1));
+        }
+        // Add the current date as a logged date
+        userLoggedDateService.addLoggedDateByEmailAndDate(email, new Date());
     }
 }

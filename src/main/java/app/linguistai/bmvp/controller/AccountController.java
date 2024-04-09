@@ -74,8 +74,7 @@ public class AccountController {
     public ResponseEntity<Object> testAuth(@RequestHeader(Header.USER_EMAIL) String email) {
         try {
             String test = "Welcome to the authenticated endpoint!";
-            userLoggedDateService.addLoggedDateByEmailAndDate(email, new Date());
-            userStreakService.updateUserStreak(email);
+            accountService.loginWithValidToken(email);
             return Response.create("ok", HttpStatus.OK, test);
         } catch (Exception e) {
             return Response.create(e.getMessage(), HttpStatus.BAD_REQUEST);
