@@ -17,6 +17,6 @@ public class QSelectWord {
     @Min(value = 1, message = "Size value must be at least 1")
     private Integer size = 5;
 
-    @Nullable
+    @NotNull
     private List<String> preservedWords;
 }

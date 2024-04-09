@@ -36,12 +36,7 @@ public class WordSelectionService {
                 .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
 
 
-            List<String> preservedWords = new ArrayList<>();
-
-            if (selectWord.getPreservedWords() != null) {
-                // Append list of String to the preservedWords list
-                preservedWords.addAll(selectWord.getPreservedWords());
-            }
+            List<String> preservedWords = new ArrayList<>(selectWord.getPreservedWords());
 
             // Get the previously selected words
             List<WordSelection> selectedWords = 
