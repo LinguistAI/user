@@ -9,5 +9,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface IWordSelectionRepository extends JpaRepository<WordSelection, WordSelectionId> {
-    List<WordSelection> findByConversationIdAndWordOwnerListUserEmailAndDate(UUID conversationId, String email, LocalDate date);
+    List<WordSelection> findByConversationIdAndWordOwnerListUserEmail(UUID conversationId, String email);
 }

@@ -39,8 +39,4 @@ public class WordSelection {
         @JoinColumn(name = "word", referencedColumnName = "word")
     })
     private UnknownWord word;
-
-    @NotNull
-    @Column(name = "date", nullable = false)
-    private LocalDate date;
 }

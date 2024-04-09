@@ -35,26 +35,30 @@ public class WordSelectionService {
             User user = accountRepository.findUserByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
 
-            LocalDate now = LocalDate.now();
 
-            // If today new words are selected, retrieve the words
+            List<String> preservedWords = new ArrayList<>();
+
+            if (selectWord.getPreservedWords() != null) {
+                // Append list of String to the preservedWords list
+                preservedWords.addAll(selectWord.getPreservedWords());
+            }
+
+            // Get the previously selected words
             List<WordSelection> selectedWords = 
                                 wordSelectionRepository
-                                .findByConversationIdAndWordOwnerListUserEmailAndDate(
+                                .findByConversationIdAndWordOwnerListUserEmail(
                                     selectWord.getConversationId(), 
-                                    user.getEmail(), 
-                                    now);
+                                    user.getEmail());
 
-            // If today's words are not selected yet, select them and save to db
+            // If words are not selected yet, select them and save to db
             if (selectedWords.isEmpty()) {
-                List<UnknownWord> selectedUnkonwnWords = selectWords(user.getId(), selectWord.getSize());
+                List<UnknownWord> selectedUnknownWords = selectWords(user.getId(), selectWord.getSize());
 
                 // Iterate over each selected word and create a WordSelection object
-                for (UnknownWord unknownWord : selectedUnkonwnWords) {
+                for (UnknownWord unknownWord : selectedUnknownWords) {
                     WordSelection wordSelection = WordSelection.builder()
                             .conversationId(selectWord.getConversationId())
                             .word(unknownWord)
-                            .date(now)
                             .build();
 
                     selectedWords.add(wordSelection);
@@ -64,6 +68,32 @@ public class WordSelectionService {
                 wordSelectionRepository.saveAll(selectedWords);
 
                 log.info("New words are selected for user email {}", email);
+            } else {
+                // Remove the words that are not in the preservedWords list from the selectedWords list
+                selectedWords.removeIf(wordSelection -> !preservedWords.contains(wordSelection.getWord().getWord()));
+
+                // Remove all words
+                wordSelectionRepository.deleteAll(selectedWords);
+
+                // If the size of the selectedWords list is less than the required size, select new words
+                if (selectedWords.size() < selectWord.getSize()) {
+                    List<UnknownWord> selectedUnknownWords = selectWords(user.getId(), selectWord.getSize() - selectedWords.size());
+
+                    // Iterate over each selected word and create a WordSelection object
+                    for (UnknownWord unknownWord : selectedUnknownWords) {
+                        WordSelection wordSelection = WordSelection.builder()
+                                .conversationId(selectWord.getConversationId())
+                                .word(unknownWord)
+                                .build();
+
+                        selectedWords.add(wordSelection);
+                    }
+
+                    // Save all the words back to db
+                    wordSelectionRepository.saveAll(selectedWords);
+
+                    log.info("New words are selected for user email {}", email);
+                }
             }
 
             log.info("Selected words are retrieved for user email {}", email);
