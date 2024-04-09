@@ -7,6 +7,8 @@ import app.linguistai.bmvp.request.QResetPassword;
 import app.linguistai.bmvp.request.QResetPasswordVerification;
 import app.linguistai.bmvp.request.QUser;
 import app.linguistai.bmvp.request.QResetPasswordSave;
+import app.linguistai.bmvp.service.gamification.UserStreakService;
+import app.linguistai.bmvp.service.gamification.quest.IQuestService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -40,6 +42,8 @@ import lombok.AllArgsConstructor;
 public class AccountController {
     private final AccountService accountService;
     private final EmailService emailService;
+    private final UserStreakService userStreakService;
+    private final IQuestService questService;
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "login")
     public ResponseEntity<Object> login(@Valid @RequestBody QUserLogin userInfo) {
@@ -85,8 +89,10 @@ public class AccountController {
     }
 
     @GetMapping("/test")
-    public ResponseEntity<Object> testAuth() {
+    public ResponseEntity<Object> testAuth(@RequestHeader(Header.USER_EMAIL) String email) {
         try {
+            userStreakService.updateUserStreak(email);
+            questService.assignQuests(email);
             String test = "Welcome to the authenticated endpoint!";
             return Response.create("ok", HttpStatus.OK, test);
         } catch (Exception e) {

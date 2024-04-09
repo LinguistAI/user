@@ -8,6 +8,7 @@ import app.linguistai.bmvp.exception.ExceptionLogger;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
+import app.linguistai.bmvp.service.gamification.quest.IQuestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -43,6 +44,8 @@ public class AccountService {
 
     private final UserStreakService userStreakService;
 
+    private final IQuestService questService;
+
     public RLoginUser login(QUserLogin user) throws Exception {
         try {
             User dbUser = accountRepository.findUserByEmail(user.getEmail()).orElse(null);
@@ -66,6 +69,7 @@ public class AccountService {
             // ALSO IN MESSAGE SERVICE: userStreakService.updateUserStreak(dbUser.getEmail());
             try {
                 userStreakService.updateUserStreak(dbUser.getEmail());
+                questService.assignQuests(dbUser.getEmail());
             }
             catch (Exception e1) {
                 // Intentionally not thrown to not cause login exception for users without UserStreak

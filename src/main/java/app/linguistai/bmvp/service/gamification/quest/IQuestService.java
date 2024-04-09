@@ -8,4 +8,5 @@ public interface IQuestService {
     void processSendMessage(String email, QQuestSendMessage message) throws Exception;
     void processQuestTypeAction(String email, QuestCompletionCriteria type, QQuestTypeAction action) throws Exception;
     Boolean checkUserHasQuestType(String email, QuestCompletionCriteria type) throws Exception;
+    void assignQuests(String email) throws Exception;
 }

@@ -1,14 +1,17 @@
 package app.linguistai.bmvp.model.gamification.quest.types;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        property = "action")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = UseWordCriteria.class, name = "use_word"),
-        @JsonSubTypes.Type(value = SendMessageCriteria.class, name = "send_message"),
-        @JsonSubTypes.Type(value = CreateWordListCriteria.class, name = "create_word_list")
-})
-public abstract class QuestCompletionCriteria {}
+import static app.linguistai.bmvp.consts.QuestConsts.TIMES_CLOSING_IDENTIFIER;
+import static app.linguistai.bmvp.consts.QuestConsts.TIMES_IDENTIFIER;
+
+@Data
+@RequiredArgsConstructor
+public class QuestCompletionCriteria {
+    private final Integer times;
+
+    public String toString() {
+        return TIMES_IDENTIFIER + this.getTimes().toString() + TIMES_CLOSING_IDENTIFIER;
+    }
+}
