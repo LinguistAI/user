@@ -20,10 +20,12 @@ import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.request.QSelectWord;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
+@Transactional
 public class WordSelectionService {
 
     private final IWordSelectionRepository wordSelectionRepository;
@@ -63,32 +65,37 @@ public class WordSelectionService {
                 wordSelectionRepository.saveAll(selectedWords);
 
                 log.info("New words are selected for user email {}", email);
-            } else {
-                // Remove the words that are not in the preservedWords list from the selectedWords list
-                selectedWords.removeIf(wordSelection -> !preservedWords.contains(wordSelection.getWord().getWord()));
 
-                // Remove all words
-                wordSelectionRepository.deleteAll(selectedWords);
+                log.info("Selected words are retrieved for user email {}", email);
 
-                // If the size of the selectedWords list is less than the required size, select new words
-                if (selectedWords.size() < selectWord.getSize()) {
-                    List<UnknownWord> selectedUnknownWords = selectWords(user.getId(), selectWord.getSize() - selectedWords.size());
+                return selectedWords;
 
-                    // Iterate over each selected word and create a WordSelection object
-                    for (UnknownWord unknownWord : selectedUnknownWords) {
-                        WordSelection wordSelection = WordSelection.builder()
-                                .conversationId(selectWord.getConversationId())
-                                .word(unknownWord)
-                                .build();
+            }
 
-                        selectedWords.add(wordSelection);
-                    }
+            // Remove the words that are not in the preservedWords list from the selectedWords list
+            selectedWords.removeIf(wordSelection -> !preservedWords.contains(wordSelection.getWord().getWord()));
 
-                    // Save all the words back to db
-                    wordSelectionRepository.saveAll(selectedWords);
+            // Remove all words
+            wordSelectionRepository.deleteAll(selectedWords);
 
-                    log.info("New words are selected for user email {}", email);
+            // If the size of the selectedWords list is less than the required size, select new words
+            if (selectedWords.size() < selectWord.getSize()) {
+                List<UnknownWord> selectedUnknownWords = selectWords(user.getId(), selectWord.getSize() - selectedWords.size());
+
+                // Iterate over each selected word and create a WordSelection object
+                for (UnknownWord unknownWord : selectedUnknownWords) {
+                    WordSelection wordSelection = WordSelection.builder()
+                            .conversationId(selectWord.getConversationId())
+                            .word(unknownWord)
+                            .build();
+
+                    selectedWords.add(wordSelection);
                 }
+
+                // Save all the words back to db
+                wordSelectionRepository.saveAll(selectedWords);
+
+                log.info("New words are selected for user email {}", email);
             }
 
             log.info("Selected words are retrieved for user email {}", email);
@@ -114,7 +121,7 @@ public class WordSelectionService {
             selectedWords = unknownWordRepository.findRandomByOwnerListUserIdAndOwnerListIsActiveAndConfidence(
                 userId, true, confidences, selectSize);
 
-            if (selectedWords.size() >= initialSelectSize) {
+            if (selectedWords.size() == initialSelectSize) {
                 return selectedWords;
             }
 
@@ -126,7 +133,7 @@ public class WordSelectionService {
             selectedWords.addAll(unknownWordRepository.findRandomByOwnerListUserIdAndOwnerListIsActiveAndConfidence(
                 userId, true, confidences, selectSize));
 
-            if (selectedWords.size() >= initialSelectSize) {
+            if (selectedWords.size() == initialSelectSize) {
                 return selectedWords;
             }
 
@@ -137,6 +144,12 @@ public class WordSelectionService {
             
             selectedWords.addAll(unknownWordRepository.findRandomByOwnerListUserIdAndOwnerListIsActiveAndConfidence(
                 userId, true, confidences, selectSize));
+
+            if (selectedWords.size() != initialSelectSize) {
+                log.error("Error in selecting new words, selected words size is not equal to initial select size, " +
+                        "selectedWords size: {}, initialSelectSize: {}", selectedWords.size(), initialSelectSize);
+                throw new SomethingWentWrongException();
+            }
 
             return selectedWords;
         } catch (Exception e) {
