@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 public class RLeaderboardXP {
     private List<RUserXPRanking> XPRankings; // All users' rankings
-    private Long loggedUserXPRanking; // Logged user's ranking
+    private RUserXPRanking loggedUserXPRanking; // Logged user's ranking
     private int totalPages;
     private int currentPage;
 }

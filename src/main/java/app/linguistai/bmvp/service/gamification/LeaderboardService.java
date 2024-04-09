@@ -3,6 +3,7 @@ package app.linguistai.bmvp.service.gamification;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.model.User;
+import app.linguistai.bmvp.model.gamification.IXPRanking;
 import app.linguistai.bmvp.model.gamification.UserXP;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.gamification.IUserXPRepository;
@@ -32,13 +33,13 @@ public class LeaderboardService {
     public RLeaderboardXP getTopUsersByExperience(String email, Integer page, int size) throws Exception {
         try {
             // Fetch the global XP ranking for the logged-in user
-            Long loggedUserRanking = xpRepository.findGlobalUserRankByEmail(email);
+            IXPRanking loggedUserRanking = xpRepository.findGlobalUserRankByEmail(email);
             if (loggedUserRanking == null) {
                 throw new NotFoundException("User's global XP ranking", true);
             }
             // If page number is not given, then return the page where the user is present
             if (page == null) {
-                page = getPageNumberByRanking(loggedUserRanking, size);
+                page = getPageNumberByRanking(loggedUserRanking.getRanking(), size);
             }
 
             // Create pageable object with the given page number and size for pagination
@@ -68,13 +69,13 @@ public class LeaderboardService {
             }
 
             // Fetch the ranking of the logged-in user among friends
-            Long loggedUserRanking = xpRepository.findFriendsUserRankByEmail(loggedUser.getId());
+            IXPRanking loggedUserRanking = xpRepository.findFriendsUserRankByEmail(loggedUser.getId());
             if (loggedUserRanking == null) {
                 throw new NotFoundException("User's XP ranking among friends", true);
             }
             // If page number is not given, then return the page where the user is present
             if (page == null) {
-                page = getPageNumberByRanking(loggedUserRanking, size);
+                page = getPageNumberByRanking(loggedUserRanking.getRanking(), size);
             }
 
             // Create pageable object with the given page number and size for pagination
@@ -100,7 +101,7 @@ public class LeaderboardService {
     }
 
     // Helper method to build the leaderboard response
-    private RLeaderboardXP buildLeaderboardResponse(Long loggedUserRanking, Page<UserXP> userXPPage) {
+    private RLeaderboardXP buildLeaderboardResponse(IXPRanking loggedUserRanking, Page<UserXP> userXPPage) throws NotFoundException {
         List<RUserXPRanking> userXPRankings = new ArrayList<>();
         // Calculate the first user on the given page's rank by "number of previous users + 1" = page no * page size + 1
         int rank = userXPPage.getNumber() * userXPPage.getSize() + 1;
@@ -117,11 +118,21 @@ public class LeaderboardService {
 
             userXPRankings.add(ranking);
         }
+        User user = accountRepository.findUserById(loggedUserRanking.getUserIdAsUUID()).orElse(null);
+        if (user == null) {
+            throw new NotFoundException(User.class.getSimpleName(), true);
+        }
+        // Construct logged user's ranking information
+        RUserXPRanking loggedUserRankingInfo = RUserXPRanking.builder()
+                .user(user)
+                .ranking(loggedUserRanking.getRanking())
+                .experience(loggedUserRanking.getExperience())
+                .build();
 
         // Construct and return the leaderboard response
         return RLeaderboardXP.builder()
                 .XPRankings(userXPRankings)
-                .loggedUserXPRanking(loggedUserRanking)
+                .loggedUserXPRanking(loggedUserRankingInfo)
                 .totalPages(userXPPage.getTotalPages())
                 .currentPage(userXPPage.getNumber())
                 .build();
