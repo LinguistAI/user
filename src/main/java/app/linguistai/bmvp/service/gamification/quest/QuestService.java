@@ -31,13 +31,7 @@ public class QuestService implements IQuestService {
 
     private final IUnknownWordService unknownWordService;
 
-    // Quest "Times" Upper Limits
-    private final int USE_WORD_TIMES_UPPER_LIMIT = 8;
-    private final int SEND_MESSAGE_TIMES_UPPER_LIMIT = 10;
 
-    // Quest "Times" Lower Limits
-    private final int USE_WORD_TIMES_LOWER_LIMIT = 3;
-    private final int SEND_MESSAGE_TIMES_LOWER_LIMIT = 6;
 
     @Override
     public void processSendMessage(String email, QQuestSendMessage message) throws Exception {
@@ -99,7 +93,7 @@ public class QuestService implements IQuestService {
             this.deleteInactiveQuests(user);
 
             // Step 3. Assign 2 "Word Practice" quests for different words
-            List<Quest> useWordQuests = this.buildBulkUseWordQuests(user, 2);
+            List<Quest> useWordQuests = this.buildBulkUseWordQuests(user, ASSIGN_USE_WORD_QUEST_AMOUNT);
 
             // Step 4. Assign a "Send Message" quest
             Integer randomSendMessagedTimes = this.generateRandomTimesForUseWordQuest();
@@ -197,16 +191,16 @@ public class QuestService implements IQuestService {
 
     private void deleteInactiveQuests(User user) {
         // Get all user quests
-        List<Quest> userQuests = questRepository.findAllByUserId(user.getId());
+        List<Quest> userQuestsToRemove = questRepository.findAllByUserId(user.getId());
 
         // Get today's date in java.sql.Date format
         java.sql.Date today = DateUtils.convertUtilDateToSqlDate(Calendar.getInstance().getTime());
 
-        // Remove all quests assigned today
-        userQuests.removeIf(quest -> quest.getAssignedDate().equals(today));
+        // Remove all quests assigned today (so they are not deleted after questRepository.deleteAll(userQuestsToRemove)
+        userQuestsToRemove.removeIf(quest -> quest.getAssignedDate().equals(today));
 
         // Delete all inactive quests from the repository
-        questRepository.deleteAll(userQuests);
+        questRepository.deleteAll(userQuestsToRemove);
     }
 
     private String generateUseWordQuestDesc(String word, Integer times) {

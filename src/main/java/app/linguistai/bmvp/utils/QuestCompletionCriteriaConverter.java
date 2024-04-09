@@ -3,12 +3,12 @@ package app.linguistai.bmvp.utils;
 import app.linguistai.bmvp.model.gamification.quest.types.QuestCompletionCriteria;
 import app.linguistai.bmvp.model.gamification.quest.types.UseWordCriteria;
 import app.linguistai.bmvp.model.gamification.quest.types.SendMessageCriteria;
-import app.linguistai.bmvp.model.gamification.quest.types.CreateWordListCriteria;
+import app.linguistai.bmvp.model.gamification.quest.types.AddUnknownWordCriteria;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 /**
- * @author ChatGPT, will be refactored when merging to dev
+ * @author ChatGPT, TODO will be refactored when merging to dev
  */
 @Converter(autoApply = true)
 public class QuestCompletionCriteriaConverter implements AttributeConverter<QuestCompletionCriteria, String> {
@@ -27,9 +27,9 @@ public class QuestCompletionCriteriaConverter implements AttributeConverter<Ques
             SendMessageCriteria criteria = (SendMessageCriteria) attribute;
             return "SendMessage:" + criteria.getTimes();
         }
-        else if (attribute instanceof CreateWordListCriteria) {
-            CreateWordListCriteria criteria = (CreateWordListCriteria) attribute;
-            return "CreateWordList:" + criteria.getTimes();
+        else if (attribute instanceof AddUnknownWordCriteria) {
+            AddUnknownWordCriteria criteria = (AddUnknownWordCriteria) attribute;
+            return "AddUnknownWord:" + criteria.getTimes();
         }
 
         return attribute.toString(); // Default serialization
@@ -57,8 +57,8 @@ public class QuestCompletionCriteriaConverter implements AttributeConverter<Ques
                 return new UseWordCriteria(details[0], Integer.parseInt(details[1]));
             case "SendMessage":
                 return new SendMessageCriteria(Integer.parseInt(details[0]));
-            case "CreateWordList":
-                return new CreateWordListCriteria(Integer.parseInt(details[0]));
+            case "AddUnknownWord":
+                return new AddUnknownWordCriteria(Integer.parseInt(details[0]));
             default:
                 return null; // or handle unknown types
         }

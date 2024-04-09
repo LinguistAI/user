@@ -5,6 +5,17 @@ public class QuestConsts {
     public static final String TIMES_IDENTIFIER = "<TIMES>";
     public static final String TIMES_CLOSING_IDENTIFIER = "</TIMES>";
 
+    // Quest "Times" Upper Limits
+    public static final int USE_WORD_TIMES_UPPER_LIMIT = 8;
+    public static final int SEND_MESSAGE_TIMES_UPPER_LIMIT = 10;
+
+    // Quest "Times" Lower Limits
+    public static final int USE_WORD_TIMES_LOWER_LIMIT = 3;
+    public static final int SEND_MESSAGE_TIMES_LOWER_LIMIT = 6;
+
+    // Use Word Quest Amount
+    public static final int ASSIGN_USE_WORD_QUEST_AMOUNT = 2;
+
     // Types
     public static final String TYPE_USE_WORD = "WORD";
     public static final String TYPE_SEND_MESSAGE = "MESSAGE";

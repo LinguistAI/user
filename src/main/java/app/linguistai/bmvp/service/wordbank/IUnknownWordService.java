@@ -8,6 +8,7 @@ import app.linguistai.bmvp.response.wordbank.RUnknownWord;
 import app.linguistai.bmvp.response.wordbank.RUnknownWordListWords;
 import app.linguistai.bmvp.response.wordbank.RUnknownWordLists;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface IUnknownWordService {
@@ -27,4 +28,5 @@ public interface IUnknownWordService {
     ROwnerUnknownWordList deleteList(UUID listId, String email) throws Exception;
     UnknownWordList getRandomActiveUnknownWordList(UUID userId) throws Exception;
     String getRandomWordFromList(UUID listId) throws Exception;
+    List<String> getRandomWordFromList(UUID listId, Integer numOfWords) throws Exception;
 }
