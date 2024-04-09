@@ -7,9 +7,6 @@ import app.linguistai.bmvp.model.gamification.quest.types.AddUnknownWordCriteria
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
-/**
- * @author ChatGPT, TODO will be refactored when merging to dev
- */
 @Converter(autoApply = true)
 public class QuestCompletionCriteriaConverter implements AttributeConverter<QuestCompletionCriteria, String> {
 
@@ -19,16 +16,13 @@ public class QuestCompletionCriteriaConverter implements AttributeConverter<Ques
             return null;
         }
 
-        if (attribute instanceof UseWordCriteria) {
-            UseWordCriteria criteria = (UseWordCriteria) attribute;
+        if (attribute instanceof UseWordCriteria criteria) {
             return "UseWord:" + criteria.getWord() + "," + criteria.getTimes();
         }
-        else if (attribute instanceof SendMessageCriteria) {
-            SendMessageCriteria criteria = (SendMessageCriteria) attribute;
+        else if (attribute instanceof SendMessageCriteria criteria) {
             return "SendMessage:" + criteria.getTimes();
         }
-        else if (attribute instanceof AddUnknownWordCriteria) {
-            AddUnknownWordCriteria criteria = (AddUnknownWordCriteria) attribute;
+        else if (attribute instanceof AddUnknownWordCriteria criteria) {
             return "AddUnknownWord:" + criteria.getTimes();
         }
 
@@ -43,7 +37,7 @@ public class QuestCompletionCriteriaConverter implements AttributeConverter<Ques
 
         String[] parts = dbData.split(":");
         if (parts.length < 2) {
-            return null; // or throw an IllegalArgumentException
+            return null;
         }
 
         String type = parts[0];
@@ -52,7 +46,7 @@ public class QuestCompletionCriteriaConverter implements AttributeConverter<Ques
         switch (type) {
             case "UseWord":
                 if (details.length < 2) {
-                    return null; // or handle error
+                    return null;
                 }
                 return new UseWordCriteria(details[0], Integer.parseInt(details[1]));
             case "SendMessage":
@@ -60,7 +54,7 @@ public class QuestCompletionCriteriaConverter implements AttributeConverter<Ques
             case "AddUnknownWord":
                 return new AddUnknownWordCriteria(Integer.parseInt(details[0]));
             default:
-                return null; // or handle unknown types
+                return null;
         }
     }
 }
