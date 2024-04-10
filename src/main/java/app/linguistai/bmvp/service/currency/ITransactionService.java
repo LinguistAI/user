@@ -5,5 +5,5 @@ import app.linguistai.bmvp.model.enums.TransactionType;
 import java.util.UUID;
 
 public interface ITransactionService {
-    UserGems processTransaction(UUID userId, TransactionType type, Long amount) throws Exception;
+    UserGems processTransaction(String email, TransactionType type, Long amount) throws Exception;
 }

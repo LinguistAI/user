@@ -1,5 +1,6 @@
 package app.linguistai.bmvp.controller.currency;
 
+import app.linguistai.bmvp.consts.Header;
 import app.linguistai.bmvp.model.currency.UserGems;
 import app.linguistai.bmvp.model.enums.TransactionType;
 import app.linguistai.bmvp.request.currency.QTransactionRequest;
@@ -38,11 +39,11 @@ public class TransactionController {
         @ApiResponse(responseCode = "404", description = "User or gems not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<Object> processTransaction(@Valid @RequestBody QTransactionRequest request) throws Exception {
+    public ResponseEntity<Object> processTransaction(@RequestHeader(Header.USER_EMAIL) String email, @Valid @RequestBody QTransactionRequest request) throws Exception {
         return Response.create(
             "Transaction processed successfully",
             HttpStatus.OK,
-            transactionService.processTransaction(request.getUserId(), request.getType(), request.getAmount())
+            transactionService.processTransaction(email, request.getType(), request.getAmount())
         );
     }
 
