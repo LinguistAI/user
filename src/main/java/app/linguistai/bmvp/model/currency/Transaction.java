@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static app.linguistai.bmvp.consts.TransactionConsts.MIN_TRANSACTION_AMOUNT;
@@ -39,4 +40,13 @@ public class Transaction {
     @Min(value = MIN_TRANSACTION_AMOUNT, message = "The transaction amount must be greater than zero.")
     @Column(name = "amount", nullable = false)
     private Long amount;
+
+    // @NotNull not required per this.onCreate(), which guarantees not null
+    @Column(name = "timestamp", nullable = false, columnDefinition = "TIMESTAMP")
+    private LocalDateTime timestamp;
+
+    @PrePersist
+    protected void onCreate() {
+        timestamp = LocalDateTime.now();
+    }
 }
