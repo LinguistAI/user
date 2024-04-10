@@ -59,4 +59,18 @@ public class TransactionController {
     public ResponseEntity<Object> getTransactionTypes() {
         return Response.create("Available transaction types", HttpStatus.OK, TransactionType.values());
     }
+
+    @GetMapping
+    @Operation(summary = "Get User Gems", description = "Retrieves user's gem information")
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Successfully retrieved user gems",
+            content = {@Content(mediaType = "application/json", schema = @Schema(implementation = UserGems.class))}
+        ),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<Object> getUserGems(@RequestHeader(Header.USER_EMAIL) String email) throws Exception {
+        return Response.create("Successfully retrieved user gems", HttpStatus.OK, transactionService.ensureUserGemsExists(email));
+    }
 }
