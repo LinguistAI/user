@@ -11,6 +11,7 @@ import app.linguistai.bmvp.model.enums.TransactionType;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.currency.ITransactionRepository;
 import app.linguistai.bmvp.repository.currency.IUserGemsRepository;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;
+
+import static app.linguistai.bmvp.consts.TransactionConsts.DEFAULT_STARTING_GEMS;
 
 @Slf4j
 @Service
@@ -32,7 +35,7 @@ public class TransactionService implements ITransactionService {
 
     @Override
     @Transactional
-    public UserGems processTransaction(@NotBlank String email, @NotNull TransactionType type, @NotNull Long amount) throws Exception {
+    public UserGems processTransaction(@NotBlank @Email String email, @NotNull TransactionType type, @NotNull Long amount) throws Exception {
         try {
             // Check if user exists, if so get the ID, if not throw a NotFoundException
             UUID userId = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true)).getId();
@@ -73,7 +76,7 @@ public class TransactionService implements ITransactionService {
         }
         catch (NotFoundException e) {
             if (e.getObject().equals(User.class.getSimpleName())) {
-                log.error("User is not found for email {}", email);
+                log.error("User not found for email {}", email);
             }
             else if (e.getObject().equals(UserGems.class.getSimpleName())) {
                 log.error("UserGems not found for user with email {}", email);
@@ -91,6 +94,35 @@ public class TransactionService implements ITransactionService {
             log.error("Could not process transaction for user with email {}", email, e);
             throw new SomethingWentWrongException();
         }
+    }
+
+    @Override
+    @Transactional
+    public UserGems ensureUserGemsExists(@NotBlank @Email String email) throws Exception {
+        try {
+            // Check if user exists
+            User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
+
+            // Check if user gems exists and return it, otherwise or create a new one
+            UserGems userGems = userGemsRepository.findById(user.getId()).orElseGet(() -> createUserGems(user));
+
+            log.info("User gems ensured for user with email {}", email);
+            return userGems;
+        } catch (NotFoundException e) {
+            log.error("User not found for email {}", email);
+            throw e;
+        } catch (Exception e) {
+            log.error("Could not ensure user gems for user with email {}", email, e);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    private UserGems createUserGems(User user) {
+        return userGemsRepository.save(UserGems.builder()
+                .user(user)
+                .gems(DEFAULT_STARTING_GEMS)
+                .build()
+        );
     }
 
     private Boolean validateEnoughGems(Long currentGems, Long itemCost) {

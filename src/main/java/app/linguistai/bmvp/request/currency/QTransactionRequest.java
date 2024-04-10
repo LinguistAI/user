@@ -5,14 +5,13 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import static app.linguistai.bmvp.consts.TransactionConsts.MIN_TRANSACTION_AMOUNT;
-
 @Data
 public class QTransactionRequest {
     @NotNull
     private TransactionType type;
 
+    // Defining Min value as a constant in TransactionConsts gave "java: element value must be a constant expression" error
     @NotNull
-    @Min(value = MIN_TRANSACTION_AMOUNT, message = "The transaction amount must be greater than zero")
+    @Min(value = 1, message = "The transaction amount must be greater than zero")
     private Long amount;
 }

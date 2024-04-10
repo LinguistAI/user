@@ -4,15 +4,19 @@ import app.linguistai.bmvp.model.User;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Data
+@Builder
 @Entity
 @Table(name = "user_gems")
 @NoArgsConstructor
+@AllArgsConstructor
 public class UserGems {
     @Id
     @NotNull

@@ -13,8 +13,6 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static app.linguistai.bmvp.consts.TransactionConsts.MIN_TRANSACTION_AMOUNT;
-
 @Data
 @Builder
 @Entity
@@ -33,11 +31,13 @@ public class Transaction {
     private User user;
 
     @NotNull
+    @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
     private TransactionType transactionType;
 
+    // Defining Min value as a constant in TransactionConsts gave "java: element value must be a constant expression" error
     @NotNull
-    @Min(value = MIN_TRANSACTION_AMOUNT, message = "The transaction amount must be greater than zero")
+    @Min(value = 1, message = "The transaction amount must be greater than zero")
     @Column(name = "amount", nullable = false)
     private Long amount;
 
