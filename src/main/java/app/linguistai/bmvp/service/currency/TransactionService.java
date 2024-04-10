@@ -19,7 +19,6 @@ import org.springframework.validation.annotation.Validated;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import java.util.UUID;
 
 import static app.linguistai.bmvp.consts.TransactionConsts.DEFAULT_STARTING_GEMS;
@@ -108,10 +107,12 @@ public class TransactionService implements ITransactionService {
 
             log.info("User gems ensured for user with email {}", email);
             return userGems;
-        } catch (NotFoundException e) {
+        }
+        catch (NotFoundException e) {
             log.error("User not found for email {}", email);
             throw e;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Could not ensure user gems for user with email {}", email, e);
             throw new SomethingWentWrongException();
         }
@@ -119,9 +120,9 @@ public class TransactionService implements ITransactionService {
 
     private UserGems createUserGems(User user) {
         return userGemsRepository.save(UserGems.builder()
-                .user(user)
-                .gems(DEFAULT_STARTING_GEMS)
-                .build()
+            .user(user)
+            .gems(DEFAULT_STARTING_GEMS)
+            .build()
         );
     }
 
@@ -129,4 +130,3 @@ public class TransactionService implements ITransactionService {
         return currentGems >= itemCost;
     }
 }
-

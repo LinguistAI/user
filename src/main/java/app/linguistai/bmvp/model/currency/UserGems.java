@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.util.UUID;
 
 @Data
@@ -25,10 +24,10 @@ public class UserGems {
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(
-            name = "user_id",
-            referencedColumnName = "id",
-            foreignKey = @ForeignKey(),
-            nullable = false
+        name = "user_id",
+        referencedColumnName = "id",
+        foreignKey = @ForeignKey(),
+        nullable = false
     )
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private User user;
