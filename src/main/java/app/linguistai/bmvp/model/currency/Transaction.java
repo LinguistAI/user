@@ -37,7 +37,7 @@ public class Transaction {
     private TransactionType transactionType;
 
     @NotNull
-    @Min(value = MIN_TRANSACTION_AMOUNT, message = "The transaction amount must be greater than zero.")
+    @Min(value = MIN_TRANSACTION_AMOUNT, message = "The transaction amount must be greater than zero")
     @Column(name = "amount", nullable = false)
     private Long amount;
 

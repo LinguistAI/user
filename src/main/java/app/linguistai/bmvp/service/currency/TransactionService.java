@@ -2,6 +2,8 @@ package app.linguistai.bmvp.service.currency;
 
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
+import app.linguistai.bmvp.exception.currency.InsufficientGemsException;
+import app.linguistai.bmvp.exception.currency.InvalidTransactionTypeException;
 import app.linguistai.bmvp.model.currency.Transaction;
 import app.linguistai.bmvp.model.currency.UserGems;
 import app.linguistai.bmvp.model.enums.TransactionType;
@@ -33,13 +35,13 @@ public class TransactionService implements ITransactionService {
             switch (type) {
                 case SHOP_SPEND -> {
                     if (!this.validateEnoughGems(userGems.getGems(), amount)) {
-                        throw new RuntimeException("Not enough gems.");
+                        throw new InsufficientGemsException();
                     }
 
                     userGems.setGems(userGems.getGems() - amount);
                 }
                 case GEMS_PURCHASE, GEMS_REWARD -> userGems.setGems(userGems.getGems() + amount);
-                default -> throw new IllegalArgumentException("Unsupported transaction type.");
+                default -> throw new InvalidTransactionTypeException();
             }
 
             // Save the new gem count of user to the repository
@@ -56,7 +58,7 @@ public class TransactionService implements ITransactionService {
             log.info("Processed transaction for user with ID {}: type: {} amount: {}", userId, type, amount);
             return saved;
         }
-        catch (IllegalArgumentException e) {
+        catch (InvalidTransactionTypeException e) {
             log.error("Could not process transaction for user with ID {}, unsupported transaction type", userId);
             throw e;
         }
@@ -64,7 +66,7 @@ public class TransactionService implements ITransactionService {
             log.error("UserGems not found for user with ID {}", userId);
             throw e;
         }
-        catch (RuntimeException e) {
+        catch (InsufficientGemsException e) {
             log.error("Not enough gems for user with ID {}", userId);
             throw e;
         }
