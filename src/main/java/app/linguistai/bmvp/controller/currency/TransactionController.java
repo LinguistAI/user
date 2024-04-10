@@ -68,6 +68,7 @@ public class TransactionController {
             description = "Successfully retrieved user gems",
             content = {@Content(mediaType = "application/json", schema = @Schema(implementation = UserGems.class))}
         ),
+        @ApiResponse(responseCode = "404", description = "User not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<Object> getUserGems(@RequestHeader(Header.USER_EMAIL) String email) throws Exception {
