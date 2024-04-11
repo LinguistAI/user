@@ -13,10 +13,10 @@ public class Response {
         HashMap<String, Object> response = new HashMap<String, Object>();
         String timestamp = new SimpleDateFormat("yyyy.MM.dd HH.mm.ss").format(new java.util.Date());
 
-        response.put("timestamp", timestamp);
-        response.put("msg", message);
-        response.put("status", status.value());
         response.put("data", data);
+        response.put("timestamp", timestamp);
+        response.put("status", status.value());
+        response.put("msg", message);        
 
         return new ResponseEntity<Object>(response, status);
     }
