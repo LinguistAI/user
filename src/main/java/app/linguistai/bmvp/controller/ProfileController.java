@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import app.linguistai.bmvp.consts.Header;
@@ -21,6 +22,8 @@ import app.linguistai.bmvp.response.Response;
 import app.linguistai.bmvp.service.AccountService;
 import app.linguistai.bmvp.service.profile.ProfileService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
@@ -43,10 +46,14 @@ public class ProfileController {
         RUserProfile userProfile = profileService.getUserProfile(email);
         return Response.create("OK", HttpStatus.OK, userProfile);        
     }
+    @GetMapping(path = "search")
+    public ResponseEntity<Object> searchUser(
+            @RequestParam @NotBlank String username,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Min page number can be 0") Integer page,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "Min page size can be 1") Integer size,
+            @RequestHeader(Header.USER_EMAIL) String email) throws Exception {
 
-    @GetMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "search")
-    public ResponseEntity<Object> searchUser(@Valid @RequestBody QUserSearch userSearch,
-                                             @RequestHeader(Header.USER_EMAIL) String email) throws Exception {
+        QUserSearch userSearch = new QUserSearch(username, page, size); 
         Page<User> users = accountService.searchUser(userSearch, email);
         return Response.create("User search is successful", HttpStatus.OK, users);
     }
