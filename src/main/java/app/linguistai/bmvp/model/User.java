@@ -24,7 +24,7 @@ public class User {
     private UUID id;
 
     @NotBlank
-    @Column(name = "username", nullable = false)
+    @Column(name = "username", nullable = false, unique = true)
     private String username;
 
     @NotBlank

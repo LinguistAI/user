@@ -4,6 +4,8 @@ import java.util.UUID;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -20,6 +22,9 @@ public interface IAccountRepository extends JpaRepository<User, UUID> {
     Optional<User> findUserById(UUID id);
     Optional<User> findUserByEmail(String email);
     boolean existsByEmail(String email);
+    boolean existsByUsername(String username);
+
+    Page<User> findByUsernameStartingWithAndEmailNot(String username, String loggedInUserEmail, Pageable pageable);
 
     @Modifying
     @Transactional
