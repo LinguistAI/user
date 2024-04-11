@@ -15,6 +15,7 @@ import app.linguistai.bmvp.exception.StreakException;
 import app.linguistai.bmvp.exception.TokenException;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
+import app.linguistai.bmvp.service.currency.ITransactionService;
 import app.linguistai.bmvp.service.stats.UserLoggedDateService;
 import app.linguistai.bmvp.service.wordbank.UnknownWordService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +60,7 @@ public class AccountService {
     private final UserStreakService userStreakService;
     private final UserLoggedDateService userLoggedDateService;
     private final UnknownWordService unknownWordService;
+    private final ITransactionService transactionService;
 
     public RLoginUser login(QUserLogin user) throws Exception {
         try {
@@ -88,6 +90,7 @@ public class AccountService {
             log.info("User {} logged in.", dbUser.getId());
             // Add the current date as a logged date
             userLoggedDateService.addLoggedDateByEmailAndDate(dbUser.getEmail(), new Date());
+            transactionService.ensureUserGemsExists(dbUser.getEmail());
 
             return new RLoginUser(dbUser, accessToken, refreshToken);
         } catch (CustomException e2) {
