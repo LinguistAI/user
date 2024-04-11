@@ -103,7 +103,7 @@ public class UnknownWordController {
         }
     }
 
-    @GetMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/select")
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/select")
     public ResponseEntity<Object> selectWord(@Valid @RequestBody QSelectWord selectWord,
                                                 @RequestHeader(Header.USER_EMAIL) String email) throws Exception {    
         return Response.create("OK", HttpStatus.OK, wordSelectionService.getSelectedWords(selectWord, email));       

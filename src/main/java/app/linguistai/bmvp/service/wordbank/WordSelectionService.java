@@ -47,30 +47,6 @@ public class WordSelectionService {
                                     selectWord.getConversationId(), 
                                     user.getEmail());
 
-            // If words are not selected yet, select them and save to db
-            if (selectedWords.isEmpty()) {
-                List<UnknownWord> selectedUnknownWords = selectWords(user.getId(), selectWord.getSize());
-
-                // Iterate over each selected word and create a WordSelection object
-                for (UnknownWord unknownWord : selectedUnknownWords) {
-                    WordSelection wordSelection = WordSelection.builder()
-                            .conversationId(selectWord.getConversationId())
-                            .word(unknownWord)
-                            .build();
-
-                    selectedWords.add(wordSelection);
-                }
-
-                // Save the selected words to db
-                wordSelectionRepository.saveAll(selectedWords);
-
-                log.info("New words are selected for user email {}", email);
-
-                log.info("Selected words are retrieved for user email {}", email);
-
-                return selectedWords;
-
-            }
 
             // Remove the words that are not in the preservedWords list from the selectedWords list
             selectedWords.removeIf(wordSelection -> !preservedWords.contains(wordSelection.getWord().getWord()));
@@ -80,7 +56,7 @@ public class WordSelectionService {
 
             // If the size of the selectedWords list is less than the required size, select new words
             if (selectedWords.size() < selectWord.getSize()) {
-                List<UnknownWord> selectedUnknownWords = selectWords(user.getId(), selectWord.getSize() - selectedWords.size());
+                List<UnknownWord> selectedUnknownWords = this.selectWords(user.getId(), selectWord.getSize() - selectedWords.size());
 
                 // Iterate over each selected word and create a WordSelection object
                 for (UnknownWord unknownWord : selectedUnknownWords) {
