@@ -13,9 +13,12 @@ import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.exception.StreakException;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
+import app.linguistai.bmvp.service.currency.ITransactionService;
 import app.linguistai.bmvp.service.stats.UserLoggedDateService;
 import app.linguistai.bmvp.service.wordbank.UnknownWordService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,7 @@ import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.request.QChangePassword;
 import app.linguistai.bmvp.request.QUser;
 import app.linguistai.bmvp.request.QUserLogin;
+import app.linguistai.bmvp.request.QUserSearch;
 import app.linguistai.bmvp.response.RLoginUser;
 import app.linguistai.bmvp.response.RRefreshToken;
 import app.linguistai.bmvp.security.JWTUserService;
@@ -54,6 +58,7 @@ public class AccountService {
     private final UserStreakService userStreakService;
     private final UserLoggedDateService userLoggedDateService;
     private final UnknownWordService unknownWordService;
+    private final ITransactionService transactionService;
 
     public RLoginUser login(QUserLogin user) throws Exception {
         try {
@@ -90,6 +95,22 @@ public class AccountService {
             log.info("User with email {} logged in with a valid token.", email);
         } catch (Exception e) {
             log.error("User login with valid token failed for email {}", email, e);
+            throw new SomethingWentWrongException();
+        }
+    }
+  
+    public Page<User> searchUser(QUserSearch userSearch, String userEmail) throws Exception {
+        try {
+            // Create a page request using the request body
+            PageRequest pageable = PageRequest.of(userSearch.getPage(), userSearch.getSize());
+
+            Page<User> users = accountRepository.findByUsernameStartingWithAndEmailNot(userSearch.getUsername(), userEmail, pageable);
+
+            log.info("User {} searched for users {}.", userEmail, userSearch.getUsername());
+
+            return users;
+        } catch (Exception e) {
+            log.error("User {} search for users {} failed.", userEmail, userSearch.getUsername(), e);
             throw new SomethingWentWrongException();
         }
     }
@@ -144,10 +165,17 @@ public class AccountService {
     @Transactional
     public RLoginUser addUser(QUser requestUser) throws Exception {
         try {
+            // check if email or username is already used before
             boolean userExist = accountRepository.existsByEmail(requestUser.getEmail());
             
             if (userExist) {
                 throw new AlreadyFoundException("User already exists with the provided email address. Please use a different email or sign in.");
+            }
+
+            userExist = accountRepository.existsByUsername(requestUser.getUsername());
+
+            if (userExist) {
+                throw new AlreadyFoundException("User already exists with the provided username. Please use a different username or sign in.");
             }
 
             // Generate uuid and hash password if user does not exist in the system
@@ -293,6 +321,7 @@ public class AccountService {
         }
         // Add the current date as a logged date
         userLoggedDateService.addLoggedDateByEmailAndDate(email, new Date());
+        transactionService.ensureUserGemsExists(email);
         log.info("User session initiated for email {}.", email);
     }
 }

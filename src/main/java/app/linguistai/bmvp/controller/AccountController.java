@@ -8,8 +8,11 @@ import app.linguistai.bmvp.request.QResetPassword;
 import app.linguistai.bmvp.request.QResetPasswordVerification;
 import app.linguistai.bmvp.request.QUser;
 import app.linguistai.bmvp.request.QResetPasswordSave;
+import app.linguistai.bmvp.service.currency.ITransactionService;
 import app.linguistai.bmvp.service.gamification.UserStreakService;
 import app.linguistai.bmvp.service.stats.UserLoggedDateService;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -44,6 +47,7 @@ public class AccountController {
     private final EmailService emailService;
     private final UserLoggedDateService userLoggedDateService;
     private final UserStreakService userStreakService;
+    private final ITransactionService transactionService;
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "login")
     public ResponseEntity<Object> login(@Valid @RequestBody QUserLogin userInfo) throws Exception {
