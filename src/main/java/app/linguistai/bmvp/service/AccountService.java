@@ -292,7 +292,7 @@ public class AccountService {
 
             int rowsAffected = accountRepository.updatePassword(hashedPassword, user.getId());
 
-            log.info("New password is set for user {}.", user.getId().toString());
+            log.info("New password is set for user with email {}.", email);
 
             return rowsAffected > 0;
         } catch (NotFoundException e) {
