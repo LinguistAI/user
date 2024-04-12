@@ -33,10 +33,9 @@ public class LeaderboardService {
     public RLeaderboardXP getTopUsersByExperience(String email, Integer page, int size) throws Exception {
         try {
             // Fetch the global XP ranking for the logged-in user
-            IXPRanking loggedUserRanking = xpRepository.findGlobalUserRankByEmail(email);
-            if (loggedUserRanking == null) {
-                throw new NotFoundException("User's global XP ranking", true);
-            }
+            IXPRanking loggedUserRanking = xpRepository.findGlobalUserRankByEmail(email)
+                    .orElseThrow(() -> new NotFoundException("User's global XP ranking", true));
+
             // If page number is not given, then return the page where the user is present
             if (page == null) {
                 page = getPageNumberByRanking(loggedUserRanking.getRanking(), size);
@@ -69,10 +68,9 @@ public class LeaderboardService {
             }
 
             // Fetch the ranking of the logged-in user among friends
-            IXPRanking loggedUserRanking = xpRepository.findFriendsUserRankByEmail(loggedUser.getId());
-            if (loggedUserRanking == null) {
-                throw new NotFoundException("User's XP ranking among friends", true);
-            }
+            IXPRanking loggedUserRanking = xpRepository.findFriendsUserRankByEmail(loggedUser.getId())
+                    .orElseThrow(() -> new NotFoundException("User's XP ranking among friends", true));;
+
             // If page number is not given, then return the page where the user is present
             if (page == null) {
                 page = getPageNumberByRanking(loggedUserRanking.getRanking(), size);
@@ -118,7 +116,10 @@ public class LeaderboardService {
 
             userXPRankings.add(ranking);
         }
-        User user = accountRepository.findUserById(loggedUserRanking.getUserIdAsUUID()).orElse(null);
+
+        User user = accountRepository.findUserById(loggedUserRanking.getUserIdAsUUID())
+                .orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
+
         if (user == null) {
             throw new NotFoundException(User.class.getSimpleName(), true);
         }

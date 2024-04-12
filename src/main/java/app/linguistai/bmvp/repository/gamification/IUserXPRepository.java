@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface IUserXPRepository extends JpaRepository<UserXP, UUID> {
@@ -20,7 +21,7 @@ public interface IUserXPRepository extends JpaRepository<UserXP, UUID> {
     @Query(value = "SELECT r.ranking, r.userIdAsByte, r.experience FROM (SELECT DENSE_RANK() OVER (ORDER BY ux.experience DESC) AS ranking, u.email AS email, ux.experience, ux.user_id as userIdAsByte " +
             "FROM user_xp ux JOIN user u ON u.id = ux.user_id) AS r WHERE r.email = :email",
             nativeQuery = true)
-    IXPRanking findGlobalUserRankByEmail(String email);
+    Optional<IXPRanking> findGlobalUserRankByEmail(String email);
 
     @Query(value = "SELECT r.ranking, r.userIdAsByte, r.experience FROM (SELECT DENSE_RANK() OVER (ORDER BY ux.experience DESC) AS ranking, ux.experience, ux.user_id as userIdAsByte " +
             "FROM user_xp ux " +
@@ -29,6 +30,6 @@ public interface IUserXPRepository extends JpaRepository<UserXP, UUID> {
             "AND f.status = 1) AS r " +
             "WHERE r.userIdAsByte = :userId",
             nativeQuery = true)
-    IXPRanking findFriendsUserRankByEmail(UUID userId);
+    Optional<IXPRanking> findFriendsUserRankByEmail(UUID userId);
 
 }
