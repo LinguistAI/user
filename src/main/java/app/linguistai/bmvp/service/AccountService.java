@@ -6,13 +6,11 @@ import java.util.UUID;
 
 import app.linguistai.bmvp.exception.AlreadyFoundException;
 import app.linguistai.bmvp.exception.CustomException;
-import app.linguistai.bmvp.exception.ExceptionLogger;
 import app.linguistai.bmvp.exception.LoginException;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.PasswordNotMatchException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.exception.StreakException;
-import app.linguistai.bmvp.exception.TokenException;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
 import app.linguistai.bmvp.service.stats.UserLoggedDateService;
@@ -72,13 +70,12 @@ public class AccountService {
             final String accessToken = jwtUtils.createAccessToken(userDetails);
             final String refreshToken = jwtUtils.createRefreshToken(userDetails);
 
-            initiateUserSession(dbUser.getEmail());
+            this.initiateUserSession(dbUser.getEmail());
 
             log.info("User {} logged in.", dbUser.getId());
             return new RLoginUser(dbUser, accessToken, refreshToken);
         } catch (CustomException e2) {
             log.error("User login failed due to wrong email or password for email {}", user.getEmail());
-
             throw e2;
         } catch (Exception e2) {
             log.error("User login failed for email {}", user.getEmail(), e2);
@@ -89,7 +86,7 @@ public class AccountService {
     public void loginWithValidToken(String email) throws Exception {
         // This method is only reached if the user already has a valid token
         try {
-            initiateUserSession(email);
+            this.initiateUserSession(email);
             log.info("User with email {} logged in with a valid token.", email);
         } catch (Exception e) {
             log.error("User login with valid token failed for email {}", email, e);
@@ -287,15 +284,15 @@ public class AccountService {
 
     private void initiateUserSession(String email) throws Exception {
         // Upon successful user entry, check whether to increase user streak or not
-        // ALSO IN MESSAGE SERVICE: userStreakService.updateUserStreak(dbUser.getEmail());
         try {
             userStreakService.updateUserStreak(email);
         }
-        catch (Exception e1) {
+        catch (Exception e) {
             // Intentionally not thrown to not cause login exception for users without UserStreak
-            System.out.println(ExceptionLogger.log(e1));
+            log.error("User streak update is failed for email {} when initiating user session.", email, e);
         }
         // Add the current date as a logged date
         userLoggedDateService.addLoggedDateByEmailAndDate(email, new Date());
+        log.info("User session initiated for email {}.", email);
     }
 }
