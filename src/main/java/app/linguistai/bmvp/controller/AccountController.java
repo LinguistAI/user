@@ -12,6 +12,9 @@ import app.linguistai.bmvp.service.currency.ITransactionService;
 import app.linguistai.bmvp.service.gamification.UserStreakService;
 import app.linguistai.bmvp.service.stats.UserLoggedDateService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -111,33 +114,30 @@ public class AccountController {
         return Response.create("Reset token is generated", HttpStatus.OK, resetToken);
     }
 
+    @Operation(summary = "Validate Reset Password Token", description = "Validate the provided reset password token.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Validated password reset token"),
+            @ApiResponse(responseCode = "400", description = "Invalid reset token"),
+            @ApiResponse(responseCode = "404", description = "User or reset token not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PostMapping("/validate-reset")
-    public ResponseEntity<Object> validateResetPassword(@Valid @RequestBody QResetPasswordVerification verificationInfo) {
-        try {
-            boolean tokenValid = accountService.validateResetCode(verificationInfo.getEmail(), verificationInfo.getResetCode(), false);
-            if (!tokenValid) {
-                return Response.create("Invalid password reset token", HttpStatus.BAD_REQUEST);
-            }
-            return Response.create("Validated password reset token", HttpStatus.OK);
-        } catch (Exception e) {
-            return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Object> validateResetPassword(@Valid @RequestBody QResetPasswordVerification verificationInfo) throws Exception{
+        accountService.validateResetCode(verificationInfo.getEmail(), verificationInfo.getResetCode(), false);
+        return Response.create("Validated password reset token", HttpStatus.OK);
     }
 
+    @Operation(summary = "Reset Password", description = "Reset the user's password using the provided reset password code.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Password is changed"),
+            @ApiResponse(responseCode = "400", description = "Invalid reset token"),
+            @ApiResponse(responseCode = "404", description = "User or reset token not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/reset-password")
-    public ResponseEntity<Object> saveResetPassword(@Valid @RequestBody QResetPasswordSave passwordInfo) {
-        try {
-            boolean tokenValid = accountService.validateResetCode(passwordInfo.getEmail(), passwordInfo.getResetCode(), true);
-            if (!tokenValid) {
-                return Response.create("Invalid password reset token", HttpStatus.BAD_REQUEST);
-            }
-            boolean passwordChanged = accountService.setPassword(passwordInfo.getEmail(), passwordInfo.getNewPassword());
-            if (!passwordChanged) {
-                return Response.create("Failed to change the password", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-            return Response.create("Password is changed", HttpStatus.OK);
-        } catch (Exception e) {
-            return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Object> saveResetPassword(@Valid @RequestBody QResetPasswordSave passwordInfo) throws Exception{
+        accountService.validateResetCode(passwordInfo.getEmail(), passwordInfo.getResetCode(), true);
+        accountService.setPassword(passwordInfo.getEmail(), passwordInfo.getNewPassword());
+        return Response.create("Password is changed", HttpStatus.OK);
     }
 }
