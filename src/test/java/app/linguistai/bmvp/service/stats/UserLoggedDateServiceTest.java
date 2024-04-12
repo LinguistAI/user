@@ -80,6 +80,7 @@ public class UserLoggedDateServiceTest {
             loggedDates.add(new UserLoggedDate(user, date2));
             loggedDates.add(new UserLoggedDate(user, date3));
 
+            when(accountRepository.findUserByEmail(user.getEmail())).thenReturn(Optional.of(user));
             when(userLoggedDateRepository.findByUserEmailOrderByLoggedDateDesc(user.getEmail()))
                     .thenReturn(loggedDates);
 
@@ -156,6 +157,7 @@ public class UserLoggedDateServiceTest {
             loggedDates.add(new UserLoggedDate(user, date3));
             loggedDates.add(new UserLoggedDate(user, date2));
 
+            when(accountRepository.findUserByEmail(user.getEmail())).thenReturn(Optional.of(user));
             when(userLoggedDateRepository.findByUserEmailOrderByLoggedDateAsc(user.getEmail()))
                     .thenReturn(loggedDates.stream()
                             .sorted(Comparator.comparing(UserLoggedDate::getLoggedDate))
@@ -183,6 +185,7 @@ public class UserLoggedDateServiceTest {
             user.setEmail("test@test.com");
             user.setId(UUID.randomUUID());
 
+            when(accountRepository.findUserByEmail(user.getEmail())).thenReturn(Optional.of(user));
             when(userLoggedDateRepository.findByUserEmailOrderByLoggedDateDesc(user.getEmail())).thenReturn(Collections.emptyList());
 
             RUserLoggedDate rUserLoggedDate = userLoggedDateService.getLoggedDates(user.getEmail(), null, null);
