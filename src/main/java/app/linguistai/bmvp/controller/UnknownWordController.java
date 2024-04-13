@@ -191,7 +191,7 @@ public class UnknownWordController {
 
     @Operation(summary = "Get Word Stats", description = "Returns the mastered/reviewing/learning stats for words in all word lists")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OK", content =
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved statistics for all word lists.", content =
                     {@Content(mediaType = "application/json", schema =
                     @Schema(implementation = RUnknownWordListsStats.class))}),
             @ApiResponse(responseCode = "404", description = "User not found"),

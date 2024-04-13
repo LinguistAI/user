@@ -3,8 +3,11 @@ package app.linguistai.bmvp.controller.stats;
 import app.linguistai.bmvp.consts.Header;
 import app.linguistai.bmvp.response.Response;
 import app.linguistai.bmvp.response.stats.RUserLoggedDate;
+import app.linguistai.bmvp.response.wordbank.RUnknownWordListsStats;
 import app.linguistai.bmvp.service.stats.UserLoggedDateService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.AllArgsConstructor;
@@ -21,7 +24,9 @@ public class UserLoggedDateController {
 
     @Operation(summary = "Get Logged Date", description = "Retrieve logged dates for the user.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully fetched logged dates"),
+            @ApiResponse(responseCode = "200", description = "Successfully fetched logged dates", content =
+                    {@Content(mediaType = "application/json", schema =
+                    @Schema(implementation = RUserLoggedDate.class))}),
             @ApiResponse(responseCode = "400", description = "Invalid input parameter"),
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
