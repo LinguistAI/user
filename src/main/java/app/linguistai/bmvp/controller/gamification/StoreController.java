@@ -53,7 +53,6 @@ public class StoreController {
         return Response.create("Successfully fetched all enabled store items", HttpStatus.OK, storeService.getAllEnabledStoreItems(page, size));
     }
 
-
     @GetMapping("/user-items")
     @Operation(summary = "Get user items", description = "Retrieves a user's items and their quantity")
     @ApiResponses(value = {

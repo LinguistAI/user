@@ -31,16 +31,16 @@ public class StoreItem {
     private String description;
 
     @NotNull
-    @Column(name = "gem_price", nullable = false)
-    private Long gemPrice;
+    @Column(name = "price", nullable = false)
+    private Long price;
 
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
 
-    public StoreItem(String type, String description, Long gemPrice, boolean enabled) {
+    public StoreItem(String type, String description, Long price, boolean enabled) {
         this.type = type;
         this.description = description;
-        this.gemPrice = gemPrice;
+        this.price = price;
         this.enabled = enabled;
     }
 }

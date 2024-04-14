@@ -8,6 +8,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
+import java.util.Arrays;
 import static app.linguistai.bmvp.consts.StoreConsts.*;
 
 @Slf4j
@@ -30,17 +31,14 @@ public class StoreItemLoader implements ApplicationRunner {
 
         try {
             // Save store items by updating the existing ones and creating new items for new "types"
-            for (StoreItem newItem : storeItems) {
-                StoreItem existingItem = storeItemRepository.findByType(newItem.getType()).orElse(null);
-                if (existingItem != null) {
-                    existingItem.setDescription(newItem.getDescription());
-                    existingItem.setGemPrice(newItem.getGemPrice());
-                    existingItem.setEnabled(newItem.isEnabled());
-                    storeItemRepository.save(existingItem);
-                } else {
-                    storeItemRepository.save(newItem);
-                }
-            }
+            Arrays.stream(storeItems).forEach(newItem -> storeItemRepository.findByType(newItem.getType())
+                    .map(existingItem -> {
+                        existingItem.setDescription(newItem.getDescription());
+                        existingItem.setPrice(newItem.getPrice());
+                        existingItem.setEnabled(newItem.isEnabled());
+                        return storeItemRepository.save(existingItem);
+                    })
+                    .orElseGet(() -> storeItemRepository.save(newItem)));
             log.info("Store items loaded into the database successfully.");
         } catch (DataIntegrityViolationException e) {
             log.info("Store items already exist in the database.");

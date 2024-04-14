@@ -16,7 +16,7 @@ import app.linguistai.bmvp.response.gamification.store.RStoreItem;
 import app.linguistai.bmvp.response.gamification.store.RStoreItems;
 import app.linguistai.bmvp.response.gamification.store.RUserItem;
 import app.linguistai.bmvp.response.gamification.store.RUserItems;
-import app.linguistai.bmvp.service.currency.TransactionService;
+import app.linguistai.bmvp.service.currency.ITransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -37,7 +37,7 @@ public class StoreService {
     private final IUserItemRepository userItemRepository;
     private final IAccountRepository accountRepository;
 
-    private final TransactionService transactionService;
+    private final ITransactionService transactionService;
 
     @Transactional(readOnly = true)
     public RStoreItems getAllStoreItems(int page, int size) throws Exception {
@@ -122,7 +122,7 @@ public class StoreService {
                 throw new ItemNotEnabledException();
             }
 
-            transactionService.processTransaction(email, TransactionType.SHOP_SPEND, storeItem.getGemPrice());
+            transactionService.processTransaction(email, TransactionType.SHOP_SPEND, storeItem.getPrice());
 
             // If the user already has the item, increment the quantity, otherwise create a new UserItem
             UserItem userItem = userItemRepository.findByUserAndStoreItem(user, storeItem)
@@ -148,11 +148,10 @@ public class StoreService {
             log.error("Store item with id {} is not enabled for purchase", storeItemId);
             throw e;
         }  catch (InsufficientGemsException e) {
-            log.error("Not enough gems for user with email {}", email);
             throw e;
         } catch (Exception e) {
             log.error("Failed to purchase item", e);
-            throw new SomethingWentWrongException("Failed to purchase item");
+            throw new SomethingWentWrongException();
         }
     }
 
