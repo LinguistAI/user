@@ -18,7 +18,7 @@ public class UserXP {
     @NotNull
     private UUID userId; // maps to User.id by @MapsId
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @MapsId
     @JoinColumn(
         name = "user_id",
