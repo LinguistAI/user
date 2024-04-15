@@ -45,7 +45,7 @@ public class FriendshipService {
             Friendship friendship = friendshipRepository.findByUserPair(dbUser1.getId(), user2Id).orElse(null);
 
             if (friendship != null) {
-                throw new AlreadyFoundException(friendship.getStatus().toString(), true);              
+                throw new AlreadyFoundException(REQ_FRIEND_STR, true);              
             }
             
             LocalDateTime now = LocalDateTime.now();
