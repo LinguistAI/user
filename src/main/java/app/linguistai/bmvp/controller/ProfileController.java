@@ -1,6 +1,9 @@
 package app.linguistai.bmvp.controller;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +21,7 @@ import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.request.QUserProfile;
 import app.linguistai.bmvp.request.QUserSearch;
 import app.linguistai.bmvp.response.RUserProfile;
+import app.linguistai.bmvp.response.RUserSearch;
 import app.linguistai.bmvp.response.Response;
 import app.linguistai.bmvp.service.AccountService;
 import app.linguistai.bmvp.service.profile.ProfileService;
@@ -54,7 +58,7 @@ public class ProfileController {
             @RequestHeader(Header.USER_EMAIL) String email) throws Exception {
 
         QUserSearch userSearch = new QUserSearch(username, page, size); 
-        Page<User> users = accountService.searchUser(userSearch, email);
+        PageImpl<RUserSearch> users = accountService.searchUser(userSearch, email);
         return Response.create("User search is successful", HttpStatus.OK, users);
     }
 }

@@ -26,6 +26,24 @@ public interface IAccountRepository extends JpaRepository<User, UUID> {
 
     Page<User> findByUsernameStartingWithAndEmailNot(String username, String loggedInUserEmail, Pageable pageable);
 
+    @Query("SELECT u, " +
+            "CASE " +
+            "   WHEN f.status = 1 THEN 0 " +
+            "   WHEN f.status = 0 AND f.user1.id = :loggedInUserId THEN 1 " +
+            "   WHEN f.status = 0 AND f.user1.id = u.id THEN 2 " +
+            "   ELSE 3 " +
+            "END AS friendship_status " +
+            "FROM User u " +
+            "LEFT JOIN Friendship f ON (u.id = f.user1.id OR u.id = f.user2.id) " +
+            "AND (f.user1.id = :loggedInUserId OR f.user2.id = :loggedInUserId) " +
+            "WHERE u.username LIKE :usernamePrefix% " +
+            "AND u.id != :loggedInUserId")
+    Page<Object[]> findByUsernameStartingWithAndWithFriendshipStatusAndEmailNot(
+            String usernamePrefix,
+            UUID loggedInUserId,
+            Pageable pageable
+    );
+
     @Modifying
     @Transactional
     @Query("update User u set u.password = :password where u.id = :id")
