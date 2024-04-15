@@ -3,7 +3,6 @@ package app.linguistai.bmvp.service;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import app.linguistai.bmvp.exception.AlreadyFoundException;
 import app.linguistai.bmvp.exception.CustomException;
@@ -19,14 +18,12 @@ import app.linguistai.bmvp.service.stats.UserLoggedDateService;
 import app.linguistai.bmvp.service.wordbank.UnknownWordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import app.linguistai.bmvp.model.User;
-import app.linguistai.bmvp.model.enums.UserSearchFriendshipStatus;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.request.QChangePassword;
 import app.linguistai.bmvp.request.QUser;
@@ -34,7 +31,6 @@ import app.linguistai.bmvp.request.QUserLogin;
 import app.linguistai.bmvp.request.QUserSearch;
 import app.linguistai.bmvp.response.RLoginUser;
 import app.linguistai.bmvp.response.RRefreshToken;
-import app.linguistai.bmvp.response.RUserSearch;
 import app.linguistai.bmvp.security.JWTUserService;
 import app.linguistai.bmvp.security.JWTUtils;
 import app.linguistai.bmvp.service.gamification.UserStreakService;
@@ -103,29 +99,16 @@ public class AccountService {
         }
     }
   
-    public PageImpl<RUserSearch> searchUser(QUserSearch userSearch, String userEmail) throws Exception {
+    public Page<User> searchUser(QUserSearch userSearch, String userEmail) throws Exception {
         try {
-            System.out.println(userSearch.getPage());
-            User dbUser = accountRepository.findUserByEmail(userEmail).orElseThrow(() -> new LoginException());
-
             // Create a page request using the request body
             PageRequest pageable = PageRequest.of(userSearch.getPage(), userSearch.getSize());
 
-            Page<Object[]> users = accountRepository.findByUsernameStartingWithAndWithFriendshipStatusAndEmailNot(userSearch.getUsername(), dbUser.getId(), pageable);
-
-            // Map query results into the response object
-            List<RUserSearch> searchResults = users.getContent().stream()
-                .map(entry -> {
-                    User user = (User) entry[0];
-                    UserSearchFriendshipStatus status = UserSearchFriendshipStatus.fromValue((int) entry[1]);
-
-                    return new RUserSearch(user, status);
-                })
-                .collect(Collectors.toList());
+            Page<User> users = accountRepository.findByUsernameStartingWithAndEmailNot(userSearch.getUsername(), userEmail, pageable);
 
             log.info("User {} searched for users {}.", userEmail, userSearch.getUsername());
-            
-            return new PageImpl<RUserSearch>(searchResults, pageable, users.getTotalElements());
+
+            return users;
         } catch (Exception e) {
             log.error("User {} search for users {} failed.", userEmail, userSearch.getUsername(), e);
             throw new SomethingWentWrongException();
