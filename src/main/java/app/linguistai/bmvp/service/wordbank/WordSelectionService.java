@@ -123,10 +123,13 @@ public class WordSelectionService {
             if (selectedWords.size() != initialSelectSize) {
                 log.error("Error in selecting new words, selected words size is not equal to initial select size, " +
                         "selectedWords size: {}, initialSelectSize: {}", selectedWords.size(), initialSelectSize);
-                throw new Exception("Error in selecting new words, you need to add more unknown words to your word bank");
+                throw new NotFoundException("Error in selecting new words, you need to add more unknown words to your word bank");
             }
 
             return selectedWords;
+        } catch (NotFoundException e) {
+            log.error("Error in selecting new words, you need to add more unknown words to your word bank", e);
+            throw e;
         } catch (Exception e) {
             log.error("Error in selecting new words", e);
             throw new SomethingWentWrongException();
