@@ -1,6 +1,5 @@
 package app.linguistai.bmvp.service.wordbank;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -90,7 +89,7 @@ public class WordSelectionService {
         try {
             int initialSelectSize = selectSize;
 
-            List<UnknownWord> selectedWords = null;
+            List<UnknownWord> selectedWords;
             List<ConfidenceEnum> confidences = new ArrayList<>(Arrays.asList(ConfidenceEnum.LOWEST, ConfidenceEnum.LOW));
 
             // Select words whose confidences are lowest or low
@@ -124,7 +123,7 @@ public class WordSelectionService {
             if (selectedWords.size() != initialSelectSize) {
                 log.error("Error in selecting new words, selected words size is not equal to initial select size, " +
                         "selectedWords size: {}, initialSelectSize: {}", selectedWords.size(), initialSelectSize);
-                throw new SomethingWentWrongException();
+                throw new Exception("Error in selecting new words, you need to add more unknown words to your word bank");
             }
 
             return selectedWords;
