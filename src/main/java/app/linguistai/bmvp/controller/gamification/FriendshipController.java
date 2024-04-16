@@ -3,6 +3,8 @@ package app.linguistai.bmvp.controller.gamification;
 import java.util.List;
 
 import app.linguistai.bmvp.model.Friendship;
+import app.linguistai.bmvp.model.User;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -61,7 +63,7 @@ public class FriendshipController {
 
     @GetMapping
     public ResponseEntity<Object> getFriends(@RequestHeader(Header.USER_EMAIL) String email) throws Exception {
-        List<Friendship> friends = friendshipService.getFriends(email);
+        List<User> friends = friendshipService.getFriends(email);
         return Response.create("OK", HttpStatus.OK, friends);      
     }
 }
