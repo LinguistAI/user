@@ -151,8 +151,8 @@ public class UserStreakService {
             throw e1;
         }
         catch (Exception e2) {
-            System.out.println("ERROR: Could not fetch UserStreak.");
-            throw e2;
+            log.error("Could not fetch user streak for email {}", email, e2);
+            throw new SomethingWentWrongException();
         }
     }
 

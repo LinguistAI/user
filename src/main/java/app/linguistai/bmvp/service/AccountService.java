@@ -15,6 +15,7 @@ import app.linguistai.bmvp.exception.StreakException;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
 import app.linguistai.bmvp.service.currency.ITransactionService;
+import app.linguistai.bmvp.service.gamification.IXPService;
 import app.linguistai.bmvp.service.stats.UserLoggedDateService;
 import app.linguistai.bmvp.service.wordbank.UnknownWordService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,10 +64,11 @@ public class AccountService {
     private final UserLoggedDateService userLoggedDateService;
     private final UnknownWordService unknownWordService;
     private final ITransactionService transactionService;
+    private final IXPService xpService;
 
     public RLoginUser login(QUserLogin user) throws Exception {
         try {
-            User dbUser = accountRepository.findUserByEmail(user.getEmail()).orElseThrow(() -> new LoginException());
+            User dbUser = accountRepository.findUserByEmail(user.getEmail()).orElseThrow(LoginException::new);
 
             String hashedPassword = dbUser.getPassword();
             boolean passwordMatch = bCryptPasswordEncoder.matches(user.getPassword(), hashedPassword);
@@ -106,7 +108,7 @@ public class AccountService {
     public PageImpl<RUserSearch> searchUser(QUserSearch userSearch, String userEmail) throws Exception {
         try {
             System.out.println(userSearch.getPage());
-            User dbUser = accountRepository.findUserByEmail(userEmail).orElseThrow(() -> new LoginException());
+            User dbUser = accountRepository.findUserByEmail(userEmail).orElseThrow(LoginException::new);
 
             // Create a page request using the request body
             PageRequest pageable = PageRequest.of(userSearch.getPage(), userSearch.getSize());
@@ -205,7 +207,8 @@ public class AccountService {
             if (!userStreakService.createUserStreak(newUser)) {
                 throw new StreakException();
             }
-          
+
+            xpService.createUserXPForRegister(newUser);
             unknownWordService.addPredefinedWordList(DEFAULT_WORD_LIST_FILE, newUser.getEmail());
           
             // Create access and reset tokens so that user does not have to log in after registering
@@ -315,7 +318,7 @@ public class AccountService {
 
             int rowsAffected = accountRepository.updatePassword(hashedPassword, user.getId());
 
-            log.info("New password is set for user %s.", user.getId());
+            log.info("New password is set for user {}.", user.getId());
 
             return rowsAffected > 0;
         } catch (NotFoundException e) {

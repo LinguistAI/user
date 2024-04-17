@@ -2,6 +2,7 @@ package app.linguistai.bmvp.service.gamification;
 
 import app.linguistai.bmvp.configs.XPConfiguration;
 import app.linguistai.bmvp.exception.NotFoundException;
+import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.exception.UserXPNotFoundException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.enums.XPAction;
@@ -12,12 +13,14 @@ import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.gamification.IUserXPRepository;
 import app.linguistai.bmvp.response.gamification.RUserXP;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 import java.util.TreeMap;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class XPService implements IXPService {
@@ -29,11 +32,12 @@ public class XPService implements IXPService {
     private final IUserXPRepository xpRepository;
 
     @Override
+    @Transactional
     public RUserXP createUserXP(String email) throws Exception {
         try {
             // Check if user exists
             User user = accountRepository.findUserByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+                .orElseThrow(() -> new NotFoundException("User does not exist"));
 
             UserXP toSave = new UserXP();
             toSave.setUser(user);
@@ -41,6 +45,7 @@ public class XPService implements IXPService {
 
             // Create and save new UserXP
             UserXP saved = xpRepository.save(toSave);
+            log.info("User XP created for email {}", email);
 
             UserXPWithLevel levelInfo = this.determineProceduralLevel(saved.getExperience());
             Long userLevel = levelInfo.level();
@@ -53,13 +58,35 @@ public class XPService implements IXPService {
                 .level(userLevel)
                 .build();
         }
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not create user xp.");
-            throw e1;
+            log.error("Create user XP failed for email {}", email, e1);
+            throw new SomethingWentWrongException();
         }
     }
 
     @Override
+    public void createUserXPForRegister(User user) throws Exception {
+        try {
+            UserXP toSave = new UserXP();
+            toSave.setUser(user);
+            toSave.setExperience(0L);
+
+            // Create and save new UserXP
+            xpRepository.save(toSave);
+            log.info("User XP created for email {}", user.getEmail());
+        }
+        catch (Exception e1) {
+            log.error("Create user XP for register failed for user with email {}", user.getEmail(), e1);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    @Override
+    @Transactional
     public RUserXP increaseUserXP(String email, XPAction action) throws Exception {
         try {
             UserXPWithUser info = this.getUserOwnedXP(email);
@@ -81,16 +108,21 @@ public class XPService implements IXPService {
                 .level(userLevel)
                 .build();
         }
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        }
         catch (UserXPNotFoundException e1) {
             return this.createUserXP(email);
         }
         catch (Exception e2) {
-            System.out.println("ERROR: Could not increase user xp.");
-            throw e2;
+            log.error("Could not increase user XP", e2);
+            throw new SomethingWentWrongException();
         }
     }
 
     @Override
+    @Transactional
     public RUserXP getUserXP(String email) throws Exception {
         try {
             UserXPWithUser info = this.getUserOwnedXP(email);
@@ -108,12 +140,16 @@ public class XPService implements IXPService {
                 .level(userLevel)
                 .build();
         }
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        }
         catch (UserXPNotFoundException e1) {
             return this.createUserXP(email);
         }
         catch (Exception e2) {
-            System.out.println("ERROR: Could not increase user xp.");
-            throw e2;
+            log.error("Could not get user XP", e2);
+            throw new SomethingWentWrongException();
         }
     }
 

@@ -1,6 +1,7 @@
 package app.linguistai.bmvp.service.gamification.quest;
 
 import app.linguistai.bmvp.exception.NotFoundException;
+import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.gamification.quest.Quest;
 import app.linguistai.bmvp.model.gamification.quest.types.QuestCompletionCriteria;
@@ -14,6 +15,7 @@ import app.linguistai.bmvp.request.gamification.QQuestTypeAction;
 import app.linguistai.bmvp.service.wordbank.IUnknownWordService;
 import app.linguistai.bmvp.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +23,7 @@ import java.util.*;
 
 import static app.linguistai.bmvp.consts.QuestConsts.*;
 
-
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class QuestService implements IQuestService {
@@ -31,19 +33,21 @@ public class QuestService implements IQuestService {
 
     private final IUnknownWordService unknownWordService;
 
-
-
     @Override
     public void processSendMessage(String email, QQuestSendMessage message) throws Exception {
         try {
             // Check if user exists
             User user = accountRepository.findUserByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         }
-        catch (Exception e) {
-            System.out.println("ERROR: Could not process quest send message quest action.");
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
             throw e;
+        }
+        catch (Exception e) {
+            log.error("Process send message for quests failed for email {}", email, e);
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -52,12 +56,16 @@ public class QuestService implements IQuestService {
         try {
             // Check if user exists
             User user = accountRepository.findUserByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         }
-        catch (Exception e) {
-            System.out.println("ERROR: Could not process quest type action.");
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
             throw e;
+        }
+        catch (Exception e) {
+            log.error("Process quest type action failed for email {}", email, e);
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -66,13 +74,17 @@ public class QuestService implements IQuestService {
         try {
             // Check if user exists
             User user = accountRepository.findUserByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+                    .orElseThrow(() -> new NotFoundException("User not found"));
 
             return false;
         }
-        catch (Exception e) {
-            System.out.println("ERROR: Could not check if the user with email " + email + " has quest type " + type.getClass().getSimpleName() + ".");
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
             throw e;
+        }
+        catch (Exception e) {
+            log.error("Check user has quest type failed for email {}", email, e);
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -82,7 +94,7 @@ public class QuestService implements IQuestService {
         try {
             // Step 1. Check if user exists
             User user = accountRepository.findUserByEmail(email)
-                    .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+                    .orElseThrow(() -> new NotFoundException("User not found"));
 
             // Step 2. Check if user has active quests (assigned that day)
             if (this.userHasActiveQuests(user)) {
@@ -105,9 +117,13 @@ public class QuestService implements IQuestService {
 
             questRepository.saveAll(questsToAssign);
         }
-        catch (Exception e) {
-            System.out.println("ERROR: Could not assign quests to user with email " + email + ".");
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
             throw e;
+        }
+        catch (Exception e) {
+            log.error("Assign quests failed for email {}", email, e);
+            throw new SomethingWentWrongException();
         }
     }
 
