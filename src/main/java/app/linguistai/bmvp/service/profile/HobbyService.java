@@ -29,7 +29,7 @@ public class HobbyService {
             userHobbyRepository.deleteByUserId(user.getId());
 
             List<Hobby> dbHobbies = hobbyRepository.findByNameInIgnoreCase(hobbies);
-            List<UserHobby> userHobbies = new ArrayList<UserHobby>();
+            List<UserHobby> userHobbies = new ArrayList<>();
 
             for (Hobby h : dbHobbies) {
                 userHobbies.add(new UserHobby(user, h));

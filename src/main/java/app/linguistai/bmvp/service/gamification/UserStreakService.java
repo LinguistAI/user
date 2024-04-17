@@ -73,13 +73,16 @@ public class UserStreakService {
                 // Streak must be reset (edge case, if last login is after current time) Streak must be reset
                 default -> resetUserStreak(userStreak);
             };
-        } catch (NotFoundException e) {            
-            log.error("User streak is not found for username {}", rUserStreak.getUsername());            
+        }
+        catch (NotFoundException e) {
+            log.error("User streak is not found for username {}", rUserStreak.getUsername());
             throw e;
-        } catch (StreakException e) {            
-            log.error("Streak time is null for username {}", rUserStreak.getUsername());            
+        }
+        catch (StreakException e) {
+            log.error("Streak time is null for username {}", rUserStreak.getUsername());
             throw e;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Check user streak for update fail for username {}", rUserStreak.getUsername(), e);
             throw new SomethingWentWrongException();
         }
@@ -108,7 +111,8 @@ public class UserStreakService {
                 .highestStreak(streak.getHighestStreak())
                 .lastLogin(streak.getLastLogin())
                 .build();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Increment user streak for update fail for id {}", userStreak.getUserId(), e);
             throw new SomethingWentWrongException();
         }
@@ -132,7 +136,8 @@ public class UserStreakService {
                 .highestStreak(streak.getHighestStreak())
                 .lastLogin(streak.getLastLogin())
                 .build();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Reset user streak for update fail for id {}", userStreak.getUserId(), e);
             throw new SomethingWentWrongException();
         }
@@ -146,8 +151,8 @@ public class UserStreakService {
             throw e1;
         }
         catch (Exception e2) {
-            System.out.println("ERROR: Could not fetch UserStreak.");
-            throw e2;
+            log.error("Could not fetch user streak for email {}", email, e2);
+            throw new SomethingWentWrongException();
         }
     }
 
