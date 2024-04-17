@@ -38,10 +38,9 @@ public class GlobalExceptionHandler {
     }
     
     @ExceptionHandler(CustomException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
     @ResponseBody
     public ResponseEntity<Object> handleCustomException(CustomException ex) {
-        return Response.create(ex.getMessage(), HttpStatus.NOT_FOUND);
+        return Response.create(ex.getMessage(),ex.getStatus());
     }
 
     // Handle 400 Bad Request (Invalid request body)
