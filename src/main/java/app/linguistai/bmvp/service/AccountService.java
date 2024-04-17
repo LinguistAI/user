@@ -16,6 +16,7 @@ import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
 import app.linguistai.bmvp.service.currency.ITransactionService;
 import app.linguistai.bmvp.service.gamification.IXPService;
+import app.linguistai.bmvp.service.gamification.quest.IQuestService;
 import app.linguistai.bmvp.service.stats.UserLoggedDateService;
 import app.linguistai.bmvp.service.wordbank.UnknownWordService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +66,7 @@ public class AccountService {
     private final UnknownWordService unknownWordService;
     private final ITransactionService transactionService;
     private final IXPService xpService;
+    private final IQuestService questService;
 
     public RLoginUser login(QUserLogin user) throws Exception {
         try {
@@ -341,6 +343,7 @@ public class AccountService {
         }
         // Add the current date as a logged date
         userLoggedDateService.addLoggedDateByEmailAndDate(email, new Date());
+        questService.assignQuests(email);
         transactionService.ensureUserGemsExists(email);
         log.info("User session initiated for email {}.", email);
     }

@@ -8,6 +8,7 @@ public interface IXPService {
     RUserXP createUserXP(String email) throws Exception;
     void createUserXPForRegister(User user) throws Exception;
     RUserXP increaseUserXP(String email, XPAction action) throws Exception;
+    void awardQuestReward(String email, Long reward) throws Exception;
     // Get user xp
     RUserXP getUserXP(String email) throws Exception;
     // (?) Decrease user xp

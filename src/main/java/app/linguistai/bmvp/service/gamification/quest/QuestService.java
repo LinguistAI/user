@@ -4,14 +4,13 @@ import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.gamification.quest.Quest;
-import app.linguistai.bmvp.model.gamification.quest.types.QuestCompletionCriteria;
-import app.linguistai.bmvp.model.gamification.quest.types.SendMessageCriteria;
-import app.linguistai.bmvp.model.gamification.quest.types.UseWordCriteria;
+import app.linguistai.bmvp.model.gamification.quest.types.*;
 import app.linguistai.bmvp.model.wordbank.UnknownWordList;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.gamification.quest.IQuestRepository;
+import app.linguistai.bmvp.request.gamification.QQuestAction;
 import app.linguistai.bmvp.request.gamification.QQuestSendMessage;
-import app.linguistai.bmvp.request.gamification.QQuestTypeAction;
+import app.linguistai.bmvp.service.gamification.IXPService;
 import app.linguistai.bmvp.service.wordbank.IUnknownWordService;
 import app.linguistai.bmvp.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
+import static app.linguistai.bmvp.consts.LanguageTags.TR_TAG;
 import static app.linguistai.bmvp.consts.QuestConsts.*;
 
 @Slf4j
@@ -33,13 +33,41 @@ public class QuestService implements IQuestService {
 
     private final IUnknownWordService unknownWordService;
 
+    private final IXPService xpService;
+
     @Override
+    public List<Quest> getUserQuests(String email) throws Exception {
+        try {
+            // Check if user exists
+            User user = accountRepository.findUserByEmail(email)
+                    .orElseThrow(() -> new NotFoundException("User not found"));
+
+            // Get quests of user
+            return questRepository.findAllByUserId(user.getId());
+        }
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        }
+        catch (Exception e) {
+            log.error("Get user quests failed for email {}", email, e);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    @Override
+    @Transactional
     public void processSendMessage(String email, QQuestSendMessage message) throws Exception {
         try {
             // Check if user exists
             User user = accountRepository.findUserByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
+            // Get quests of user
+            List<Quest> userQuests = questRepository.findAllByUserId(user.getId());
+
+            // Process each quest
+            this.processAllQuests(user, userQuests, message);
         }
         catch (NotFoundException e) {
             log.error("User is not found for email {}", email);
@@ -51,41 +79,95 @@ public class QuestService implements IQuestService {
         }
     }
 
-    @Override
-    public void processQuestTypeAction(String email, QuestCompletionCriteria type, QQuestTypeAction action) throws Exception {
-        try {
-            // Check if user exists
-            User user = accountRepository.findUserByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+    @Transactional
+    private void processAllQuests(User user, List<Quest> quests, QQuestAction action) throws Exception {
+        quests.forEach(q -> {
+            try {
+                this.processQuest(user, q, action);
+            }
+            catch (Exception e) {
+                log.error("Could not process quests of user with email {}", user.getEmail());
+                throw new RuntimeException();
+            }
+        });
+    }
 
-        }
-        catch (NotFoundException e) {
-            log.error("User is not found for email {}", email);
-            throw e;
+    @Override
+    @Transactional
+    public void processQuest(User user, Quest quest, QQuestAction action) throws Exception {
+        try {
+            QuestCompletionCriteria type = quest.getCompletionCriteria();
+
+            if (type instanceof UseWordCriteria criteria) {
+                this.processUseWordQuest(quest, criteria, (QQuestSendMessage) action);
+            }
+            else if (type instanceof SendMessageCriteria criteria) {
+                this.processSendMessageQuest(quest, (QQuestSendMessage) action);
+            }
         }
         catch (Exception e) {
-            log.error("Process quest type action failed for email {}", email, e);
+            log.error("Process quest type action failed for email {}", user.getEmail(), e);
             throw new SomethingWentWrongException();
         }
     }
 
-    @Override
-    public Boolean checkUserHasQuestType(String email, QuestCompletionCriteria type) throws Exception {
-        try {
-            // Check if user exists
-            User user = accountRepository.findUserByEmail(email)
-                    .orElseThrow(() -> new NotFoundException("User not found"));
+    @Transactional
+    private void checkQuestResult(Quest quest) throws Exception {
+        if (
+            quest.getProgress().getTimes() < quest.getCompletionCriteria().getTimes()
+            || quest.isCompleted()
+        ) {
+            return;
+        }
 
-            return false;
+        // If we are here, we know the target quest times is achieved
+        // and the quest is not marked as complete,
+        // so we award the reward to the user
+        xpService.awardQuestReward(quest.getUser().getEmail(), quest.getReward());
+
+        // And mark the quest as completed
+        quest.setCompleted(true);
+        questRepository.save(quest);
+    }
+
+    @Transactional
+    private void processSendMessageQuest(Quest quest, QQuestSendMessage action) throws Exception {
+        Integer previousProgress = quest.getProgress().getTimes();
+
+        if (previousProgress >= quest.getCompletionCriteria().getTimes()) {
+            return;
         }
-        catch (NotFoundException e) {
-            log.error("User is not found for email {}", email);
-            throw e;
+
+        quest.setProgress(new QuestProgress(previousProgress + 1));
+        Quest saved = questRepository.save(quest);
+
+        // If quest is completed, award the result
+        this.checkQuestResult(saved);
+    }
+
+    @Transactional
+    private void processUseWordQuest(Quest quest, UseWordCriteria criteria, QQuestSendMessage action) throws Exception {
+        Integer previousProgress = quest.getProgress().getTimes();
+
+        if (previousProgress >= quest.getCompletionCriteria().getTimes()) {
+            return;
         }
-        catch (Exception e) {
-            log.error("Check user has quest type failed for email {}", email, e);
-            throw new SomethingWentWrongException();
+
+        // Check if message contains required word (case-insensitive)
+        // TR_TAG is used since most users will be in Turkey
+        // (for addressing issues with specific characters like i, I, etc.)
+        String requiredWord = criteria.getWord().toLowerCase(Locale.forLanguageTag(TR_TAG));
+        String message = action.getMessage().toLowerCase(Locale.forLanguageTag(TR_TAG));
+
+        if (!message.contains(requiredWord)) {
+            return;
         }
+
+        quest.setProgress(new QuestProgress(previousProgress + 1));
+        Quest saved = questRepository.save(quest);
+
+        // If quest is completed, award the result
+        this.checkQuestResult(saved);
     }
 
     @Override
@@ -183,6 +265,8 @@ public class QuestService implements IQuestService {
             .reward(BASE_USE_WORD_REWARD * times)
             .assignedDate(DateUtils.convertUtilDateToSqlDate(Calendar.getInstance().getTime()))
             .completionCriteria(new UseWordCriteria(word, times))
+            .progress(new QuestProgress(0))
+            .completed(false)
             .build();
     }
 
@@ -196,6 +280,8 @@ public class QuestService implements IQuestService {
             .reward(BASE_SEND_MESSAGE_REWARD * times)
             .assignedDate(DateUtils.convertUtilDateToSqlDate(Calendar.getInstance().getTime()))
             .completionCriteria(new SendMessageCriteria(times))
+            .progress(new QuestProgress(0))
+            .completed(false)
             .build();
     }
 

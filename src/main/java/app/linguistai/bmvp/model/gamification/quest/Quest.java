@@ -2,7 +2,9 @@ package app.linguistai.bmvp.model.gamification.quest;
 
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.gamification.quest.types.QuestCompletionCriteria;
+import app.linguistai.bmvp.model.gamification.quest.types.QuestProgress;
 import app.linguistai.bmvp.utils.QuestCompletionCriteriaConverter;
+import app.linguistai.bmvp.utils.QuestProgressConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -55,5 +57,14 @@ public class Quest {
     @Convert(converter = QuestCompletionCriteriaConverter.class)
     @Column(name = "completion_criteria", nullable = false, columnDefinition = "TEXT")
     private QuestCompletionCriteria completionCriteria;
+
+    @NotNull
+    @Convert(converter = QuestProgressConverter.class)
+    @Column(name = "progress", nullable = false, columnDefinition = "TEXT")
+    private QuestProgress progress;
+
+    @NotNull
+    @Column(name = "completed", nullable = false)
+    private boolean completed;
 }
 

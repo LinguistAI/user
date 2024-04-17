@@ -1,4 +1,4 @@
 package app.linguistai.bmvp.request.gamification;
 
-public class QQuestTypeAction {
+public class QQuestAction {
 }

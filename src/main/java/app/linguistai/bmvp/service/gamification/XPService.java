@@ -123,6 +123,27 @@ public class XPService implements IXPService {
 
     @Override
     @Transactional
+    public void awardQuestReward(String email, Long reward) throws Exception {
+        try {
+            UserXPWithUser info = this.getUserOwnedXP(email);
+            UserXP userXP = info.userXP();
+
+            userXP.setExperience(userXP.getExperience() + reward);
+
+            xpRepository.save(userXP);
+        }
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        }
+        catch (Exception e2) {
+            log.error("Could not increase user XP", e2);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    @Override
+    @Transactional
     public RUserXP getUserXP(String email) throws Exception {
         try {
             UserXPWithUser info = this.getUserOwnedXP(email);

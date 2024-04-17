@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class QQuestSendMessage extends QQuestTypeAction {
+public class QQuestSendMessage extends QQuestAction {
     @NotBlank
     private String message;
 
