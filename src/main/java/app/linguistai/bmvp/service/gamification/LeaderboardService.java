@@ -9,7 +9,7 @@ import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.gamification.IUserXPRepository;
 import app.linguistai.bmvp.response.gamification.RLeaderboardXP;
 import app.linguistai.bmvp.response.gamification.RUserXPRanking;
-import app.linguistai.bmvp.consts.LeaderboardConsts;
+import static app.linguistai.bmvp.consts.LeaderboardConsts.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -42,7 +42,7 @@ public class LeaderboardService {
             }
 
             // Create pageable object with the given page number and size for pagination
-            Pageable pageable = PageRequest.of(page, size, Sort.by(LeaderboardConsts.XP_SORT_FIELD).descending());
+            Pageable pageable = PageRequest.of(page, size, Sort.by(XP_SORT_FIELD).descending().and(Sort.by(USERNAME_SORT_FIELD)));
             // Fetch page of user XP records sorted by experience
             Page<UserXP> userXPPage = xpRepository.findAll(pageable);
 
@@ -68,7 +68,7 @@ public class LeaderboardService {
             }
 
             // Fetch the ranking of the logged-in user among friends
-            IXPRanking loggedUserRanking = xpRepository.findFriendsUserRankByEmail(loggedUser.getId())
+            IXPRanking loggedUserRanking = xpRepository.findFriendsUserRankById(loggedUser.getId())
                     .orElseThrow(() -> new NotFoundException("User's XP ranking among friends", true));
 
             // If page number is not given, then return the page where the user is present
