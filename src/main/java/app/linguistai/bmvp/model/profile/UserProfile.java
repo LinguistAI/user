@@ -2,9 +2,8 @@ package app.linguistai.bmvp.model.profile;
 
 import java.time.LocalDate;
 import java.util.UUID;
-
-import app.linguistai.bmvp.consts.EnglishLevels;
 import app.linguistai.bmvp.model.User;
+import app.linguistai.bmvp.model.enums.EnglishLevel;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -48,9 +47,9 @@ public class UserProfile {
 
     @NotNull
     @Column(name = "english_level", nullable = true)
-    private EnglishLevels englishLevel;
+    private EnglishLevel englishLevel;
 
     public UserProfile() {
-        this.englishLevel = EnglishLevels.DONT_KNOW;
+        this.englishLevel = EnglishLevel.DONT_KNOW;
     }
 }
