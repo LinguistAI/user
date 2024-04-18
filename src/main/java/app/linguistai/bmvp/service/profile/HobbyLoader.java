@@ -1,5 +1,6 @@
 package app.linguistai.bmvp.service.profile;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -11,6 +12,7 @@ import app.linguistai.bmvp.repository.IHobbyRepository;
 
 import java.util.Arrays;
 
+@Slf4j
 @Component
 public class HobbyLoader implements ApplicationRunner {
 
@@ -58,9 +60,11 @@ public class HobbyLoader implements ApplicationRunner {
         
         try {
             hobbyRepository.saveAll(Arrays.asList(hobbies));
+            log.info("Hobbies loaded into the database successfully.");
         } catch (DataIntegrityViolationException e) {
-            System.out.println("Hobbies already exist");
+            log.info("Hobbies already exist in the database.");
         } catch (Exception e) {
+            log.error("Failed to load hobbies.", e);
             e.printStackTrace();
         }        
     }

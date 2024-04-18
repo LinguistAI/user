@@ -69,7 +69,7 @@ public class LeaderboardService {
 
             // Fetch the ranking of the logged-in user among friends
             IXPRanking loggedUserRanking = xpRepository.findFriendsUserRankByEmail(loggedUser.getId())
-                    .orElseThrow(() -> new NotFoundException("User's XP ranking among friends", true));;
+                    .orElseThrow(() -> new NotFoundException("User's XP ranking among friends", true));
 
             // If page number is not given, then return the page where the user is present
             if (page == null) {

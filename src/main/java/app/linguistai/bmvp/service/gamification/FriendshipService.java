@@ -3,6 +3,7 @@ package app.linguistai.bmvp.service.gamification;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import app.linguistai.bmvp.exception.AlreadyFoundException;
 import app.linguistai.bmvp.exception.FriendException;
@@ -45,7 +46,7 @@ public class FriendshipService {
             Friendship friendship = friendshipRepository.findByUserPair(dbUser1.getId(), user2Id).orElse(null);
 
             if (friendship != null) {
-                throw new AlreadyFoundException(friendship.getStatus().toString(), true);              
+                throw new AlreadyFoundException(REQ_FRIEND_STR, true);              
             }
             
             LocalDateTime now = LocalDateTime.now();
@@ -80,15 +81,20 @@ public class FriendshipService {
         }
     }
 
-    public List<Friendship> getFriends(String userEmail) throws Exception {
+    public List<User> getFriends(String userEmail) throws Exception {
         try {
             User dbUser1 = accountRepository.findUserByEmail(userEmail).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
 
             List<Friendship> friends = friendshipRepository.findByUser1OrUser2AndStatus(dbUser1.getId(), FriendshipStatus.ACCEPTED);
 
+            // Create user list from the friends of the logged in user
+            List<User> userFriends = friends.stream()
+                .map(friend -> friend.getUser1().getEmail().equals(userEmail) ? friend.getUser2() : friend.getUser1())
+                .collect(Collectors.toList());
+
             log.info("User {} viewed their friends.", dbUser1.getId());
 
-            return friends;
+            return userFriends;
         } catch (NotFoundException e) {
             log.error("Get friends failed since user does not exists for email {}", userEmail);
             throw e;

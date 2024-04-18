@@ -24,7 +24,7 @@ public class NotFoundException extends CustomException {
     }
 
     public NotFoundException(String obj, String key, String value) {
-        super(String.format("%s with %s: %s is not found", obj), HttpStatus.NOT_FOUND);
+        super(String.format("%s with %s: %s is not found", obj, key, value), HttpStatus.NOT_FOUND);
         this.object = obj;
     }
 
