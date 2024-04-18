@@ -1,4 +1,4 @@
-package app.linguistai.bmvp.model.enums;
+package app.linguistai.bmvp.enums;
 
 public enum TransactionType {
     SHOP_SPEND("shop_spend"), // for spending gems in the in-app store

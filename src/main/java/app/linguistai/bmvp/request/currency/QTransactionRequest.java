@@ -1,6 +1,6 @@
 package app.linguistai.bmvp.request.currency;
 
-import app.linguistai.bmvp.model.enums.TransactionType;
+import app.linguistai.bmvp.enums.TransactionType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

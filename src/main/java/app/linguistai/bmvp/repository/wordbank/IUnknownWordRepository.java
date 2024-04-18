@@ -1,7 +1,7 @@
 package app.linguistai.bmvp.repository.wordbank;
 
 import app.linguistai.bmvp.model.embedded.UnknownWordId;
-import app.linguistai.bmvp.model.enums.ConfidenceEnum;
+import app.linguistai.bmvp.enums.ConfidenceEnum;
 import app.linguistai.bmvp.model.wordbank.IConfidenceCount;
 import app.linguistai.bmvp.model.wordbank.UnknownWord;
 import org.springframework.data.jpa.repository.JpaRepository;

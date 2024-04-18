@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import app.linguistai.bmvp.model.Friendship;
 import app.linguistai.bmvp.model.embedded.FriendshipId;
-import app.linguistai.bmvp.model.enums.FriendshipStatus;
+import app.linguistai.bmvp.enums.FriendshipStatus;
 
 @Repository
 public interface IFriendshipRepository extends JpaRepository<Friendship, FriendshipId> {  

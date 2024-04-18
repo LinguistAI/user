@@ -1,7 +1,7 @@
 package app.linguistai.bmvp.service.gamification;
 
 import app.linguistai.bmvp.model.User;
-import app.linguistai.bmvp.model.enums.XPAction;
+import app.linguistai.bmvp.enums.XPAction;
 import app.linguistai.bmvp.response.gamification.RUserXP;
 
 public interface IXPService {

@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.UUID;
 
 import app.linguistai.bmvp.model.User;
-import app.linguistai.bmvp.model.enums.UserSearchFriendshipStatus;
+import app.linguistai.bmvp.enums.UserSearchFriendshipStatus;
 
 @Data
 @Builder

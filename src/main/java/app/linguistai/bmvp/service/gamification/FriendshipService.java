@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import app.linguistai.bmvp.model.User;
-import app.linguistai.bmvp.model.enums.FriendshipStatus;
+import app.linguistai.bmvp.enums.FriendshipStatus;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

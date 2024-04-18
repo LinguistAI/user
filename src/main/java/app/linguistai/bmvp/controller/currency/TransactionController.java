@@ -2,7 +2,7 @@ package app.linguistai.bmvp.controller.currency;
 
 import app.linguistai.bmvp.consts.Header;
 import app.linguistai.bmvp.model.currency.UserGems;
-import app.linguistai.bmvp.model.enums.TransactionType;
+import app.linguistai.bmvp.enums.TransactionType;
 import app.linguistai.bmvp.request.currency.QTransactionRequest;
 import app.linguistai.bmvp.response.Response;
 import app.linguistai.bmvp.service.currency.ITransactionService;

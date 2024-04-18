@@ -1,4 +1,4 @@
-package app.linguistai.bmvp.model.enums;
+package app.linguistai.bmvp.enums;
 
 public enum EnglishLevel {
     DONT_KNOW("Don't Know"),

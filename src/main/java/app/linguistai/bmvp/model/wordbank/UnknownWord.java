@@ -1,7 +1,7 @@
 package app.linguistai.bmvp.model.wordbank;
 
 import app.linguistai.bmvp.model.embedded.UnknownWordId;
-import app.linguistai.bmvp.model.enums.ConfidenceEnum;
+import app.linguistai.bmvp.enums.ConfidenceEnum;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
