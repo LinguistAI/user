@@ -3,7 +3,7 @@ package app.linguistai.bmvp.model.profile;
 import java.time.LocalDate;
 import java.util.UUID;
 import app.linguistai.bmvp.model.User;
-import app.linguistai.bmvp.model.enums.EnglishLevel;
+import app.linguistai.bmvp.enums.EnglishLevel;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

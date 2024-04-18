@@ -3,7 +3,7 @@ package app.linguistai.bmvp.request;
 import java.time.LocalDate;
 import java.util.List;
 
-import app.linguistai.bmvp.model.enums.EnglishLevel;
+import app.linguistai.bmvp.enums.EnglishLevel;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

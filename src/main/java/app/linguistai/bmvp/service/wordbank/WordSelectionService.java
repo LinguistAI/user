@@ -12,7 +12,7 @@ import app.linguistai.bmvp.repository.wordbank.IWordSelectionRepository;
 import org.springframework.stereotype.Service;
 
 import app.linguistai.bmvp.model.User;
-import app.linguistai.bmvp.model.enums.ConfidenceEnum;
+import app.linguistai.bmvp.enums.ConfidenceEnum;
 import app.linguistai.bmvp.model.wordbank.UnknownWord;
 import app.linguistai.bmvp.model.wordbank.WordSelection;
 import app.linguistai.bmvp.repository.IAccountRepository;

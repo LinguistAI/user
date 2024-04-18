@@ -1,6 +1,6 @@
 package app.linguistai.bmvp.model.wordbank;
 
-import app.linguistai.bmvp.model.enums.ConfidenceEnum;
+import app.linguistai.bmvp.enums.ConfidenceEnum;
 
 public interface IConfidenceCount {
     ConfidenceEnum getConfidence();

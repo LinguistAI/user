@@ -7,7 +7,7 @@ import app.linguistai.bmvp.exception.currency.InvalidTransactionTypeException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.currency.Transaction;
 import app.linguistai.bmvp.model.currency.UserGems;
-import app.linguistai.bmvp.model.enums.TransactionType;
+import app.linguistai.bmvp.enums.TransactionType;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.currency.ITransactionRepository;
 import app.linguistai.bmvp.repository.currency.IUserGemsRepository;

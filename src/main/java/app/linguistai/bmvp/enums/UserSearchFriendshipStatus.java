@@ -1,4 +1,4 @@
-package app.linguistai.bmvp.model.enums;
+package app.linguistai.bmvp.enums;
 
 // Note: If this values are updated, 
 // the status values in the IAccountRepository must be updated as well

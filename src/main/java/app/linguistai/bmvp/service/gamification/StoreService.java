@@ -6,7 +6,7 @@ import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.exception.currency.InsufficientGemsException;
 import app.linguistai.bmvp.exception.store.ItemNotEnabledException;
 import app.linguistai.bmvp.model.User;
-import app.linguistai.bmvp.model.enums.TransactionType;
+import app.linguistai.bmvp.enums.TransactionType;
 import app.linguistai.bmvp.model.gamification.store.StoreItem;
 import app.linguistai.bmvp.model.gamification.store.UserItem;
 import app.linguistai.bmvp.repository.IAccountRepository;

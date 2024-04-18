@@ -1,7 +1,7 @@
 package app.linguistai.bmvp.service.currency;
 
 import app.linguistai.bmvp.model.currency.UserGems;
-import app.linguistai.bmvp.model.enums.TransactionType;
+import app.linguistai.bmvp.enums.TransactionType;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

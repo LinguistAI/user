@@ -5,7 +5,7 @@ import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.exception.UserXPNotFoundException;
 import app.linguistai.bmvp.model.User;
-import app.linguistai.bmvp.model.enums.XPAction;
+import app.linguistai.bmvp.enums.XPAction;
 import app.linguistai.bmvp.model.gamification.UserXP;
 import app.linguistai.bmvp.model.gamification.UserXPWithLevel;
 import app.linguistai.bmvp.model.gamification.UserXPWithUser;

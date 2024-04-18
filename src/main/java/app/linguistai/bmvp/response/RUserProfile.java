@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-import app.linguistai.bmvp.model.enums.EnglishLevel;
+import app.linguistai.bmvp.enums.EnglishLevel;
 
 @Data
 @Builder

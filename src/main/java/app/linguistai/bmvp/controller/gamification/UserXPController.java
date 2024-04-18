@@ -1,7 +1,7 @@
 package app.linguistai.bmvp.controller.gamification;
 
 import app.linguistai.bmvp.consts.Header;
-import app.linguistai.bmvp.model.enums.XPAction;
+import app.linguistai.bmvp.enums.XPAction;
 import app.linguistai.bmvp.response.Response;
 import app.linguistai.bmvp.service.gamification.IXPService;
 import lombok.AllArgsConstructor;

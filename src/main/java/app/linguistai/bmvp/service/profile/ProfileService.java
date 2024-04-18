@@ -16,7 +16,7 @@ import app.linguistai.bmvp.exception.AlreadyFoundException;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.model.User;
-import app.linguistai.bmvp.model.enums.EnglishLevel;
+import app.linguistai.bmvp.enums.EnglishLevel;
 import app.linguistai.bmvp.model.profile.UserProfile;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.IProfileRepository;
