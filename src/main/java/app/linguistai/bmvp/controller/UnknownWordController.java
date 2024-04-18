@@ -191,23 +191,14 @@ public class UnknownWordController {
 
     @Operation(summary = "Get Word Stats", description = "Returns the mastered/reviewing/learning stats for words in all word lists")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OK", content =
-                    { @Content(mediaType = "application/json", schema =
-                    @Schema(implementation = RUnknownWordListsStats.class)) }),
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved statistics for all word lists.", content =
+                    {@Content(mediaType = "application/json", schema =
+                    @Schema(implementation = RUnknownWordListsStats.class))}),
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-
     @GetMapping("/lists/stats")
-    public ResponseEntity<Object> getAllListStats(@RequestHeader(Header.USER_EMAIL) String email) {
-        try {
-            return Response.create("Successfully retrieved statistics for all word lists.", HttpStatus.OK, unknownWordService.getAllListStats(email));
-        }
-        catch (NotFoundException e) {
-            return Response.create(e.getMessage(), HttpStatus.NOT_FOUND);
-        }
-        catch (Exception e) {
-            return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Object> getAllListStats(@RequestHeader(Header.USER_EMAIL) String email) throws Exception {
+        return Response.create("Successfully retrieved statistics for all word lists.", HttpStatus.OK, unknownWordService.getAllListStats(email));
     }
 }

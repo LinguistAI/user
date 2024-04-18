@@ -1,6 +1,7 @@
 package app.linguistai.bmvp.service.wordbank;
 
 import app.linguistai.bmvp.exception.NotFoundException;
+import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.embedded.UnknownWordId;
 import app.linguistai.bmvp.model.enums.ConfidenceEnum;
@@ -17,6 +18,7 @@ import app.linguistai.bmvp.request.wordbank.QPredefinedWordList;
 import app.linguistai.bmvp.request.wordbank.QUnknownWordList;
 import app.linguistai.bmvp.response.wordbank.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import static app.linguistai.bmvp.utils.FileUtils.readPredefinedWordListFromYamlFile;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class UnknownWordService implements IUnknownWordService {
@@ -553,26 +556,36 @@ public class UnknownWordService implements IUnknownWordService {
 
     @Transactional
     public RUnknownWordListsStats getAllListStats(String email) throws Exception {
-        User user = accountRepository.findUserByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+        try {
+            User user = accountRepository.findUserByEmail(email)
+                    .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
 
-        ListStats stats = new ListStats(0L, 0L, 0L);
+            ListStats stats = new ListStats(0L, 0L, 0L);
 
-        // Get word counts by confidence level
-        List<IConfidenceCount> wordCountsByConfidenceLevel = wordRepository.countWordsByConfidenceLevel(user.getId());
+            // Get word counts by confidence level
+            List<IConfidenceCount> wordCountsByConfidenceLevel = wordRepository.countWordsByConfidenceLevel(user.getId());
 
-        // Update list stats based on confidence levels
-        for (IConfidenceCount confidenceCount : wordCountsByConfidenceLevel) {
-            ConfidenceEnum confidence = confidenceCount.getConfidence();
-            Long count = confidenceCount.getCount();
+            // Update list stats based on confidence levels
+            for (IConfidenceCount confidenceCount : wordCountsByConfidenceLevel) {
+                ConfidenceEnum confidence = confidenceCount.getConfidence();
+                Long count = confidenceCount.getCount();
 
-            stats = updateStatsBasedOnConfidence(stats, confidence, count);
+                stats = updateStatsBasedOnConfidence(stats, confidence, count);
+            }
+
+            log.info("Retrieved list stats for user {}.", email);
+            return RUnknownWordListsStats.builder()
+                    .listStats(stats)
+                    .build();
+        } catch (NotFoundException e) {
+            log.error("Get all list stats failed since user does not exist for email {}", email);
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to retrieve list stats for user {}.", email, e);
+            throw new SomethingWentWrongException();
         }
-
-        return RUnknownWordListsStats.builder()
-                .listStats(stats)
-                .build();
     }
+
 
     private ConfidenceEnum increaseConfidence(ConfidenceEnum currentConfidence) {
         return (currentConfidence.ordinal() < ConfidenceEnum.values().length - 1)

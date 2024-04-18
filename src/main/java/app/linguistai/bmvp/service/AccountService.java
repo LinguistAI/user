@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import app.linguistai.bmvp.exception.AlreadyFoundException;
 import app.linguistai.bmvp.exception.CustomException;
+import app.linguistai.bmvp.exception.InvalidResetCodeException;
 import app.linguistai.bmvp.exception.LoginException;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.PasswordNotMatchException;
@@ -234,20 +235,11 @@ public class AccountService {
     }
 
     public List<User> getUsers() {
-        try {
-            // return accountRepository.findAll().stream().map(user -> new RUser(user)).collect(Collectors.toList());
-            return accountRepository.findAll();
-        } catch (Exception e) {
-            throw e;
-        }
+        return accountRepository.findAll();
     }
 
     private String encodePassword(String plainPassword) {
-        try {
-            return bCryptPasswordEncoder.encode(plainPassword);
-        } catch (Exception e) {
-            throw e;
-        }
+        return bCryptPasswordEncoder.encode(plainPassword);
     }
 
     public ResetToken generateEmailToken(String email) throws Exception {
@@ -275,15 +267,13 @@ public class AccountService {
         }
     }
 
-    public boolean validateResetCode(String email, String resetCode, boolean invalidate) throws Exception {
+    public void validateResetCode(String email, String resetCode, boolean invalidate) throws Exception {
         try {
             User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
 
             ResetToken resetToken = resetTokenRepository.findByUserAndResetCode(user, resetCode).orElseThrow(() -> new NotFoundException("Reset token", true));
 
-            if (!isResetTokenValid(resetToken)) {
-                return false;
-            }
+            if (!isResetTokenValid(resetToken)) throw new InvalidResetCodeException();
 
             if (invalidate) {
                 resetToken.setUsed(true);
@@ -291,15 +281,15 @@ public class AccountService {
             }
 
             log.info("Reset code is validated for user {}", user.getId());
-
-            return true;
         } catch (NotFoundException e) {
             if (e.getObject().equals(User.class.getSimpleName())) {
                 log.error("User is not found for email {}", email);
             } else {
                 log.error("Reset token for user with email {} with code {} not found.", email, resetCode);
             }
-
+            throw e;
+        } catch (InvalidResetCodeException e) {
+            log.error("Reset token for user with email {} with code {} is invalid.", email, resetCode);
             throw e;
         } catch (Exception e) {
             log.error("Validate reset code failed for email {}", email, e);
@@ -320,7 +310,7 @@ public class AccountService {
 
             int rowsAffected = accountRepository.updatePassword(hashedPassword, user.getId());
 
-            log.info("New password is set for user {}.", user.getId());
+            log.info("New password is set for user with email {}.", email);
 
             return rowsAffected > 0;
         } catch (NotFoundException e) {

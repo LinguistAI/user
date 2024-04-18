@@ -42,131 +42,157 @@ public class UserLoggedDateServiceTest {
     @DisplayName("When adding a new logged date for a valid user, verify it is saved")
     @Test
     void whenAddingNewLoggedDateThenVerifySaved() throws NotFoundException {
-        User user = new User();
-        user.setEmail("test@test.com");
-        user.setId(UUID.randomUUID());
+        try {
+            User user = new User();
+            user.setEmail("test@test.com");
+            user.setId(UUID.randomUUID());
 
-        java.util.Date loggedDate = new java.util.Date();
+            java.util.Date loggedDate = new java.util.Date();
 
-        when(accountRepository.findUserByEmail(user.getEmail()))
-                .thenReturn(Optional.of(user));
-        when(userLoggedDateRepository.findByUserAndLoggedDate(eq(user), any()))
-                .thenReturn(Optional.empty());
+            when(accountRepository.findUserByEmail(user.getEmail()))
+                    .thenReturn(Optional.of(user));
+            when(userLoggedDateRepository.findByUserAndLoggedDate(eq(user), any()))
+                    .thenReturn(Optional.empty());
 
-        userLoggedDateService.addLoggedDateByEmailAndDate(user.getEmail(), loggedDate);
+            userLoggedDateService.addLoggedDateByEmailAndDate(user.getEmail(), loggedDate);
 
-        verify(userLoggedDateRepository, times(1)).findByUserAndLoggedDate(eq(user), any());
-        verify(userLoggedDateRepository, times(1)).save(any(UserLoggedDate.class));
+            verify(userLoggedDateRepository, times(1)).findByUserAndLoggedDate(eq(user), any());
+            verify(userLoggedDateRepository, times(1)).save(any(UserLoggedDate.class));
+        } catch (Exception e) {
+            fail("TEST FAILED: " + e.getMessage());
+        }
     }
 
     @DisplayName("When user logs in on five different dates, check if all dates are returned")
     @Test
     void whenUserLogsInOnFiveDifferentDatesThenCheckIfAllDatesReturned() {
-        User user = new User();
-        user.setEmail("test@test.com");
-        user.setId(UUID.randomUUID());
+        try {
+            User user = new User();
+            user.setEmail("test@test.com");
+            user.setId(UUID.randomUUID());
 
-        Date date1 = Date.valueOf("2024-03-28");
-        Date date2 = Date.valueOf("2024-03-29");
-        Date date3 = Date.valueOf("2024-03-30");
+            Date date1 = Date.valueOf("2024-03-28");
+            Date date2 = Date.valueOf("2024-03-29");
+            Date date3 = Date.valueOf("2024-03-30");
 
-        List<UserLoggedDate> loggedDates = new ArrayList<>();
-        loggedDates.add(new UserLoggedDate(user, date1));
-        loggedDates.add(new UserLoggedDate(user, date2));
-        loggedDates.add(new UserLoggedDate(user, date3));
+            List<UserLoggedDate> loggedDates = new ArrayList<>();
+            loggedDates.add(new UserLoggedDate(user, date1));
+            loggedDates.add(new UserLoggedDate(user, date2));
+            loggedDates.add(new UserLoggedDate(user, date3));
 
-        when(userLoggedDateRepository.findByUserEmailOrderByLoggedDateDesc(user.getEmail()))
-                .thenReturn(loggedDates);
+            when(accountRepository.findUserByEmail(user.getEmail())).thenReturn(Optional.of(user));
+            when(userLoggedDateRepository.findByUserEmailOrderByLoggedDateDesc(user.getEmail()))
+                    .thenReturn(loggedDates);
 
-        RUserLoggedDate returnedUserLoggedDates = userLoggedDateService.getLoggedDates(user.getEmail(), "desc", null);
+            RUserLoggedDate returnedUserLoggedDates = userLoggedDateService.getLoggedDates(user.getEmail(), "desc", null);
 
-        List<Date> returnedDates = returnedUserLoggedDates.getLoggedDates();
+            List<Date> returnedDates = returnedUserLoggedDates.getLoggedDates();
 
-        assertEquals(loggedDates.size(), returnedDates.size());
-        assertTrue(returnedDates.contains(date1));
-        assertTrue(returnedDates.contains(date2));
-        assertTrue(returnedDates.contains(date3));
+            assertEquals(loggedDates.size(), returnedDates.size());
+            assertTrue(returnedDates.contains(date1));
+            assertTrue(returnedDates.contains(date2));
+            assertTrue(returnedDates.contains(date3));
+        } catch (Exception e) {
+            fail("TEST FAILED: " + e.getMessage());
+        }
     }
 
     @DisplayName("When adding a logged date for an unregistered user, throw NotFoundException")
     @Test
     void whenAddingLoggedDateForUnregisteredUserThenThrowNotFoundException() {
-        String email = "unregistered@test.com";
-        java.util.Date loggedDate = new java.util.Date();
+        try {
+            String email = "unregistered@test.com";
+            java.util.Date loggedDate = new java.util.Date();
 
-        when(accountRepository.findUserByEmail(anyString()))
-                .thenReturn(Optional.empty());
+            when(accountRepository.findUserByEmail(anyString()))
+                    .thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> {
-            userLoggedDateService.addLoggedDateByEmailAndDate(email, loggedDate);
-        });
+            assertThrows(NotFoundException.class, () -> {
+                userLoggedDateService.addLoggedDateByEmailAndDate(email, loggedDate);
+            });
+        } catch (Exception e) {
+            fail("TEST FAILED: " + e.getMessage());
+        }
     }
 
     @DisplayName("When adding a logged date for a user who logged in twice on the same day, do not add it again")
     @Test
     void whenAddingLoggedDateForUserWithDuplicateDateThenDoNotAddAgain() throws NotFoundException {
-        User user = new User();
-        user.setEmail("test@test.com");
-        user.setId(UUID.randomUUID());
+        try {
+            User user = new User();
+            user.setEmail("test@test.com");
+            user.setId(UUID.randomUUID());
 
-        java.util.Date loggedDate = Date.valueOf("2024-03-28");
+            java.util.Date loggedDate = Date.valueOf("2024-03-28");
 
-        when(accountRepository.findUserByEmail(user.getEmail()))
-                .thenReturn(Optional.of(user));
-        when(userLoggedDateRepository.findByUserAndLoggedDate(eq(user), eq(DateUtils.convertUtilDateToSqlDate(loggedDate))))
-                .thenReturn(java.util.Optional.of(new UserLoggedDate()));
+            when(accountRepository.findUserByEmail(user.getEmail()))
+                    .thenReturn(Optional.of(user));
+            when(userLoggedDateRepository.findByUserAndLoggedDate(eq(user), eq(DateUtils.convertUtilDateToSqlDate(loggedDate))))
+                    .thenReturn(Optional.of(new UserLoggedDate()));
 
-        userLoggedDateService.addLoggedDateByEmailAndDate(user.getEmail(), loggedDate);
+            userLoggedDateService.addLoggedDateByEmailAndDate(user.getEmail(), loggedDate);
 
-        verify(userLoggedDateRepository, never()).save(any(UserLoggedDate.class));
-
+            verify(userLoggedDateRepository, never()).save(any(UserLoggedDate.class));
+        } catch (Exception e) {
+            fail("TEST FAILED: " + e.getMessage());
+        }
     }
 
     @Test
     @DisplayName("When fetching logged dates in ascending order, verify sorting")
     void testGetLoggedDatesAscendingOrderWithNullDaysLimit() {
-        String sort = Parameter.ASCENDING_ORDER;
+        try {
+            String sort = Parameter.ASCENDING_ORDER;
 
-        User user = new User();
-        user.setEmail("test@test.com");
-        user.setId(UUID.randomUUID());
+            User user = new User();
+            user.setEmail("test@test.com");
+            user.setId(UUID.randomUUID());
 
-        Date date1 = Date.valueOf("2024-03-28");
-        Date date2 = Date.valueOf("2024-03-29");
-        Date date3 = Date.valueOf("2024-03-30");
+            Date date1 = Date.valueOf("2024-03-28");
+            Date date2 = Date.valueOf("2024-03-29");
+            Date date3 = Date.valueOf("2024-03-30");
 
-        List<UserLoggedDate> loggedDates = new ArrayList<>();
-        loggedDates.add(new UserLoggedDate(user, date1));
-        loggedDates.add(new UserLoggedDate(user, date3));
-        loggedDates.add(new UserLoggedDate(user, date2));
+            List<UserLoggedDate> loggedDates = new ArrayList<>();
+            loggedDates.add(new UserLoggedDate(user, date1));
+            loggedDates.add(new UserLoggedDate(user, date3));
+            loggedDates.add(new UserLoggedDate(user, date2));
 
-        when(userLoggedDateRepository.findByUserEmailOrderByLoggedDateAsc(user.getEmail()))
-                .thenReturn(loggedDates.stream()
-                        .sorted(Comparator.comparing(UserLoggedDate::getLoggedDate))
-                        .collect(Collectors.toList()));
+            when(accountRepository.findUserByEmail(user.getEmail())).thenReturn(Optional.of(user));
+            when(userLoggedDateRepository.findByUserEmailOrderByLoggedDateAsc(user.getEmail()))
+                    .thenReturn(loggedDates.stream()
+                            .sorted(Comparator.comparing(UserLoggedDate::getLoggedDate))
+                            .collect(Collectors.toList()));
 
-        RUserLoggedDate returnedUserLoggedDates = userLoggedDateService.getLoggedDates(user.getEmail(), sort, null);
+            RUserLoggedDate returnedUserLoggedDates = userLoggedDateService.getLoggedDates(user.getEmail(), sort, null);
 
-        List<Date> returnedDates = returnedUserLoggedDates.getLoggedDates();
+            List<Date> returnedDates = returnedUserLoggedDates.getLoggedDates();
 
-        assertNotNull(returnedDates);
-        for (int i = 0; i < returnedDates.size() - 1; i++) {
-            assertTrue(returnedDates.get(i).before(returnedDates.get(i + 1)) || returnedDates.get(i).equals(returnedDates.get(i + 1)));
+            assertNotNull(returnedDates);
+            for (int i = 0; i < returnedDates.size() - 1; i++) {
+                assertTrue(returnedDates.get(i).before(returnedDates.get(i + 1)) || returnedDates.get(i).equals(returnedDates.get(i + 1)));
+            }
+            assertEquals(loggedDates.size(), returnedDates.size());
+        } catch (Exception e) {
+            fail("TEST FAILED: " + e.getMessage());
         }
-        assertEquals(loggedDates.size(), returnedDates.size());
     }
 
     @DisplayName("When getting logged dates for a user who never logged in, verify empty list is returned")
     @Test
     void whenGettingLoggedDatesForUserNeverLoggedInThenVerifyEmptyList() {
-        User user = new User();
-        user.setEmail("test@test.com");
-        user.setId(UUID.randomUUID());
+        try {
+            User user = new User();
+            user.setEmail("test@test.com");
+            user.setId(UUID.randomUUID());
 
-        when(userLoggedDateRepository.findByUserEmailOrderByLoggedDateDesc(user.getEmail())).thenReturn(Collections.emptyList());
+            when(accountRepository.findUserByEmail(user.getEmail())).thenReturn(Optional.of(user));
+            when(userLoggedDateRepository.findByUserEmailOrderByLoggedDateDesc(user.getEmail())).thenReturn(Collections.emptyList());
 
-        RUserLoggedDate rUserLoggedDate = userLoggedDateService.getLoggedDates(user.getEmail(), null, null);
+            RUserLoggedDate rUserLoggedDate = userLoggedDateService.getLoggedDates(user.getEmail(), null, null);
 
-        assertTrue(rUserLoggedDate.getLoggedDates().isEmpty());
+            assertTrue(rUserLoggedDate.getLoggedDates().isEmpty());
+        } catch (Exception e) {
+            fail("TEST FAILED: " + e.getMessage());
+        }
     }
 }
