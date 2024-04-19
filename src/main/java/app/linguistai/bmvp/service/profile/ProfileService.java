@@ -1,9 +1,6 @@
 package app.linguistai.bmvp.service.profile;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import app.linguistai.bmvp.consts.Header;
 import app.linguistai.bmvp.consts.ServiceUris;
@@ -54,7 +51,7 @@ public class ProfileService {
         try {
             Optional<UserProfile> profile = profileRepository.findById(userId);
 
-            if (!profile.isEmpty()) {
+            if (profile.isPresent()) {
                 throw new AlreadyFoundException(UserProfile.class.getSimpleName(), true);
             }
             
