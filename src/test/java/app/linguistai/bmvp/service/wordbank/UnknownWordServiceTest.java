@@ -77,7 +77,7 @@ class UnknownWordServiceTest {
             .isPinned(false)
             .imageUrl("imageUrl")
             .build());
-        when(listRepository.findByUserId(UUID.fromString("67a444dc-14f4-4abc-bd83-b1c380f2004d")))
+        when(listRepository.findByUserIdOrderByIsPinnedDesc(UUID.fromString("67a444dc-14f4-4abc-bd83-b1c380f2004d")))
             .thenReturn(unknownWordLists);
 
         // Configure IUnknownWordListRepository.findById(...).
@@ -151,7 +151,7 @@ class UnknownWordServiceTest {
             .isPinned(false)
             .imageUrl("imageUrl")
             .build());
-        when(listRepository.findByUserId(UUID.fromString("67a444dc-14f4-4abc-bd83-b1c380f2004d")))
+        when(listRepository.findByUserIdOrderByIsPinnedDesc(UUID.fromString("67a444dc-14f4-4abc-bd83-b1c380f2004d")))
             .thenReturn(unknownWordLists);
 
         when(listRepository.findById(UUID.fromString("cc04e013-6d5e-4015-887f-5e5a9bc58382")))
@@ -198,7 +198,7 @@ class UnknownWordServiceTest {
             .isPinned(false)
             .imageUrl("imageUrl")
             .build());
-        when(listRepository.findByUserId(UUID.fromString("67a444dc-14f4-4abc-bd83-b1c380f2004d")))
+        when(listRepository.findByUserIdOrderByIsPinnedDesc(UUID.fromString("67a444dc-14f4-4abc-bd83-b1c380f2004d")))
             .thenReturn(unknownWordLists);
 
         // Configure IUnknownWordListRepository.findById(...).
