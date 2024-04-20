@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface IUnknownWordListRepository extends JpaRepository<UnknownWordList, UUID> {
     List<UnknownWordList> findByUserId(UUID userId);
+    List<UnknownWordList> findByUserIdOrderByIsPinnedDesc(UUID userId);
 }

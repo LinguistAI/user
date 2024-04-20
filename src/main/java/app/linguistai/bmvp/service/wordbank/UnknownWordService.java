@@ -53,7 +53,7 @@ public class UnknownWordService implements IUnknownWordService {
             User user = accountRepository.findUserByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
 
-            List<UnknownWordList> listsOfUser = listRepository.findByUserId(user.getId());
+            List<UnknownWordList> listsOfUser = listRepository.findByUserIdOrderByIsPinnedDesc(user.getId());
             List<RUnknownWordList> responseListsOfUser = new ArrayList<>();
 
             for (UnknownWordList list : listsOfUser) {
