@@ -75,9 +75,13 @@ public class UnknownWordService implements IUnknownWordService {
                 .lists(responseListsOfUser)
                 .build();
         }
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not get unknown word lists.");
-            throw e1;
+            log.error("Get lists by email failed for email {}", email, e1);
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -91,7 +95,7 @@ public class UnknownWordService implements IUnknownWordService {
 
             List<RUnknownWord> responseWords = wordRepository.findByOwnerListListId(listId)
                 .stream()
-                .map(word -> new RUnknownWord(word.getWord(), word.getConfidence()))
+                .map(word -> new RUnknownWord(word.getWord().toLowerCase(), word.getConfidence()))
                 .collect(Collectors.toList());
 
             return RUnknownWordListWords.builder()
@@ -110,8 +114,8 @@ public class UnknownWordService implements IUnknownWordService {
                 .build();
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not get unknown word lists.");
-            throw e1;
+            log.error("Could not get unknown word lists.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -149,9 +153,13 @@ public class UnknownWordService implements IUnknownWordService {
                 .listStats(this.getListStats(savedList.getListId()))
                 .build();
         }
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not create unknown word list.");
-            throw e1;
+            log.error("Could not create unknown word list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -190,8 +198,8 @@ public class UnknownWordService implements IUnknownWordService {
                 .build();
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not edit unknown word list.");
-            throw e1;
+            log.error("Could not edit unknown word list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -205,49 +213,49 @@ public class UnknownWordService implements IUnknownWordService {
             // Check if the same word already exists
             UnknownWordId unknownWordId = UnknownWordId.builder()
                 .ownerList(userList)
-                .word(qAddUnknownWord.getWord())
+                .word(qAddUnknownWord.getWord().toLowerCase())
                 .build();
 
             wordRepository.findById(unknownWordId).ifPresent(existingWord -> {
-                throw new RuntimeException("Word " + qAddUnknownWord.getWord() + " already exists in list " + userList.getTitle() + ".");
+                throw new RuntimeException("Word " + qAddUnknownWord.getWord().toLowerCase() + " already exists in list " + userList.getTitle() + ".");
             });
 
             // If the word does not exist in the list, build new unknown word
             UnknownWord newWord = UnknownWord.builder()
                 .ownerList(userList)
-                .word(qAddUnknownWord.getWord())
+                .word(qAddUnknownWord.getWord().toLowerCase())
                 .confidence(ConfidenceEnum.LOWEST)
                 .build();
 
             UnknownWord saved = wordRepository.save(newWord);
 
-            return RUnknownWord.builder().word(saved.getWord()).confidence(saved.getConfidence()).build();
+            return RUnknownWord.builder().word(saved.getWord().toLowerCase()).confidence(saved.getConfidence()).build();
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not add unknown word.");
-            throw e1;
+            log.error("Could not add unknown word.");
+            throw new SomethingWentWrongException();
         }
     }
 
     @Override
     public RUnknownWord increaseConfidence(QAddUnknownWord qAddUnknownWord, String email) throws Exception {
         try {
-            return modifyWord(qAddUnknownWord.getListId(), email, qAddUnknownWord.getWord(), MODIFY_WORD_CONFIDENCE_UP);
+            return modifyWord(qAddUnknownWord.getListId(), email, qAddUnknownWord.getWord().toLowerCase(), MODIFY_WORD_CONFIDENCE_UP);
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not increase word confidence.");
-            throw e1;
+            log.error("Could not increase word confidence.");
+            throw new SomethingWentWrongException();
         }
     }
 
     @Override
     public RUnknownWord decreaseConfidence(QAddUnknownWord qAddUnknownWord, String email) throws Exception {
         try {
-            return modifyWord(qAddUnknownWord.getListId(), email, qAddUnknownWord.getWord(), MODIFY_WORD_CONFIDENCE_DOWN);
+            return modifyWord(qAddUnknownWord.getListId(), email, qAddUnknownWord.getWord().toLowerCase(), MODIFY_WORD_CONFIDENCE_DOWN);
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not decrease word confidence.");
-            throw e1;
+            log.error("Could not decrease word confidence.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -257,8 +265,8 @@ public class UnknownWordService implements IUnknownWordService {
             return modifyList(listId, email, Boolean.TRUE, MODIFY_LIST_ACTIVE);
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not activate list.");
-            throw e1;
+            log.error("Could not activate list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -268,8 +276,8 @@ public class UnknownWordService implements IUnknownWordService {
             return modifyList(listId, email, Boolean.FALSE, MODIFY_LIST_ACTIVE);
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not deactivate list.");
-            throw e1;
+            log.error("Could not deactivate list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -279,8 +287,8 @@ public class UnknownWordService implements IUnknownWordService {
             return modifyList(listId, email, Boolean.TRUE, MODIFY_LIST_FAVORITE);
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not add list to favorites.");
-            throw e1;
+            log.error("Could not add list to favorites.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -290,8 +298,8 @@ public class UnknownWordService implements IUnknownWordService {
             return modifyList(listId, email, Boolean.FALSE, MODIFY_LIST_FAVORITE);
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not remove list from favorites.");
-            throw e1;
+            log.error("Could not remove list from favorites.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -301,8 +309,8 @@ public class UnknownWordService implements IUnknownWordService {
             return modifyList(listId, email, Boolean.TRUE, MODIFY_LIST_PINNED);
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not pin list.");
-            throw e1;
+            log.error("Could not pin list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -312,8 +320,8 @@ public class UnknownWordService implements IUnknownWordService {
             return modifyList(listId, email, Boolean.FALSE, MODIFY_LIST_PINNED);
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not unpin list.");
-            throw e1;
+            log.error("Could not unpin list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -342,8 +350,8 @@ public class UnknownWordService implements IUnknownWordService {
             return response;
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not delete list.");
-            throw e1;
+            log.error("Could not delete list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -357,14 +365,18 @@ public class UnknownWordService implements IUnknownWordService {
                 .toList();
 
             if (activeLists.isEmpty()) {
-                throw new NotFoundException("No active unknown word lists found for user with ID: [" + userId + "].");
+                throw new NotFoundException();
             }
 
             return activeLists.get(new Random().nextInt(activeLists.size()));
         }
-        catch (Exception e) {
-            System.out.println("ERROR: Could not retrieve random active unknown word list.");
+        catch (NotFoundException e) {
+            log.error("No active unknown word lists found for user with ID {}", userId);
             throw e;
+        }
+        catch (Exception e) {
+            log.error("Could not retrieve random active unknown word list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -375,14 +387,18 @@ public class UnknownWordService implements IUnknownWordService {
             List<UnknownWord> words = wordRepository.findByOwnerListListId(listId);
 
             if (words.isEmpty()) {
-                throw new NotFoundException("No words found in the unknown word list with ID: [" + listId + "].");
+                throw new NotFoundException();
             }
 
-            return words.get(new Random().nextInt(words.size())).getWord();
+            return words.get(new Random().nextInt(words.size())).getWord().toLowerCase();
+        }
+        catch (NotFoundException e) {
+            log.error("No words found in the unknown word list with ID {}", listId);
+            throw e;
         }
         catch (Exception e) {
-            System.out.println("ERROR: Could not retrieve a random word from the list.");
-            throw e;
+            log.error("Could not retrieve a random word from the list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -393,7 +409,7 @@ public class UnknownWordService implements IUnknownWordService {
             List<UnknownWord> words = wordRepository.findByOwnerListListId(listId);
 
             if (words.isEmpty()) {
-                throw new NotFoundException("No words found in the unknown word list with ID: [" + listId + "].");
+                throw new NotFoundException();
             }
 
             if (words.size() < numOfWords) {
@@ -401,11 +417,15 @@ public class UnknownWordService implements IUnknownWordService {
             }
 
             Collections.shuffle(words);
-            return words.subList(0, numOfWords).stream().map(UnknownWord::getWord).collect(Collectors.toList());
+            return words.subList(0, numOfWords).stream().map(UnknownWord::getWord).map(String::toLowerCase).collect(Collectors.toList());
+        }
+        catch (NotFoundException e) {
+            log.error("No words found in the unknown word list with ID {}", listId);
+            throw e;
         }
         catch (Exception e) {
-            System.out.println("ERROR: Could not retrieve a random word from the list.");
-            throw e;
+            log.error("Could not retrieve a random word from the list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -436,7 +456,7 @@ public class UnknownWordService implements IUnknownWordService {
             for (String word : predefinedWordList.getWords()) {
                 UnknownWord newWord = UnknownWord.builder()
                         .ownerList(savedList)
-                        .word(word)
+                        .word(word.toLowerCase())
                         .confidence(ConfidenceEnum.LOWEST)
                         .build();
                 unknownWords.add(newWord);
@@ -458,8 +478,8 @@ public class UnknownWordService implements IUnknownWordService {
                     .build();
 
         } catch (Exception e) {
-            System.out.println("ERROR: Could not add predefined word list.");
-            throw e;
+            log.error("Could not add predefined word list.");
+            throw new SomethingWentWrongException();
         }
     }
 
