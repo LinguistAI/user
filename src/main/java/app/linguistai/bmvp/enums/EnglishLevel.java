@@ -1,11 +1,21 @@
 package app.linguistai.bmvp.enums;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public enum EnglishLevel {
-    DONT_KNOW("Don't Know"),
-    BEGINNER("Beginner"),
-    INTERMEDIATE("Intermediate"),
-    ADVANCED("Advanced"),
-    NATIVE("Native");
+    DONT_KNOW("DONT_KNOW"),
+    BEGINNER("BEGINNER"),
+    INTERMEDIATE("INTERMEDIATE"),
+    ADVANCED("ADVANCED"),
+    NATIVE("NATIVE");
+
+    private static final Map<String, EnglishLevel> LEVEL_MAP = new HashMap<>();
+    static {
+        for (EnglishLevel level : EnglishLevel.values()) {
+            LEVEL_MAP.put(level.levelString, level);
+        }
+    }
 
     private final String levelString;
 
@@ -28,5 +38,9 @@ public enum EnglishLevel {
             }
         }
         return EnglishLevel.DONT_KNOW; // default if level not found
+    }
+
+    public static EnglishLevel fromStringOrDefault(String levelString) {
+        return LEVEL_MAP.getOrDefault(levelString, DONT_KNOW);
     }
 }

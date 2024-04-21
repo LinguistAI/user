@@ -70,29 +70,38 @@ public class ProfileService {
     @Transactional
     public RUserProfile updateUserProfile(String email, QUserProfile profile) throws Exception {
         try {
-            User dbUser = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
+            User dbUser = accountRepository.findUserByEmail(email)
+                    .orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
 
             UserProfile dbProfile = profileRepository.findById(dbUser.getId()).orElse(null);
 
-            // update user profile
+            // If the user profile doesn't exist, create a new one
             if (dbProfile == null) {
-                dbProfile = profileRepository.save(
-                UserProfile.builder()
-                    .user(dbUser)
-                    .name(profile.getName())
-                    .birthDate(profile.getBirthDate())
-                    .englishLevel(profile.getEnglishLevel())
-                    .build());
-            } else {
-                dbProfile.setName(profile.getName());
-                dbProfile.setBirthDate(profile.getBirthDate());
-                dbProfile.setEnglishLevel(profile.getEnglishLevel());
-
-                dbProfile = profileRepository.save(dbProfile);
+                dbProfile = UserProfile.builder()
+                        .user(dbUser)
+                        .build();
             }
 
+            // Update fields from the profile if they are not null
+            if (profile.getName() != null && !profile.getName().isEmpty()) {
+                dbProfile.setName(profile.getName());
+            }
+            if (profile.getBirthDate() != null) {
+                dbProfile.setBirthDate(profile.getBirthDate());
+            }
+
+            if (profile.getEnglishLevel() != null) {
+                EnglishLevel englishLevel = EnglishLevel.fromStringOrDefault(profile.getEnglishLevel().toUpperCase());
+                dbProfile.setEnglishLevel(englishLevel);
+            }
+
+            // Save the updated profile
+            dbProfile = profileRepository.save(dbProfile);
+
+            // Update user hobbies
             List<String> userHobbies = hobbyService.updateUserHobby(dbUser, profile.getHobbies());
-          
+
+            // Build the response profile
             RUserProfile userProfile = RUserProfile.builder()
                   .id(dbUser.getId())
                   .name(dbProfile.getName())
@@ -101,6 +110,7 @@ public class ProfileService {
                   .hobbies(userHobbies)
                   .build();
 
+            // If ML service base URL is not set, return the profile without sending it to ML service
             if (ML_SERVICE_BASE_URL == null || ML_SERVICE_BASE_URL.isEmpty()) {
                 System.out.println("ML Service Base URL is not set!");
                 return userProfile;
@@ -110,6 +120,7 @@ public class ProfileService {
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("profile", userProfile);
 
+            // Asynchronously send the updated profile to ML service
             this.getWebClient().put()
                 .uri(ServiceUris.ML_SERVICE_UPDATE_PROFILE)
                 .header(Header.USER_EMAIL, email)
@@ -128,7 +139,7 @@ public class ProfileService {
 
             log.info("User {} updated their profile.", dbUser.getId());
 
-            return new RUserProfile(dbUser.getId(), dbProfile.getName(), dbProfile.getBirthDate(), dbProfile.getEnglishLevel(), userHobbies);
+            return userProfile;
         } catch (NotFoundException e) {
             log.error("Update profile failed since user does not exist for email {}", email);
             throw e;
