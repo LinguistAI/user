@@ -112,7 +112,7 @@ public class ProfileService {
 
             // If ML service base URL is not set, return the profile without sending it to ML service
             if (ML_SERVICE_BASE_URL == null || ML_SERVICE_BASE_URL.isEmpty()) {
-                System.out.println("ML Service Base URL is not set!");
+                log.error("ML Service Base URL is not set!");
                 return userProfile;
             }
 
@@ -129,11 +129,11 @@ public class ProfileService {
                 .bodyToMono(String.class)
                 .subscribe(response -> {
                     if (response != null) {
-                        System.out.println("updateProfile - Response from ML service: " + response);
+                        log.info("updateProfile - Response from ML service: " + response);
                     }
                 }, error -> {
                     if (error != null) {
-                        System.out.println("updateProfile - Error from ML service: " + error.getMessage());
+                        log.error("updateProfile - Error from ML service: " + error.getMessage());
                     }
                 });
 
