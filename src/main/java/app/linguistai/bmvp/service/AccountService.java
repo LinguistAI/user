@@ -18,6 +18,7 @@ import app.linguistai.bmvp.repository.IResetTokenRepository;
 import app.linguistai.bmvp.service.currency.ITransactionService;
 import app.linguistai.bmvp.service.gamification.IXPService;
 import app.linguistai.bmvp.service.gamification.quest.IQuestService;
+import app.linguistai.bmvp.service.profile.ProfileService;
 import app.linguistai.bmvp.service.stats.UserLoggedDateService;
 import app.linguistai.bmvp.service.wordbank.UnknownWordService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,6 +69,7 @@ public class AccountService {
     private final ITransactionService transactionService;
     private final IXPService xpService;
     private final IQuestService questService;
+    private final ProfileService profileService;
 
     public RLoginUser login(QUserLogin user) throws Exception {
         try {
@@ -212,6 +214,7 @@ public class AccountService {
             }
 
             xpService.createUserXPForRegister(newUser);
+            profileService.createEmptyProfile(newUser.getId());
             unknownWordService.addPredefinedWordList(DEFAULT_WORD_LIST_FILE, newUser.getEmail());
           
             // Create access and reset tokens so that user does not have to log in after registering
