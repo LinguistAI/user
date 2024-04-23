@@ -214,7 +214,7 @@ public class AccountService {
             }
 
             xpService.createUserXPForRegister(newUser);
-            profileService.createEmptyProfile(newUser.getId());
+            profileService.createEmptyProfile(newUser);
             unknownWordService.addPredefinedWordList(DEFAULT_WORD_LIST_FILE, newUser.getEmail());
           
             // Create access and reset tokens so that user does not have to log in after registering

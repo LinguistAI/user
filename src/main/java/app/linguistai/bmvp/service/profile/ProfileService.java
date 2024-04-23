@@ -47,23 +47,23 @@ public class ProfileService {
     }
 
     // this method should be called only when a new user is created
-    public boolean createEmptyProfile(UUID userId) throws Exception {
+    public boolean createEmptyProfile(User user) throws Exception {
         try {
-            Optional<UserProfile> profile = profileRepository.findById(userId);
+            Optional<UserProfile> profile = profileRepository.findById(user.getId());
 
             if (profile.isPresent()) {
                 throw new AlreadyFoundException(UserProfile.class.getSimpleName(), true);
             }
             
             // save empty profile to the db
-            profileRepository.save(new UserProfile());
+            profileRepository.save(UserProfile.builder().user(user).build());
 
             return true;
         } catch (AlreadyFoundException e) {
-            log.error("Create empty profile failed since profile already exists for id {}", userId);
+            log.error("Create empty profile failed since profile already exists for id {}", user.getId());
             throw e;
         } catch (Exception e) {
-            log.error("Create empty profile failed for id {}", userId, e);
+            log.error("Create empty profile failed for id {}", user.getId(), e);
             throw new SomethingWentWrongException();
         }
     }

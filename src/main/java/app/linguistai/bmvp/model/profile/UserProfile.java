@@ -37,15 +37,12 @@ public class UserProfile {
     )
     private User user;
 
-    @NotBlank
     @Column(name = "name", nullable = true)
     private String name;
 
-    @NotNull
     @Column(name = "birthdate", nullable = true)
     private LocalDate birthDate;
 
-    @NotNull
     @Column(name = "english_level", nullable = true)
     private EnglishLevel englishLevel;
 
