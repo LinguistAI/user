@@ -104,6 +104,7 @@ public class ProfileService {
 
             // Build the response profile
             RUserProfile userProfile = RUserProfile.builder()
+                  .id(dbUser.getId())
                   .name(dbProfile.getName())
                   .birthDate(dbProfile.getBirthDate())
                   .englishLevel(dbProfile.getEnglishLevel())
