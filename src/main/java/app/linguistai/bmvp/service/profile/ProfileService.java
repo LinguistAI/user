@@ -52,8 +52,12 @@ public class ProfileService {
     // this method should be called only when a new user is created
     public boolean createEmptyProfile(UUID userId) throws Exception {
         try {
-            profileRepository.findById(userId).orElseThrow(() -> new AlreadyFoundException(UserProfile.class.getSimpleName(), true));
+            Optional<UserProfile> profile = profileRepository.findById(userId);
 
+            if (!profile.isEmpty()) {
+                throw new AlreadyFoundException(UserProfile.class.getSimpleName(), true);
+            }
+            
             // save empty profile to the db
             profileRepository.save(new UserProfile());
 
