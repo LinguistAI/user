@@ -1,9 +1,6 @@
 package app.linguistai.bmvp.service.profile;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import app.linguistai.bmvp.consts.Header;
 import app.linguistai.bmvp.consts.ServiceUris;
@@ -50,19 +47,23 @@ public class ProfileService {
     }
 
     // this method should be called only when a new user is created
-    public boolean createEmptyProfile(UUID userId) throws Exception {
+    public boolean createEmptyProfile(User user) throws Exception {
         try {
-            profileRepository.findById(userId).orElseThrow(() -> new AlreadyFoundException(UserProfile.class.getSimpleName(), true));
+            Optional<UserProfile> profile = profileRepository.findById(user.getId());
 
+            if (profile.isPresent()) {
+                throw new AlreadyFoundException(UserProfile.class.getSimpleName(), true);
+            }
+            
             // save empty profile to the db
-            profileRepository.save(new UserProfile());
+            profileRepository.save(UserProfile.builder().user(user).build());
 
             return true;
         } catch (AlreadyFoundException e) {
-            log.error("Create empty profile failed since profile already exists for id {}", userId);
+            log.error("Create empty profile failed since profile already exists for id {}", user.getId());
             throw e;
         } catch (Exception e) {
-            log.error("Create empty profile failed for id {}", userId, e);
+            log.error("Create empty profile failed for id {}", user.getId(), e);
             throw new SomethingWentWrongException();
         }
     }
