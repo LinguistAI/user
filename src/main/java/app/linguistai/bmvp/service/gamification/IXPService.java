@@ -11,5 +11,6 @@ public interface IXPService {
     void awardQuestReward(String email, Long reward) throws Exception;
     // Get user xp
     RUserXP getUserXP(String email) throws Exception;
+    Long getUserGlobalRank(User user) throws Exception;
     // (?) Decrease user xp
 }

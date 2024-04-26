@@ -11,7 +11,6 @@ import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.model.Friendship;
 import app.linguistai.bmvp.repository.gamification.IFriendshipRepository;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

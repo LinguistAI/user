@@ -192,6 +192,20 @@ public class XPService implements IXPService {
         return new UserXPWithUser(user, userXP);
     }
 
+    @Override
+    public Long getUserGlobalRank(User user) throws Exception {
+        try {
+            return xpRepository.findGlobalUserRankByEmail(user.getEmail())
+            .orElseThrow(() -> new NotFoundException("User's global XP ranking", true)).getRanking();
+        } catch (NotFoundException e) {
+            log.error("User {} global ranking is not found", user.getId(), e);
+            throw e;
+        } catch (Exception e) {
+            log.error("Error in retrieving user {} global ranking", user.getId(), e);
+            throw e;
+        }
+    }
+
     @Deprecated
     private Long determineHardcodedLevel(Long points) throws Exception {
         TreeMap<Long, String> sortedLevels = new TreeMap<>();
