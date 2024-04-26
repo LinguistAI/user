@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.enums.FriendshipStatus;
+import app.linguistai.bmvp.enums.UserSearchFriendshipStatus;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -218,6 +219,29 @@ public class FriendshipService {
             throw e;
         } catch (Exception e) {
             log.error("Remove friend failed between users {} and {}", user1Id, user2Email, e);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    public UserSearchFriendshipStatus getFriendshipStatus(User loggedUser, User searchUser) throws SomethingWentWrongException {
+        try {
+            Friendship friendship = friendshipRepository.findByUserPair(loggedUser.getId(), searchUser.getId()).orElse(null);
+
+            if (friendship == null) {
+                return UserSearchFriendshipStatus.NOT_EXIST;
+            }
+
+            if (friendship.getStatus() == FriendshipStatus.ACCEPTED) {
+                return UserSearchFriendshipStatus.FRIEND;
+            } 
+
+            if (friendship.getUser1().getId().equals(loggedUser.getId())) {
+                return UserSearchFriendshipStatus.REQUEST_SENT;
+            }
+            
+            return UserSearchFriendshipStatus.REQUEST_RECEIVED;
+        } catch (Exception e) {
+            log.error("Get friendship status failed between users {} and {}", loggedUser.getId(), searchUser.getId(), e);
             throw new SomethingWentWrongException();
         }
     }
