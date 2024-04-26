@@ -20,6 +20,7 @@ import app.linguistai.bmvp.enums.EnglishLevel;
 import app.linguistai.bmvp.enums.UserSearchFriendshipStatus;
 import app.linguistai.bmvp.model.profile.UserProfile;
 import app.linguistai.bmvp.repository.IAccountRepository;
+import app.linguistai.bmvp.repository.IHobbyRepository;
 import app.linguistai.bmvp.repository.IProfileRepository;
 import app.linguistai.bmvp.request.QUserProfile;
 import app.linguistai.bmvp.response.RFriendProfile;
@@ -193,6 +194,7 @@ public class ProfileService {
     public RFriendProfile getFriendProfile(UUID friendId, String userEmail) throws Exception {
         try {
             User loggedUser = accountRepository.findUserByEmail(userEmail).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
+
             User friend = accountRepository.findUserById(friendId).orElseThrow(() -> new NotFoundException(Friendship.class.getSimpleName(), true));
 
             // Get friend profile and hobbies
@@ -207,7 +209,7 @@ public class ProfileService {
             // Get friendship status
             UserSearchFriendshipStatus status = friendshipService.getFriendshipStatus(loggedUser, friend);
 
-            return new RFriendProfile(friendId, dbProfile, hobbies, streak, xp, rank, status);            
+            return new RFriendProfile(friendId, dbProfile, hobbies, streak, xp, rank, status);        
         } catch (NotFoundException e) {
             if (e.getObject().equals(User.class.getSimpleName())) {
                 log.error("Get friend profile failed since logged in user does not exists for email {}", userEmail);
