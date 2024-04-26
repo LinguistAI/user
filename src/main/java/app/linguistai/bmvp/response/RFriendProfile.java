@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 import app.linguistai.bmvp.enums.EnglishLevel;
+import app.linguistai.bmvp.enums.UserSearchFriendshipStatus;
 import app.linguistai.bmvp.model.gamification.UserStreak;
 import app.linguistai.bmvp.model.profile.UserProfile;
 import app.linguistai.bmvp.response.gamification.RUserXP;
@@ -24,8 +25,9 @@ public class RFriendProfile {
     private Integer currentStreak;
     private RUserXP xp;
     private Long globalRank;
+    private UserSearchFriendshipStatus friendshipStatus;
 
-    public RFriendProfile(UUID friendId, UserProfile profile, List<String> hobbies, UserStreak streak, RUserXP xp, Long rank) {
+    public RFriendProfile(UUID friendId, UserProfile profile, List<String> hobbies, UserStreak streak, RUserXP xp, Long rank, UserSearchFriendshipStatus status) {
         this.id = friendId;
 
         if (profile == null) {
@@ -42,5 +44,6 @@ public class RFriendProfile {
         this.currentStreak = streak == null ? 0 : streak.getCurrentStreak();
         this.xp = xp;
         this.globalRank = rank;
+        this.friendshipStatus = status;
     }
 }
