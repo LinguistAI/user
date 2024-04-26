@@ -11,22 +11,12 @@ import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.model.Friendship;
 import app.linguistai.bmvp.repository.gamification.IFriendshipRepository;
-import app.linguistai.bmvp.repository.gamification.IUserStreakRepository;
-import app.linguistai.bmvp.repository.gamification.IUserXPRepository;
-import app.linguistai.bmvp.response.RFriendProfile;
-import app.linguistai.bmvp.response.gamification.RUserXP;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import app.linguistai.bmvp.model.User;
-import app.linguistai.bmvp.model.gamification.UserStreak;
-import app.linguistai.bmvp.model.profile.UserProfile;
 import app.linguistai.bmvp.enums.FriendshipStatus;
 import app.linguistai.bmvp.repository.IAccountRepository;
-import app.linguistai.bmvp.repository.IHobbyRepository;
-import app.linguistai.bmvp.repository.IProfileRepository;
-import app.linguistai.bmvp.repository.IUserHobbyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,11 +27,6 @@ public class FriendshipService {
 
     private final IAccountRepository accountRepository;
     private final IFriendshipRepository friendshipRepository;
-    private final IProfileRepository profileRepository;
-    private final IHobbyRepository hobbyRepository;
-    private final IUserHobbyRepository userHobbyRepository;
-    private final IUserStreakRepository streakRepository;
-    private final IXPService xpService;
 
     private final String REQ_USER_STR = "Requested user";
     private final String REQ_FRIEND_STR = "Friendship request";
