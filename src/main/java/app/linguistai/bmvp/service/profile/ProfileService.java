@@ -5,6 +5,7 @@ import java.util.*;
 import app.linguistai.bmvp.consts.Header;
 import app.linguistai.bmvp.consts.ServiceUris;
 import app.linguistai.bmvp.repository.IUserHobbyRepository;
+import app.linguistai.bmvp.repository.gamification.IUserStreakRepository;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -12,13 +13,19 @@ import org.springframework.stereotype.Service;
 import app.linguistai.bmvp.exception.AlreadyFoundException;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
+import app.linguistai.bmvp.model.Friendship;
 import app.linguistai.bmvp.model.User;
+import app.linguistai.bmvp.model.gamification.UserStreak;
 import app.linguistai.bmvp.enums.EnglishLevel;
 import app.linguistai.bmvp.model.profile.UserProfile;
 import app.linguistai.bmvp.repository.IAccountRepository;
+import app.linguistai.bmvp.repository.IHobbyRepository;
 import app.linguistai.bmvp.repository.IProfileRepository;
 import app.linguistai.bmvp.request.QUserProfile;
+import app.linguistai.bmvp.response.RFriendProfile;
 import app.linguistai.bmvp.response.RUserProfile;
+import app.linguistai.bmvp.response.gamification.RUserXP;
+import app.linguistai.bmvp.service.gamification.IXPService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +40,9 @@ public class ProfileService {
     private final IUserHobbyRepository userHobbyRepository;
     private final IAccountRepository accountRepository;
     private final HobbyService hobbyService;
+    private final IUserStreakRepository streakRepository;
+    private final IXPService xpService;
+
     private WebClient webClient;
     private final WebClient.Builder webClientBuilder;
 
@@ -172,6 +182,36 @@ public class ProfileService {
             throw e;
         } catch (Exception e) {
             log.error("Get profile failed for email {}", email, e);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    // This method retrieves profile data of other users, here other users are mentioned as friends
+    public RFriendProfile getFriendProfile(UUID friendId, String userEmail) throws Exception {
+        try {
+            accountRepository.findUserByEmail(userEmail).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
+            User friend = accountRepository.findUserById(friendId).orElseThrow(() -> new NotFoundException(Friendship.class.getSimpleName(), true));
+
+            // Get friend profile and hobbies
+            UserProfile dbProfile = profileRepository.findById(friend.getId()).orElse(null);
+            List<String> hobbies = userHobbyRepository.findHobbiesByUserId(friend.getId());
+
+            // Get user streak, xp, and global rank
+            UserStreak streak = streakRepository.findByUserId(friendId).orElse(null);
+            RUserXP xp = xpService.getUserXP(friend.getEmail());
+            Long rank = xpService.getUserGlobalRank(friend);
+
+            return new RFriendProfile(friendId, dbProfile, hobbies, streak, xp, rank);            
+        } catch (NotFoundException e) {
+            if (e.getObject().equals(User.class.getSimpleName())) {
+                log.error("Get friend profile failed since logged in user does not exists for email {}", userEmail);
+                throw e;
+            } else {
+                log.error("Get friend profile failed since friend does not exists for id {}", friendId);
+                throw new NotFoundException(User.class.getSimpleName(), true);
+            }
+        } catch (Exception e) {
+            log.error("User with email {} couldn't access friend profile with id {}", userEmail, friendId, e);
             throw new SomethingWentWrongException();
         }
     }

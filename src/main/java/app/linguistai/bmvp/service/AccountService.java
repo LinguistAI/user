@@ -189,7 +189,7 @@ public class AccountService {
     @Transactional
     public RLoginUser addUser(QUser requestUser) throws Exception {
         try {
-            // check if email or username is already used before
+            // Check if email or username is already used before
             boolean userExist = accountRepository.existsByEmail(requestUser.getEmail());
             
             if (userExist) {
