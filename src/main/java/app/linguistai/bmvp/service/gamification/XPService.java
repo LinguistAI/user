@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -142,11 +143,9 @@ public class XPService implements IXPService {
         }
     }
 
-    @Override
     @Transactional
-    public RUserXP getUserXP(String email) throws Exception {
+    public RUserXP getUserXP(UserXPWithUser info) throws Exception {
         try {
-            UserXPWithUser info = this.getUserOwnedXP(email);
             UserXP userXP = info.userXP();
             User user = info.user();
 
@@ -161,12 +160,47 @@ public class XPService implements IXPService {
                 .level(userLevel)
                 .build();
         }
+        catch (Exception e2) {
+            log.error("Could not get user XP", e2);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    @Override
+    @Transactional
+    public RUserXP getUserXPByEmail(String email) throws Exception {
+        try {
+            UserXPWithUser info = this.getUserOwnedXP(email);
+            return getUserXP(info);
+        }
         catch (NotFoundException e) {
             log.error("User is not found for email {}", email);
             throw e;
         }
         catch (UserXPNotFoundException e1) {
             return this.createUserXP(email);
+        }
+        catch (Exception e2) {
+            log.error("Could not get user XP", e2);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    @Override
+    @Transactional
+    public RUserXP getUserXPById(UUID uuid) throws Exception {
+        try {
+            UserXPWithUser info = this.getUserOwnedXPById(uuid);
+
+            return getUserXP(info);
+        }
+        catch (NotFoundException e) {
+            log.error("User is not found for id {}", uuid);
+            throw e;
+        }
+        catch (UserXPNotFoundException e1) {
+            log.error("UserXP is not found for id {}", uuid);
+            throw new NotFoundException("UserXP does not exist for given userId: [" + uuid + "].");
         }
         catch (Exception e2) {
             log.error("Could not get user XP", e2);
@@ -188,6 +222,19 @@ public class XPService implements IXPService {
         if (userXP.getUser().getId() != user.getId()) {
             throw new Exception("User not authorized to modify list.");
         }
+
+        return new UserXPWithUser(user, userXP);
+    }
+
+    @Transactional
+    protected UserXPWithUser getUserOwnedXPById(UUID uuid) throws Exception {
+        // Check if user exists
+        User user = accountRepository.findUserById(uuid)
+                .orElseThrow(() -> new NotFoundException("User does not exist for given user id: [" + uuid + "]."));
+
+        // Check if UserXP exists
+        UserXP userXP = xpRepository.findById(user.getId())
+                .orElseThrow(() -> new UserXPNotFoundException("UserXP does not exist for given userId: [" + user.getId() + "]."));
 
         return new UserXPWithUser(user, userXP);
     }
