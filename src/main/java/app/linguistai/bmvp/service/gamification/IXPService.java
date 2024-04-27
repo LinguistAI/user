@@ -14,5 +14,6 @@ public interface IXPService {
     // Get user xp
     RUserXP getUserXPByEmail(String email) throws Exception;
     RUserXP getUserXPById(UUID userId) throws Exception;
+    Long getUserGlobalRank(User user) throws Exception;
     // (?) Decrease user xp
 }
