@@ -575,11 +575,44 @@ public class UnknownWordService implements IUnknownWordService {
     }
 
     @Transactional
-    public RUnknownWordListsStats getAllListStats(String email) throws Exception {
+    public RUnknownWordListsStats getListStatsByEmail(String email) throws Exception {
         try {
             User user = accountRepository.findUserByEmail(email)
-                    .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+                .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
 
+            return getAllListStats(user);
+        }
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        }
+        catch (Exception e1) {
+            log.error("Get list stats by email failed for email {}", email, e1);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    @Transactional
+    public RUnknownWordListsStats getListStatsById(UUID userId) throws Exception {
+        try {
+            User user = accountRepository.findUserById(userId)
+                .orElseThrow(() -> new NotFoundException("User does not exist for given userId: [" + userId + "]."));
+
+            return getAllListStats(user);
+        }
+        catch (NotFoundException e) {
+            log.error("User is not found for userId {}", userId);
+            throw e;
+        }
+        catch (Exception e1) {
+            log.error("Get list stats by userId failed for userId {}", userId, e1);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    @Transactional
+    private RUnknownWordListsStats getAllListStats(User user) throws Exception {
+        try {
             ListStats stats = new ListStats(0L, 0L, 0L);
 
             // Get word counts by confidence level
@@ -593,15 +626,12 @@ public class UnknownWordService implements IUnknownWordService {
                 stats = updateStatsBasedOnConfidence(stats, confidence, count);
             }
 
-            log.info("Retrieved list stats for user {}.", email);
+            log.info("Retrieved list stats for user {}.", user.getEmail());
             return RUnknownWordListsStats.builder()
                     .listStats(stats)
                     .build();
-        } catch (NotFoundException e) {
-            log.error("Get all list stats failed since user does not exist for email {}", email);
-            throw e;
         } catch (Exception e) {
-            log.error("Failed to retrieve list stats for user {}.", email, e);
+            log.error("Failed to retrieve list stats for user {}.", user.getEmail(), e);
             throw new SomethingWentWrongException();
         }
     }
