@@ -203,7 +203,7 @@ public class ProfileService {
 
             // Get user streak, xp, and global rank
             UserStreak streak = streakRepository.findByUserId(friendId).orElse(null);
-            RUserXP xp = xpService.getUserXP(friend.getEmail());
+            RUserXP xp = xpService.getUserXPByEmail(friend.getEmail());
             Long rank = xpService.getUserGlobalRank(friend);
 
             // Get friendship status
