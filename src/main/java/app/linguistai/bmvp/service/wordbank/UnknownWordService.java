@@ -575,7 +575,7 @@ public class UnknownWordService implements IUnknownWordService {
     }
 
     @Transactional
-    public RUnknownWordListsStats getListStatsByEmail(String email) throws Exception {
+    public RUnknownWordListsStats getAllListStatsByEmail(String email) throws Exception {
         try {
             User user = accountRepository.findUserByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
@@ -593,7 +593,7 @@ public class UnknownWordService implements IUnknownWordService {
     }
 
     @Transactional
-    public RUnknownWordListsStats getListStatsById(UUID userId) throws Exception {
+    public RUnknownWordListsStats getAllListStatsByUserId(UUID userId) throws Exception {
         try {
             User user = accountRepository.findUserById(userId)
                 .orElseThrow(() -> new NotFoundException("User does not exist for given userId: [" + userId + "]."));
