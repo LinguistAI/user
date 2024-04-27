@@ -90,7 +90,7 @@ public class XPService implements IXPService {
     @Transactional
     public RUserXP increaseUserXP(String email, XPAction action) throws Exception {
         try {
-            UserXPWithUser info = this.getUserOwnedXP(email);
+            UserXPWithUser info = this.getUserOwnedXPByEmail(email);
             UserXP userXP = info.userXP();
             User user = info.user();
 
@@ -126,7 +126,7 @@ public class XPService implements IXPService {
     @Transactional
     public void awardQuestReward(String email, Long reward) throws Exception {
         try {
-            UserXPWithUser info = this.getUserOwnedXP(email);
+            UserXPWithUser info = this.getUserOwnedXPByEmail(email);
             UserXP userXP = info.userXP();
 
             userXP.setExperience(userXP.getExperience() + reward);
@@ -170,7 +170,7 @@ public class XPService implements IXPService {
     @Transactional
     public RUserXP getUserXPByEmail(String email) throws Exception {
         try {
-            UserXPWithUser info = this.getUserOwnedXP(email);
+            UserXPWithUser info = this.getUserOwnedXPByEmail(email);
             return getUserXP(info);
         }
         catch (NotFoundException e) {
@@ -194,14 +194,6 @@ public class XPService implements IXPService {
 
             return getUserXP(info);
         }
-        catch (NotFoundException e) {
-            log.error("User is not found for id {}", uuid);
-            throw e;
-        }
-        catch (UserXPNotFoundException e1) {
-            log.error("UserXP is not found for id {}", uuid);
-            throw new NotFoundException("UserXP does not exist for given userId: [" + uuid + "].");
-        }
         catch (Exception e2) {
             log.error("Could not get user XP", e2);
             throw new SomethingWentWrongException();
@@ -209,7 +201,7 @@ public class XPService implements IXPService {
     }
 
     @Transactional
-    protected UserXPWithUser getUserOwnedXP(String email) throws Exception {
+    protected UserXPWithUser getUserOwnedXPByEmail(String email) throws Exception {
         // Check if user exists
         User user = accountRepository.findUserByEmail(email)
             .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
@@ -228,15 +220,25 @@ public class XPService implements IXPService {
 
     @Transactional
     protected UserXPWithUser getUserOwnedXPById(UUID uuid) throws Exception {
-        // Check if user exists
-        User user = accountRepository.findUserById(uuid)
-                .orElseThrow(() -> new NotFoundException("User does not exist for given user id: [" + uuid + "]."));
+        try {
+            // Check if user exists
+            User user = accountRepository.findUserById(uuid)
+                    .orElseThrow(() -> new NotFoundException("User does not exist for given user id: [" + uuid + "]."));
 
-        // Check if UserXP exists
-        UserXP userXP = xpRepository.findById(user.getId())
-                .orElseThrow(() -> new UserXPNotFoundException("UserXP does not exist for given userId: [" + user.getId() + "]."));
+            // Check if UserXP exists
+            UserXP userXP = xpRepository.findById(user.getId())
+                    .orElseThrow(() -> new UserXPNotFoundException("UserXP does not exist for given userId: [" + user.getId() + "]."));
 
-        return new UserXPWithUser(user, userXP);
+            return new UserXPWithUser(user, userXP);
+        }
+        catch (NotFoundException e) {
+            log.error("User is not found for id {}", uuid);
+            throw e;
+        }
+        catch (UserXPNotFoundException e1) {
+            log.error("UserXP is not found for id {}", uuid);
+            throw new NotFoundException("UserXP does not exist for given userId: [" + uuid + "].");
+        }
     }
 
     @Deprecated

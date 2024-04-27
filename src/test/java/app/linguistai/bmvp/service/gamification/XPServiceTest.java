@@ -270,7 +270,7 @@ class XPServiceTest {
         when(mockXpRepository.findById(any(UUID.class))).thenReturn(userXP1);
 
         // Run the test
-        assertThrows(Exception.class, () -> xpServiceUnderTest.getUserOwnedXP("email"));
+        assertThrows(Exception.class, () -> xpServiceUnderTest.getUserOwnedXPByEmail("email"));
     }
 
     @Test
@@ -279,6 +279,6 @@ class XPServiceTest {
         when(mockAccountRepository.findUserByEmail("email")).thenReturn(Optional.empty());
 
         // Run the test
-        assertThatThrownBy(() -> xpServiceUnderTest.getUserOwnedXP("email")).isInstanceOf(NotFoundException.class);
+        assertThatThrownBy(() -> xpServiceUnderTest.getUserOwnedXPByEmail("email")).isInstanceOf(NotFoundException.class);
     }
 }
