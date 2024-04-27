@@ -7,11 +7,13 @@ import app.linguistai.bmvp.exception.currency.InsufficientGemsException;
 import app.linguistai.bmvp.exception.store.ItemNotEnabledException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.enums.TransactionType;
+import app.linguistai.bmvp.model.currency.UserGems;
 import app.linguistai.bmvp.model.gamification.store.StoreItem;
 import app.linguistai.bmvp.model.gamification.store.UserItem;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.gamification.store.IStoreItemRepository;
 import app.linguistai.bmvp.repository.gamification.store.IUserItemRepository;
+import app.linguistai.bmvp.response.gamification.store.RQuizItems;
 import app.linguistai.bmvp.response.gamification.store.RStoreItem;
 import app.linguistai.bmvp.response.gamification.store.RStoreItems;
 import app.linguistai.bmvp.response.gamification.store.RUserItem;
@@ -24,8 +26,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import static app.linguistai.bmvp.consts.StoreConsts.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -80,6 +84,59 @@ public class StoreService {
             throw new SomethingWentWrongException();
         }
     }
+
+    @Transactional(readOnly = true)
+    public RQuizItems getAllQuizItems(String email, int page, int size) throws Exception {
+        try {
+            User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
+
+            Pageable pageable = PageRequest.of(page, size);
+
+            Page<StoreItem> storeItemsPage = storeItemRepository.findByTypeIn(QUIZ_TYPES, pageable);
+
+            // Map store items to user items, creating items with 0 quantity if the user does not have the item
+            List<RUserItem> userItems = storeItemsPage.getContent().stream()
+                    .map(storeItem -> {
+                        // Check if the user has the item
+                        UserItem userItem = userItemRepository.findByUserAndStoreItem(user, storeItem)
+                                .orElseGet(() -> {
+                                    // If the user does not have the item, only add the enabled quiz items from the store
+                                    if (storeItem.isEnabled()) {
+                                        return new UserItem(user, storeItem, 0);
+                                    } else {
+                                        return null;
+                                    }
+                                });
+                        return userItem != null ? RUserItem.builder().userItem(userItem).build() : null;
+                    })
+                    .filter(Objects::nonNull) // Filter out null items
+                    .collect(Collectors.toList());
+
+            // Get the user's gems
+            UserGems userGems = transactionService.ensureUserGemsExists(email);
+
+            // Log success and return the result
+            log.info("Items with quantities fetched successfully.");
+
+            // Build the response
+            return RQuizItems.builder()
+                    .quizItems(userItems)
+                    .totalPages(storeItemsPage.getTotalPages())
+                    .currentPage(storeItemsPage.getNumber())
+                    .pageSize(storeItemsPage.getSize())
+                    .gems(userGems.getGems())
+                    .build();
+        } catch (NotFoundException e) {
+            log.error("Fetching quiz items failed since user does not exist for email {}", email);
+            throw e;
+        } catch (Exception e) {
+            // Log error and throw exception
+            log.error("Fetching quiz items failed", e);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+
 
     @Transactional(readOnly = true)
     public RUserItems getUserItems(String email, int page, int size) throws Exception {
@@ -154,7 +211,6 @@ public class StoreService {
             throw new SomethingWentWrongException();
         }
     }
-
     @Transactional
     public RUserItem decreaseUserItemQuantity(String email, UUID storeItemId) throws Exception {
         try {
@@ -166,40 +222,64 @@ public class StoreService {
 
             UserItem userItem = userItemRepository.findByUserAndStoreItem(user, storeItem)
                     .orElseThrow(() -> new NotFoundException(UserItem.class.getSimpleName(), true));
-
-            if (userItem.getQuantity() <= 0) {
-                throw new InsufficientUserItemQuantityException();
-            }
-
-            // Consume one unit of the user item
-            userItem.setQuantity(userItem.getQuantity() - 1);
-
-            if (userItem.getQuantity() <= 0) {
-                // If quantity becomes 0 or negative, delete the user item
-                userItemRepository.delete(userItem);
-            } else {
-                // Otherwise, save the updated user item
-                userItemRepository.save(userItem);
-            }
-
+            consumeUserItem(userItem);
             log.info("User item consumed successfully for user with email {}", email);
             return RUserItem.builder().userItem(userItem).build();
-        } catch (NotFoundException e) {
-            if (e.getObject().equals(User.class.getSimpleName())) {
-                log.error("When decreasing user item quantity, user is not found for email {}", email);
-            } else if (e.getObject().equals(StoreItem.class.getSimpleName())) {
-                log.error("When decreasing user item quantity, store item is not found for id {}", storeItemId);
-            } else {
-                log.error("When decreasing user item quantity, user item is not found for user email {} and store item id {}",
-                        email, storeItemId);
-            }
-            throw e;
-        } catch (InsufficientUserItemQuantityException e) {
-            log.error("User item quantity cannot be decreased since it is 0 or negative for user with email {}", email);
-            throw e;
         } catch (Exception e) {
+            throw handleDecreaseItemException(email, storeItemId.toString(), e);
+        }
+    }
+
+    @Transactional
+    public RUserItem decreaseUserItemQuantity(String email, String type) throws Exception {
+        try {
+            User user = accountRepository.findUserByEmail(email)
+                    .orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
+
+            StoreItem storeItem = storeItemRepository.findByType(type)
+                    .orElseThrow(() -> new NotFoundException(StoreItem.class.getSimpleName(), true));
+
+            UserItem userItem = userItemRepository.findByUserAndStoreItem(user, storeItem)
+                    .orElseThrow(() -> new NotFoundException(UserItem.class.getSimpleName(), true));
+
+            consumeUserItem(userItem);
+            log.info("User item consumed successfully for user with email {}", email);
+            return RUserItem.builder().userItem(userItem).build();
+        } catch (Exception e) {
+            throw handleDecreaseItemException(email, type, e);
+        }
+    }
+
+
+    private Exception handleDecreaseItemException(String email, String identifier, Exception e) {
+        if (e instanceof NotFoundException notFoundException) {
+            if (notFoundException.getObject().equals(User.class.getSimpleName())) {
+                log.error("When decreasing user item quantity, user is not found for email {}", email);
+            } else if (notFoundException.getObject().equals(StoreItem.class.getSimpleName())) {
+                log.error("When decreasing user item quantity, store item {} not found ", identifier);
+            } else {
+                log.error("When decreasing user item quantity, user item is not found for user email {} and store item {}",
+                        email, identifier);
+            }
+            return e;
+        } else if (e instanceof InsufficientUserItemQuantityException) {
+            log.error("User item quantity cannot be decreased since it is 0 or negative for user with email {}", email);
+            return e;
+        } else {
             log.error("Failed to decrease user item quantity for user with email {}", email, e);
-            throw new SomethingWentWrongException();
+            return new SomethingWentWrongException();
+        }
+    }
+
+    private void consumeUserItem(UserItem userItem) throws InsufficientUserItemQuantityException{
+        if (userItem.getQuantity() <= 0) {
+            throw new InsufficientUserItemQuantityException();
+        }
+        userItem.setQuantity(userItem.getQuantity() - 1);
+        if (userItem.getQuantity() <= 0) {
+            userItemRepository.delete(userItem);
+        } else {
+            userItemRepository.save(userItem);
         }
     }
 }
