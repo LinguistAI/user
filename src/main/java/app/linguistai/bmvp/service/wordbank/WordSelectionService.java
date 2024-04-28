@@ -128,7 +128,7 @@ public class WordSelectionService {
                 return selectedWords;
             }
 
-            log.error("Error in selecting new words, selected words size is not equal to initial select size, " +
+            log.error("Defaulting to the predefined word list, as selected words size is not equal to initial select size, " +
                     "selectedWords size: {}, initialSelectSize: {}", selectedWords.size(), initialSelectSize);
 
             QPredefinedWordList predefinedWordList = readPredefinedWordListFromYamlFile(DEFAULT_WORD_LIST_FILE);
