@@ -9,6 +9,7 @@ import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordRepository;
 import app.linguistai.bmvp.repository.wordbank.IWordSelectionRepository;
+import app.linguistai.bmvp.request.wordbank.QPredefinedWordList;
 import org.springframework.stereotype.Service;
 
 import app.linguistai.bmvp.model.User;
@@ -20,6 +21,9 @@ import app.linguistai.bmvp.request.QSelectWord;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
+
+import static app.linguistai.bmvp.consts.FilePaths.DEFAULT_WORD_LIST_FILE;
+import static app.linguistai.bmvp.utils.FileUtils.readPredefinedWordListFromYamlFile;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -120,10 +124,31 @@ public class WordSelectionService {
             selectedWords.addAll(unknownWordRepository.findRandomByOwnerListUserIdAndOwnerListIsActiveAndConfidence(
                 userId, true, confidences, selectSize));
 
+            if (selectedWords.size() == initialSelectSize) {
+                return selectedWords;
+            }
+
+            log.error("Error in selecting new words, selected words size is not equal to initial select size, " +
+                    "selectedWords size: {}, initialSelectSize: {}", selectedWords.size(), initialSelectSize);
+
+            QPredefinedWordList predefinedWordList = readPredefinedWordListFromYamlFile(DEFAULT_WORD_LIST_FILE);
+
+            predefinedWordList.getWords().forEach(word -> {
+                if (selectedWords.size() < initialSelectSize) {
+                    UnknownWord unknownWord = UnknownWord.builder()
+                            .word(word)
+                            .confidence(ConfidenceEnum.LOWEST)
+                            .ownerList(null)
+                            .build();
+
+                    selectedWords.add(unknownWord);
+                }
+            });
+
             if (selectedWords.size() != initialSelectSize) {
                 log.error("Error in selecting new words, selected words size is not equal to initial select size, " +
                         "selectedWords size: {}, initialSelectSize: {}", selectedWords.size(), initialSelectSize);
-                throw new NotFoundException("Error in selecting new words, you need to add more unknown words to your word bank");
+                throw new SomethingWentWrongException("Error in selecting new words, you need to add more unknown words to your word bank");
             }
 
             return selectedWords;
