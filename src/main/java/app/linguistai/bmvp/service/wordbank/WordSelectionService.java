@@ -120,11 +120,11 @@ public class WordSelectionService {
             selectSize = initialSelectSize - selectedWords.size();
             confidences.clear();
             confidences.addAll(Arrays.asList(ConfidenceEnum.HIGH, ConfidenceEnum.HIGHEST));
-            
-            selectedWords.addAll(unknownWordRepository.findRandomByOwnerListUserIdAndOwnerListIsActiveAndConfidence(
-                userId, true, confidences, selectSize));
+
 
             if (selectedWords.size() == initialSelectSize) {
+                selectedWords.addAll(unknownWordRepository.findRandomByOwnerListUserIdAndOwnerListIsActiveAndConfidence(
+                        userId, true, confidences, selectSize));
                 return selectedWords;
             }
 
@@ -150,6 +150,9 @@ public class WordSelectionService {
                         "selectedWords size: {}, initialSelectSize: {}", selectedWords.size(), initialSelectSize);
                 throw new SomethingWentWrongException("Error in selecting new words, you need to add more unknown words to your word bank");
             }
+
+            selectedWords.addAll(unknownWordRepository.findRandomByOwnerListUserIdAndOwnerListIsActiveAndConfidence(
+                    userId, true, confidences, selectSize));
 
             return selectedWords;
         } catch (NotFoundException e) {
