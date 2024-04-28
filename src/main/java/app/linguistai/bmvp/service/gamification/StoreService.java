@@ -26,10 +26,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import static app.linguistai.bmvp.consts.StoreConsts.*;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -97,19 +99,13 @@ public class StoreService {
             // Map store items to user items, creating items with 0 quantity if the user does not have the item
             List<RUserItem> userItems = storeItemsPage.getContent().stream()
                     .map(storeItem -> {
-                        // Check if the user has the item
-                        UserItem userItem = userItemRepository.findByUserAndStoreItem(user, storeItem)
-                                .orElseGet(() -> {
-                                    // If the user does not have the item, only add the enabled quiz items from the store
-                                    if (storeItem.isEnabled()) {
-                                        return new UserItem(user, storeItem, 0);
-                                    } else {
-                                        return null;
-                                    }
-                                });
-                        return userItem != null ? RUserItem.builder().userItem(userItem).build() : null;
+                        RUserItem rUserItem = getRUserItemFromStoreItem(user, storeItem);
+                        if (rUserItem == null) {
+                            log.info("Quiz type {} is not enabled in the store.", storeItem.getType());
+                        }
+                        return rUserItem;
                     })
-                    .filter(Objects::nonNull) // Filter out null items
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
             // Get the user's gems
@@ -135,7 +131,6 @@ public class StoreService {
             throw new SomethingWentWrongException();
         }
     }
-
 
 
     @Transactional(readOnly = true)
@@ -184,6 +179,10 @@ public class StoreService {
             // If the user already has the item, increment the quantity, otherwise create a new UserItem
             UserItem userItem = userItemRepository.findByUserAndStoreItem(user, storeItem)
                     .map(item -> {
+                        // Check if incrementing the quantity will exceed Integer.MAX_VALUE
+                        if (item.getQuantity() == Integer.MAX_VALUE) {
+                            throw new IllegalStateException("Quantity exceeds integer bounds");
+                        }
                         item.setQuantity(item.getQuantity() + 1);
                         return item;
                     })
@@ -204,29 +203,14 @@ public class StoreService {
         } catch (ItemNotEnabledException e) {
             log.error("Store item with id {} is not enabled for purchase", storeItemId);
             throw e;
-        }  catch (InsufficientGemsException e) {
+        } catch (InsufficientGemsException e) {
+            throw e;
+        } catch (IllegalStateException e) {
+            log.error("Quantity exceeds integer bounds for UserItem with Store id {} and for user with email {}", storeItemId, email);
             throw e;
         } catch (Exception e) {
             log.error("Failed to purchase item", e);
             throw new SomethingWentWrongException();
-        }
-    }
-    @Transactional
-    public RUserItem decreaseUserItemQuantity(String email, UUID storeItemId) throws Exception {
-        try {
-            User user = accountRepository.findUserByEmail(email)
-                    .orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
-
-            StoreItem storeItem = storeItemRepository.findById(storeItemId)
-                    .orElseThrow(() -> new NotFoundException(StoreItem.class.getSimpleName(), true));
-
-            UserItem userItem = userItemRepository.findByUserAndStoreItem(user, storeItem)
-                    .orElseThrow(() -> new NotFoundException(UserItem.class.getSimpleName(), true));
-            consumeUserItem(userItem);
-            log.info("User item consumed successfully for user with email {}", email);
-            return RUserItem.builder().userItem(userItem).build();
-        } catch (Exception e) {
-            throw handleDecreaseItemException(email, storeItemId.toString(), e);
         }
     }
 
@@ -243,43 +227,61 @@ public class StoreService {
                     .orElseThrow(() -> new NotFoundException(UserItem.class.getSimpleName(), true));
 
             consumeUserItem(userItem);
+
             log.info("User item consumed successfully for user with email {}", email);
             return RUserItem.builder().userItem(userItem).build();
-        } catch (Exception e) {
-            throw handleDecreaseItemException(email, type, e);
-        }
-    }
-
-
-    private Exception handleDecreaseItemException(String email, String identifier, Exception e) {
-        if (e instanceof NotFoundException notFoundException) {
-            if (notFoundException.getObject().equals(User.class.getSimpleName())) {
+        } catch (NotFoundException e) {
+            if (e.getObject().equals(User.class.getSimpleName())) {
                 log.error("When decreasing user item quantity, user is not found for email {}", email);
-            } else if (notFoundException.getObject().equals(StoreItem.class.getSimpleName())) {
-                log.error("When decreasing user item quantity, store item {} not found ", identifier);
+            } else if (e.getObject().equals(StoreItem.class.getSimpleName())) {
+                log.error("When decreasing user item quantity, store item {} not found ", type);
             } else {
                 log.error("When decreasing user item quantity, user item is not found for user email {} and store item {}",
-                        email, identifier);
+                        email, type);
             }
-            return e;
-        } else if (e instanceof InsufficientUserItemQuantityException) {
-            log.error("User item quantity cannot be decreased since it is 0 or negative for user with email {}", email);
-            return e;
-        } else {
+            throw e;
+        } catch (InsufficientUserItemQuantityException e) {
+            log.error("User item quantity cannot be decreased since it is 0 or negative for user with email {} and store item {}", email, type);
+            throw e;
+        } catch (Exception e) {
             log.error("Failed to decrease user item quantity for user with email {}", email, e);
-            return new SomethingWentWrongException();
+            throw new SomethingWentWrongException();
         }
     }
 
-    private void consumeUserItem(UserItem userItem) throws InsufficientUserItemQuantityException{
+    private void consumeUserItem(UserItem userItem) throws InsufficientUserItemQuantityException {
         if (userItem.getQuantity() <= 0) {
             throw new InsufficientUserItemQuantityException();
         }
+
         userItem.setQuantity(userItem.getQuantity() - 1);
+
         if (userItem.getQuantity() <= 0) {
             userItemRepository.delete(userItem);
         } else {
             userItemRepository.save(userItem);
         }
+    }
+
+    private RUserItem convertToRUserItem(UserItem userItem) {
+        if (userItem != null) {
+            return RUserItem.builder().userItem(userItem).build();
+        } else {
+            return null;
+        }
+    }
+
+    private RUserItem getRUserItemFromStoreItem(User user, StoreItem storeItem) {
+        Optional<UserItem> optionalUserItem = userItemRepository.findByUserAndStoreItem(user, storeItem);
+        // Return the user item if it exists
+        if (optionalUserItem.isPresent()) {
+            return convertToRUserItem(optionalUserItem.get());
+        }
+        // If the user does not have any of the item, create a new temporary user item with 0 quantity
+        if (storeItem.isEnabled()) {
+            return convertToRUserItem(new UserItem(user, storeItem, 0));
+        }
+        // Do not return disabled items that the user does not have
+        return null;
     }
 }

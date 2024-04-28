@@ -93,20 +93,6 @@ public class StoreController {
     }
 
     @PostMapping("/user-items/decrease-quantity")
-    @Operation(summary = "Decrease user item quantity by store id", description = "Decreases the quantity of a user item by store item's id")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User item quantity decreased successfully", content =
-                    {@Content(mediaType = "application/json", schema =
-                    @Schema(implementation = RUserItem.class))}),
-            @ApiResponse(responseCode = "404", description = "User, store item or the user item not found"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    public ResponseEntity<Object> decreaseUserItemQuantity(@RequestHeader(Header.USER_EMAIL) String email, @RequestParam @NotBlank UUID itemId) throws Exception {
-        return Response.create("User item quantity decreased successfully", HttpStatus.OK, storeService.decreaseUserItemQuantity(email, itemId));
-    }
-
-
-    @PostMapping("/user-items/decrease-quantity-by-type")
     @Operation(summary = "Decrease user item quantity by type", description = "Decreases the quantity of a user item by store item's type")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User item quantity decreased successfully", content =
