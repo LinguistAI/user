@@ -1,5 +1,6 @@
 package app.linguistai.bmvp.controller.gamification;
 
+import app.linguistai.bmvp.response.gamification.store.RQuizItems;
 import app.linguistai.bmvp.response.gamification.store.RStoreItems;
 import app.linguistai.bmvp.response.gamification.store.RUserItem;
 import app.linguistai.bmvp.response.gamification.store.RUserItems;
@@ -53,6 +54,18 @@ public class StoreController {
         return Response.create("Successfully fetched all enabled store items", HttpStatus.OK, storeService.getAllEnabledStoreItems(page, size));
     }
 
+    @GetMapping("/quiz-items")
+    @Operation(summary = "Get all quiz related store/user items", description = "Retrieves all quiz related user items with quantities and gems. Includes enabled store items the user does not have, with quantity 0.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully fetched all quiz items", content =
+                    {@Content(mediaType = "application/json", array = @ArraySchema(schema =
+                    @Schema(implementation = RQuizItems.class)))}),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<Object> getQuizItems(@RequestHeader(Header.USER_EMAIL) String email, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) throws Exception {
+        return Response.create("Successfully fetched all quiz items", HttpStatus.OK, storeService.getAllQuizItems(email, page, size));
+    }
+
     @GetMapping("/user-items")
     @Operation(summary = "Get user items", description = "Retrieves a user's items and their quantity")
     @ApiResponses(value = {
@@ -80,7 +93,7 @@ public class StoreController {
     }
 
     @PostMapping("/user-items/decrease-quantity")
-    @Operation(summary = "Decrease user item quantity", description = "Decreases the quantity of a user item")
+    @Operation(summary = "Decrease user item quantity by type", description = "Decreases the quantity of a user item by store item's type")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User item quantity decreased successfully", content =
                     {@Content(mediaType = "application/json", schema =
@@ -88,7 +101,7 @@ public class StoreController {
             @ApiResponse(responseCode = "404", description = "User, store item or the user item not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<Object> decreaseUserItemQuantity(@RequestHeader(Header.USER_EMAIL) String email, @RequestParam @NotBlank UUID itemId) throws Exception {
-        return Response.create("User item quantity decreased successfully", HttpStatus.OK, storeService.decreaseUserItemQuantity(email, itemId));
+    public ResponseEntity<Object> decreaseUserItemQuantityByType(@RequestHeader(Header.USER_EMAIL) String email, @RequestParam @NotBlank String type) throws Exception {
+        return Response.create("User item quantity decreased successfully", HttpStatus.OK, storeService.decreaseUserItemQuantity(email, type));
     }
 }

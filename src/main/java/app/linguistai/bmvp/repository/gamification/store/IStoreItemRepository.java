@@ -13,4 +13,5 @@ import java.util.UUID;
 public interface IStoreItemRepository extends JpaRepository<StoreItem, UUID> {
     Page<StoreItem> findByEnabled(boolean enabled, Pageable pageable);
     Optional<StoreItem> findByType(String type);
+    Page<StoreItem> findByTypeIn(String[] types, Pageable pageable);
 }
