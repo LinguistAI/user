@@ -18,7 +18,7 @@ import app.linguistai.bmvp.response.gamification.RUserXP;
 @AllArgsConstructor
 public class RFriendProfile {
     private UUID id;
-    private String name;
+    private String username;
     private LocalDate birthDate;
     private EnglishLevel englishLevel;
     private List<String> hobbies;
@@ -27,15 +27,14 @@ public class RFriendProfile {
     private Long globalRank;
     private UserSearchFriendshipStatus friendshipStatus;
 
-    public RFriendProfile(UUID friendId, UserProfile profile, List<String> hobbies, UserStreak streak, RUserXP xp, Long rank, UserSearchFriendshipStatus status) {
+    public RFriendProfile(UUID friendId, String username, UserProfile profile, List<String> hobbies, UserStreak streak, RUserXP xp, Long rank, UserSearchFriendshipStatus status) {
         this.id = friendId;
+        this.username = username;
 
         if (profile == null) {
-            this.name = null;
             this.birthDate = null;
             this.englishLevel = null;
         } else {
-            this.name = profile.getName() != null ? profile.getName() : null;
             this.birthDate = profile.getBirthDate() != null ? profile.getBirthDate() : null;
             this.englishLevel = profile.getEnglishLevel() != null ? profile.getEnglishLevel() : null;
         }   

@@ -209,7 +209,7 @@ public class ProfileService {
             // Get friendship status
             UserSearchFriendshipStatus status = friendshipService.getFriendshipStatus(loggedUser, friend);
 
-            return new RFriendProfile(friendId, dbProfile, hobbies, streak, xp, rank, status);        
+            return new RFriendProfile(friendId, friend.getUsername(), dbProfile, hobbies, streak, xp, rank, status);        
         } catch (NotFoundException e) {
             if (e.getObject().equals(User.class.getSimpleName())) {
                 log.error("Get friend profile failed since logged in user does not exists for email {}", userEmail);
