@@ -4,10 +4,13 @@ import app.linguistai.bmvp.consts.Header;
 import app.linguistai.bmvp.enums.XPAction;
 import app.linguistai.bmvp.response.Response;
 import app.linguistai.bmvp.service.gamification.IXPService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @AllArgsConstructor
 @RestController
@@ -17,7 +20,13 @@ public class UserXPController {
 
     @GetMapping
     public ResponseEntity<Object> getUserXPByEmail(@RequestHeader(Header.USER_EMAIL) String email) throws Exception {
-        return Response.create("Successfully fetched UserXP", HttpStatus.OK, xpService.getUserXP(email));
+        return Response.create("Successfully fetched UserXP", HttpStatus.OK, xpService.getUserXPByEmail(email));
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<Object> getUserXPByUserId(@RequestHeader(Header.USER_EMAIL) String email,
+                                                    @Valid @PathVariable("userId") UUID userId) throws Exception {
+        return Response.create("Successfully fetched UserXP", HttpStatus.OK, xpService.getUserXPById(userId));
     }
 
     @PostMapping("/message")

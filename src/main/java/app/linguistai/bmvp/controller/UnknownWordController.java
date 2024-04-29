@@ -189,9 +189,13 @@ public class UnknownWordController {
         }
     }
 
-    @Operation(summary = "Get Word Stats", description = "Returns the mastered/reviewing/learning stats for words in all word lists")
+    @Operation(
+            summary = "Get Word Stats",
+            description = "Returns the mastered/reviewing/learning stats of the logged in user for words in all word lists"
+    )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved statistics for all word lists.", content =
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved statistics for all word lists.",
+                    content =
                     {@Content(mediaType = "application/json", schema =
                     @Schema(implementation = RUnknownWordListsStats.class))}),
             @ApiResponse(responseCode = "404", description = "User not found"),
@@ -199,6 +203,26 @@ public class UnknownWordController {
     })
     @GetMapping("/lists/stats")
     public ResponseEntity<Object> getAllListStats(@RequestHeader(Header.USER_EMAIL) String email) throws Exception {
-        return Response.create("Successfully retrieved statistics for all word lists.", HttpStatus.OK, unknownWordService.getAllListStats(email));
+        return Response.create("Successfully retrieved statistics for all word lists.", HttpStatus.OK,
+                unknownWordService.getAllListStatsByEmail(email));
+    }
+
+    @Operation(
+            summary = "Get Word Stats",
+            description = "Returns the mastered/reviewing/learning stats of a user with given user id for words in all word lists"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved statistics for all word lists.",
+                    content =
+                    {@Content(mediaType = "application/json", schema =
+                    @Schema(implementation = RUnknownWordListsStats.class))}),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/lists/stats/{userId}")
+    public ResponseEntity<Object> getAllListStats(@RequestHeader(Header.USER_EMAIL) String email,
+                                                  @Valid @PathVariable("userId") UUID userId) throws Exception {
+        return Response.create("Successfully retrieved statistics for all word lists.", HttpStatus.OK,
+                unknownWordService.getAllListStatsByUserId(userId));
     }
 }

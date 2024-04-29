@@ -31,5 +31,7 @@ public interface IUnknownWordService {
     String getRandomWordFromList(UUID listId) throws Exception;
     List<String> getRandomWordFromList(UUID listId, Integer numOfWords) throws Exception;
     ROwnerUnknownWordList addPredefinedWordList(String wordListYamlFile, String email) throws Exception;
-    RUnknownWordListsStats getAllListStats(String email) throws Exception;
+    RUnknownWordListsStats getAllListStatsByEmail(String email) throws Exception;
+    RUnknownWordListsStats getAllListStatsByUserId(UUID userId) throws Exception;
+
 }
