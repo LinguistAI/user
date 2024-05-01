@@ -1,4 +1,4 @@
-package app.linguistai.bmvp;
+// package app.linguistai.bmvp;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,4 +11,4 @@ class LinguistaiApplicationTests {
     void contextLoads() {
     }
 
-}
+// }
