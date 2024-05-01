@@ -148,7 +148,7 @@ public class WordSelectionService {
             if (selectedWords.size() != initialSelectSize) {
                 log.error("Error in selecting new words, selected words size is not equal to initial select size, " +
                         "selectedWords size: {}, initialSelectSize: {}", selectedWords.size(), initialSelectSize);
-                throw new SomethingWentWrongException("Error in selecting new words, you need to add more unknown words to your word bank");
+                throw new NotFoundException("Error in selecting new words, you need to have at least " + initialSelectSize + " unknown words in your word lists");
             }
 
             selectedWords.addAll(unknownWordRepository.findRandomByOwnerListUserIdAndOwnerListIsActiveAndConfidence(
