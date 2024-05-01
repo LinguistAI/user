@@ -1,4 +1,4 @@
-// package app.linguistai.bmvp.service;
+package app.linguistai.bmvp.service;
 
 import app.linguistai.bmvp.exception.InvalidResetCodeException;
 import app.linguistai.bmvp.exception.NotFoundException;
@@ -14,16 +14,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-// import java.sql.Timestamp;
-// import java.util.Arrays;
-// import java.util.Calendar;
-// import java.util.Collections;
-// import java.util.List;
-// import java.util.Optional;
+import java.sql.Timestamp;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
-// import static org.junit.jupiter.api.Assertions.*;
-// import static org.mockito.ArgumentMatchers.any;
-// import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class AccountServiceTest {
