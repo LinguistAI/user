@@ -1,28 +1,32 @@
 package app.linguistai.bmvp.service.wordbank;
 
 import app.linguistai.bmvp.exception.NotFoundException;
+import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.embedded.UnknownWordId;
-import app.linguistai.bmvp.model.enums.ConfidenceEnum;
+import app.linguistai.bmvp.enums.ConfidenceEnum;
 import app.linguistai.bmvp.model.wordbank.ListStats;
 import app.linguistai.bmvp.model.wordbank.UnknownWord;
 import app.linguistai.bmvp.model.wordbank.UnknownWordList;
 import app.linguistai.bmvp.model.wordbank.UnknownWordListWithUser;
 import app.linguistai.bmvp.repository.IAccountRepository;
+import app.linguistai.bmvp.model.wordbank.IConfidenceCount;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordListRepository;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordRepository;
 import app.linguistai.bmvp.request.wordbank.QAddUnknownWord;
+import app.linguistai.bmvp.request.wordbank.QPredefinedWordList;
 import app.linguistai.bmvp.request.wordbank.QUnknownWordList;
 import app.linguistai.bmvp.response.wordbank.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
+import static app.linguistai.bmvp.utils.FileUtils.readPredefinedWordListFromYamlFile;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class UnknownWordService implements IUnknownWordService {
@@ -49,7 +53,7 @@ public class UnknownWordService implements IUnknownWordService {
             User user = accountRepository.findUserByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
 
-            List<UnknownWordList> listsOfUser = listRepository.findByUserId(user.getId());
+            List<UnknownWordList> listsOfUser = listRepository.findByUserIdOrderByIsPinnedDesc(user.getId());
             List<RUnknownWordList> responseListsOfUser = new ArrayList<>();
 
             for (UnknownWordList list : listsOfUser) {
@@ -71,9 +75,13 @@ public class UnknownWordService implements IUnknownWordService {
                 .lists(responseListsOfUser)
                 .build();
         }
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not get unknown word lists.");
-            throw e1;
+            log.error("Get lists by email failed for email {}", email, e1);
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -87,7 +95,7 @@ public class UnknownWordService implements IUnknownWordService {
 
             List<RUnknownWord> responseWords = wordRepository.findByOwnerListListId(listId)
                 .stream()
-                .map(word -> new RUnknownWord(word.getWord(), word.getConfidence()))
+                .map(word -> new RUnknownWord(word.getWord().toLowerCase(), word.getConfidence()))
                 .collect(Collectors.toList());
 
             return RUnknownWordListWords.builder()
@@ -106,8 +114,8 @@ public class UnknownWordService implements IUnknownWordService {
                 .build();
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not get unknown word lists.");
-            throw e1;
+            log.error("Could not get unknown word lists.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -145,9 +153,13 @@ public class UnknownWordService implements IUnknownWordService {
                 .listStats(this.getListStats(savedList.getListId()))
                 .build();
         }
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not create unknown word list.");
-            throw e1;
+            log.error("Could not create unknown word list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -186,8 +198,8 @@ public class UnknownWordService implements IUnknownWordService {
                 .build();
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not edit unknown word list.");
-            throw e1;
+            log.error("Could not edit unknown word list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -201,49 +213,49 @@ public class UnknownWordService implements IUnknownWordService {
             // Check if the same word already exists
             UnknownWordId unknownWordId = UnknownWordId.builder()
                 .ownerList(userList)
-                .word(qAddUnknownWord.getWord())
+                .word(qAddUnknownWord.getWord().toLowerCase())
                 .build();
 
             wordRepository.findById(unknownWordId).ifPresent(existingWord -> {
-                throw new RuntimeException("Word " + qAddUnknownWord.getWord() + " already exists in list " + userList.getTitle() + ".");
+                throw new RuntimeException("Word " + qAddUnknownWord.getWord().toLowerCase() + " already exists in list " + userList.getTitle() + ".");
             });
 
             // If the word does not exist in the list, build new unknown word
             UnknownWord newWord = UnknownWord.builder()
                 .ownerList(userList)
-                .word(qAddUnknownWord.getWord())
+                .word(qAddUnknownWord.getWord().toLowerCase())
                 .confidence(ConfidenceEnum.LOWEST)
                 .build();
 
             UnknownWord saved = wordRepository.save(newWord);
 
-            return RUnknownWord.builder().word(saved.getWord()).confidence(saved.getConfidence()).build();
+            return RUnknownWord.builder().word(saved.getWord().toLowerCase()).confidence(saved.getConfidence()).build();
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not add unknown word.");
-            throw e1;
+            log.error("Could not add unknown word.");
+            throw new SomethingWentWrongException();
         }
     }
 
     @Override
     public RUnknownWord increaseConfidence(QAddUnknownWord qAddUnknownWord, String email) throws Exception {
         try {
-            return modifyWord(qAddUnknownWord.getListId(), email, qAddUnknownWord.getWord(), MODIFY_WORD_CONFIDENCE_UP);
+            return modifyWord(qAddUnknownWord.getListId(), email, qAddUnknownWord.getWord().toLowerCase(), MODIFY_WORD_CONFIDENCE_UP);
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not increase word confidence.");
-            throw e1;
+            log.error("Could not increase word confidence.");
+            throw new SomethingWentWrongException();
         }
     }
 
     @Override
     public RUnknownWord decreaseConfidence(QAddUnknownWord qAddUnknownWord, String email) throws Exception {
         try {
-            return modifyWord(qAddUnknownWord.getListId(), email, qAddUnknownWord.getWord(), MODIFY_WORD_CONFIDENCE_DOWN);
+            return modifyWord(qAddUnknownWord.getListId(), email, qAddUnknownWord.getWord().toLowerCase(), MODIFY_WORD_CONFIDENCE_DOWN);
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not decrease word confidence.");
-            throw e1;
+            log.error("Could not decrease word confidence.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -253,8 +265,8 @@ public class UnknownWordService implements IUnknownWordService {
             return modifyList(listId, email, Boolean.TRUE, MODIFY_LIST_ACTIVE);
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not activate list.");
-            throw e1;
+            log.error("Could not activate list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -264,8 +276,8 @@ public class UnknownWordService implements IUnknownWordService {
             return modifyList(listId, email, Boolean.FALSE, MODIFY_LIST_ACTIVE);
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not deactivate list.");
-            throw e1;
+            log.error("Could not deactivate list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -275,8 +287,8 @@ public class UnknownWordService implements IUnknownWordService {
             return modifyList(listId, email, Boolean.TRUE, MODIFY_LIST_FAVORITE);
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not add list to favorites.");
-            throw e1;
+            log.error("Could not add list to favorites.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -286,8 +298,8 @@ public class UnknownWordService implements IUnknownWordService {
             return modifyList(listId, email, Boolean.FALSE, MODIFY_LIST_FAVORITE);
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not remove list from favorites.");
-            throw e1;
+            log.error("Could not remove list from favorites.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -297,8 +309,8 @@ public class UnknownWordService implements IUnknownWordService {
             return modifyList(listId, email, Boolean.TRUE, MODIFY_LIST_PINNED);
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not pin list.");
-            throw e1;
+            log.error("Could not pin list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -308,8 +320,8 @@ public class UnknownWordService implements IUnknownWordService {
             return modifyList(listId, email, Boolean.FALSE, MODIFY_LIST_PINNED);
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not unpin list.");
-            throw e1;
+            log.error("Could not unpin list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -338,8 +350,136 @@ public class UnknownWordService implements IUnknownWordService {
             return response;
         }
         catch (Exception e1) {
-            System.out.println("ERROR: Could not delete list.");
-            throw e1;
+            log.error("Could not delete list.");
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    @Override
+    @Transactional
+    public UnknownWordList getRandomActiveUnknownWordList(UUID userId) throws Exception {
+        try {
+            List<UnknownWordList> activeLists = listRepository.findByUserId(userId)
+                .stream()
+                .filter(UnknownWordList::getIsActive)
+                .toList();
+
+            if (activeLists.isEmpty()) {
+                throw new NotFoundException();
+            }
+
+            return activeLists.get(new Random().nextInt(activeLists.size()));
+        }
+        catch (NotFoundException e) {
+            log.error("No active unknown word lists found for user with ID {}", userId);
+            throw e;
+        }
+        catch (Exception e) {
+            log.error("Could not retrieve random active unknown word list.");
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    @Override
+    @Transactional
+    public String getRandomWordFromList(UUID listId) throws Exception {
+        try {
+            List<UnknownWord> words = wordRepository.findByOwnerListListId(listId);
+
+            if (words.isEmpty()) {
+                throw new NotFoundException();
+            }
+
+            return words.get(new Random().nextInt(words.size())).getWord().toLowerCase();
+        }
+        catch (NotFoundException e) {
+            log.error("No words found in the unknown word list with ID {}", listId);
+            throw e;
+        }
+        catch (Exception e) {
+            log.error("Could not retrieve a random word from the list.");
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    @Override
+    @Transactional
+    public List<String> getRandomWordFromList(UUID listId, Integer numOfWords) throws Exception {
+        try {
+            List<UnknownWord> words = wordRepository.findByOwnerListListId(listId);
+
+            if (words.isEmpty()) {
+                throw new NotFoundException();
+            }
+
+            if (words.size() < numOfWords) {
+                throw new IllegalArgumentException("Number of requested random words are greater than the available number of words.");
+            }
+
+            Collections.shuffle(words);
+            return words.subList(0, numOfWords).stream().map(UnknownWord::getWord).map(String::toLowerCase).collect(Collectors.toList());
+        }
+        catch (NotFoundException e) {
+            log.error("No words found in the unknown word list with ID {}", listId);
+            throw e;
+        }
+        catch (Exception e) {
+            log.error("Could not retrieve a random word from the list.");
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    @Transactional
+    public ROwnerUnknownWordList addPredefinedWordList(String wordListYamlFile, String email) throws Exception {
+        try {
+            User user = accountRepository.findUserByEmail(email)
+                    .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+
+            QPredefinedWordList predefinedWordList = readPredefinedWordListFromYamlFile(wordListYamlFile);
+
+            // Create new unknown word list
+            UnknownWordList wordList = UnknownWordList.builder()
+                    .listId(UUID.randomUUID())
+                    .user(user)
+                    .title(predefinedWordList.getTitle())
+                    .description(predefinedWordList.getDescription())
+                    .isActive(predefinedWordList.getIsActive())
+                    .isFavorite(predefinedWordList.getIsFavorite())
+                    .isPinned(predefinedWordList.getIsPinned())
+                    .imageUrl(predefinedWordList.getImageUrl())
+                    .build();
+
+            UnknownWordList savedList = listRepository.save(wordList);
+
+            // Add predefined words
+            List<UnknownWord> unknownWords = new ArrayList<>();
+            for (String word : predefinedWordList.getWords()) {
+                UnknownWord newWord = UnknownWord.builder()
+                        .ownerList(savedList)
+                        .word(word.toLowerCase())
+                        .confidence(ConfidenceEnum.LOWEST)
+                        .build();
+                unknownWords.add(newWord);
+            }
+
+            // Bulk insert all words
+            wordRepository.saveAll(unknownWords);
+
+            return ROwnerUnknownWordList.builder()
+                    .listId(wordList.getListId())
+                    .ownerUsername(user.getUsername())
+                    .title(wordList.getTitle())
+                    .description(wordList.getDescription())
+                    .isActive(wordList.getIsActive())
+                    .isFavorite(wordList.getIsFavorite())
+                    .isPinned(wordList.getIsPinned())
+                    .imageUrl(wordList.getImageUrl())
+                    .listStats(this.getListStats(wordList.getListId()))
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Could not add predefined word list.");
+            throw new SomethingWentWrongException();
         }
     }
 
@@ -428,20 +568,44 @@ public class UnknownWordService implements IUnknownWordService {
         List<UnknownWord> words = wordRepository.findByOwnerListListId(listId);
 
         for (UnknownWord word : words) {
-            switch (word.getConfidence()) {
-                // Learning
-                case LOWEST, LOW -> stats.setLearning(stats.getLearning() + 1L);
-
-                // Reviewing
-                case MODERATE, HIGH -> stats.setReviewing(stats.getReviewing() + 1L);
-
-                // Mastered
-                case HIGHEST -> stats.setMastered(stats.getMastered() + 1L);
-            }
+            stats = updateStatsBasedOnConfidence(stats, word.getConfidence(), 1L);
         }
 
         return stats;
     }
+
+    @Transactional
+    public RUnknownWordListsStats getAllListStats(String email) throws Exception {
+        try {
+            User user = accountRepository.findUserByEmail(email)
+                    .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+
+            ListStats stats = new ListStats(0L, 0L, 0L);
+
+            // Get word counts by confidence level
+            List<IConfidenceCount> wordCountsByConfidenceLevel = wordRepository.countWordsByConfidenceLevel(user.getId());
+
+            // Update list stats based on confidence levels
+            for (IConfidenceCount confidenceCount : wordCountsByConfidenceLevel) {
+                ConfidenceEnum confidence = confidenceCount.getConfidence();
+                Long count = confidenceCount.getCount();
+
+                stats = updateStatsBasedOnConfidence(stats, confidence, count);
+            }
+
+            log.info("Retrieved list stats for user {}.", email);
+            return RUnknownWordListsStats.builder()
+                    .listStats(stats)
+                    .build();
+        } catch (NotFoundException e) {
+            log.error("Get all list stats failed since user does not exist for email {}", email);
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to retrieve list stats for user {}.", email, e);
+            throw new SomethingWentWrongException();
+        }
+    }
+
 
     private ConfidenceEnum increaseConfidence(ConfidenceEnum currentConfidence) {
         return (currentConfidence.ordinal() < ConfidenceEnum.values().length - 1)
@@ -453,5 +617,20 @@ public class UnknownWordService implements IUnknownWordService {
         return (currentConfidence.ordinal() > 0)
             ? ConfidenceEnum.values()[currentConfidence.ordinal() - 1]
             : currentConfidence;
+    }
+
+    private ListStats updateStatsBasedOnConfidence(ListStats stats, ConfidenceEnum confidence, Long count) {
+        switch (confidence) {
+            // Learning
+            case LOWEST, LOW -> stats.setLearning(stats.getLearning() + count);
+
+            // Reviewing
+            case MODERATE, HIGH -> stats.setReviewing(stats.getReviewing() + count);
+
+            // Mastered
+            case HIGHEST -> stats.setMastered(stats.getMastered() + count);
+        }
+
+        return stats;
     }
 }

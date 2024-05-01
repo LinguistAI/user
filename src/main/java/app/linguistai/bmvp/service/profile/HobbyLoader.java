@@ -1,5 +1,6 @@
 package app.linguistai.bmvp.service.profile;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -11,6 +12,7 @@ import app.linguistai.bmvp.repository.IHobbyRepository;
 
 import java.util.Arrays;
 
+@Slf4j
 @Component
 public class HobbyLoader implements ApplicationRunner {
 
@@ -23,13 +25,46 @@ public class HobbyLoader implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        Hobby[] hobbies = {new Hobby("Reading"), new Hobby("Cooking"), new Hobby("Football"), new Hobby("Cinema"), new Hobby("Sports")};
+        Hobby[] hobbies = {
+            new Hobby("Sports"),
+            new Hobby("Reading"),
+            new Hobby("Gardening"),
+            new Hobby("Cooking"),
+            new Hobby("Baking"),
+            new Hobby("Photography"),
+            new Hobby("Writing"),
+            new Hobby("Drawing"),
+            new Hobby("Painting"),
+            new Hobby("Knitting"),
+            new Hobby("Crocheting"),
+            new Hobby("Fishing"),
+            new Hobby("Hiking"),
+            new Hobby("Cycling"),
+            new Hobby("Bird Watching"),
+            new Hobby("Astronomy"),
+            new Hobby("Playing Musical Instruments"),
+            new Hobby("Singing"),
+            new Hobby("Dancing"),
+            new Hobby("Yoga"),
+            new Hobby("Meditation"),
+            new Hobby("Collecting (e.g., stamps, coins, art)"),
+            new Hobby("Model Building"),
+            new Hobby("DIY Projects"),
+            new Hobby("Video Gaming"),
+            new Hobby("Board Gaming"),
+            new Hobby("Puzzle Solving"),
+            new Hobby("Traveling"),
+            new Hobby("Learning New Languages"),
+            new Hobby("Volunteering")
+        };
         
         try {
             hobbyRepository.saveAll(Arrays.asList(hobbies));
+            log.info("Hobbies loaded into the database successfully.");
         } catch (DataIntegrityViolationException e) {
-            System.out.println("Hobbies already exist");
+            log.info("Hobbies already exist in the database.");
         } catch (Exception e) {
+            log.error("Failed to load hobbies.", e);
             e.printStackTrace();
         }        
     }

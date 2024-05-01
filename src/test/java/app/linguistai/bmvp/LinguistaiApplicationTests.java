@@ -1,13 +1,14 @@
-// package app.linguistai.bmvp;
+package app.linguistai.bmvp;
 
-// import org.junit.jupiter.api.Test;
-// import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-// @SpringBootTest
-// class LinguistaiApplicationTests {
+@ExtendWith(MockitoExtension.class)
+class LinguistaiApplicationTests {
 
-// 	@Test
-// 	void contextLoads() {
-// 	}
+    @Test
+    void contextLoads() {
+    }
 
-// }
+}

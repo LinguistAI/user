@@ -6,7 +6,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import app.linguistai.bmvp.model.UserStreak;
+import app.linguistai.bmvp.model.gamification.UserStreak;
 
 @Repository
 public interface IUserStreakRepository extends JpaRepository<UserStreak, UUID> {

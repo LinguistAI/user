@@ -1,6 +1,10 @@
 package app.linguistai.bmvp.model;
 
 import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import app.linguistai.bmvp.request.QUser;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -20,7 +24,7 @@ public class User {
     private UUID id;
 
     @NotBlank
-    @Column(name = "username", nullable = false)
+    @Column(name = "username", nullable = false, unique = true)
     private String username;
 
     @NotBlank
@@ -28,7 +32,15 @@ public class User {
     @Email(message = "Email field must be in a valid email format")
     private String email;
 
+    @JsonIgnore
     @NotBlank
     @Column(name = "password", nullable = false)
     private String password;
+
+    public User(QUser reqUser) {
+        this.id = reqUser.getId();
+        this.username = reqUser.getUsername();
+        this.email = reqUser.getEmail();
+        this.password = reqUser.getPassword();
+    }
 }
