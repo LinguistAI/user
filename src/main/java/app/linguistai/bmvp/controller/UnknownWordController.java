@@ -5,6 +5,8 @@ import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.request.QSelectWord;
 import app.linguistai.bmvp.request.wordbank.*;
 import app.linguistai.bmvp.response.Response;
+import app.linguistai.bmvp.response.stats.RUserLoggedDate;
+import app.linguistai.bmvp.response.wordbank.RUnknownWord;
 import app.linguistai.bmvp.response.wordbank.RUnknownWordListsStats;
 import app.linguistai.bmvp.service.wordbank.IUnknownWordService;
 import app.linguistai.bmvp.service.wordbank.WordSelectionService;
@@ -183,6 +185,26 @@ public class UnknownWordController {
     public ResponseEntity<Object> deleteList(@Valid @PathVariable("listId") UUID listId, @RequestHeader(Header.USER_EMAIL) String email) {
         try {
             return Response.create("Successfully deleted list.", HttpStatus.OK, unknownWordService.deleteList(listId, email));
+        }
+        catch (Exception e) {
+            return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Operation(summary = "Delete Word", description = "Delete a word from the unknown word list.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully deleted word", content =
+                    {@Content(mediaType = "application/json", schema =
+                    @Schema(implementation = RUnknownWord.class))}),
+            @ApiResponse(responseCode = "400", description = "Invalid input parameter"),
+            @ApiResponse(responseCode = "403", description = "Unauthorized to delete the word"),
+            @ApiResponse(responseCode = "404", description = "User, list or word not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @DeleteMapping("/word")
+    public ResponseEntity<Object> deleteWord(@Valid @RequestParam UUID listId, @Valid @RequestParam String word, @RequestHeader(Header.USER_EMAIL) String email) {
+        try {
+            return Response.create("Successfully deleted word.", HttpStatus.OK, unknownWordService.deleteWord(listId, email, word));
         }
         catch (Exception e) {
             return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

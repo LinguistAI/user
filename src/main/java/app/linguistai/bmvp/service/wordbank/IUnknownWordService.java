@@ -27,6 +27,7 @@ public interface IUnknownWordService {
     ROwnerUnknownWordList pinList(UUID listId, String email) throws Exception;
     ROwnerUnknownWordList unpinList(UUID listId, String email) throws Exception;
     ROwnerUnknownWordList deleteList(UUID listId, String email) throws Exception;
+    RUnknownWord deleteWord(UUID listId, String email, String word) throws Exception;
     UnknownWordList getRandomActiveUnknownWordList(UUID userId) throws Exception;
     String getRandomWordFromList(UUID listId) throws Exception;
     List<String> getRandomWordFromList(UUID listId, Integer numOfWords) throws Exception;
