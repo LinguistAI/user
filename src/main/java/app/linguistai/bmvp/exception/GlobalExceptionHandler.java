@@ -7,23 +7,40 @@ import org.junit.jupiter.api.Order;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import app.linguistai.bmvp.response.Response;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @ControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class GlobalExceptionHandler {
 
-    // Handle 404 Not Found (Endpoint not found)
-    @ExceptionHandler(NotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ResponseEntity<Object> handleNotFoundException(NotFoundException e) {
-        return Response.create("Endpoint not found", HttpStatus.NOT_FOUND);
+    @ExceptionHandler(LoginException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ResponseBody
+    public ResponseEntity<Object> handleLoginException(LoginException ex) {
+        return Response.create(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(SomethingWentWrongException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseBody
+    public ResponseEntity<Object> handleSomethingWentWrongException(SomethingWentWrongException ex) {
+        return Response.create(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    
+    @ExceptionHandler(CustomException.class)
+    @ResponseBody
+    public ResponseEntity<Object> handleCustomException(CustomException ex) {
+        return Response.create(ex.getMessage(),ex.getStatus());
     }
 
     // Handle 400 Bad Request (Invalid request body)
@@ -48,6 +65,13 @@ public class GlobalExceptionHandler {
         return Response.create("Incorrect request method!", HttpStatus.METHOD_NOT_ALLOWED);
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public final ResponseEntity<Object> handleInvalidEnumType(HttpMessageNotReadableException ex) {
+        log.error(ex.getMessage());
+
+        return Response.create("Bad Request", HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleException(CustomException e) {
         // Log the exception if needed
@@ -62,7 +86,7 @@ public class GlobalExceptionHandler {
         StringBuilder errorMsg = new StringBuilder();
 
         if (Character.isLowerCase(defaultMessage.charAt(0))) {
-            errorMsg.append(Character.toUpperCase(fieldName.charAt(0)));
+            errorMsg.append(fieldName.charAt(0));
             errorMsg.append(fieldName.substring(1));
             errorMsg.append(" ");
             errorMsg.append(defaultMessage);
