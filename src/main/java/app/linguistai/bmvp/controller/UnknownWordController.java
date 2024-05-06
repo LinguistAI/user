@@ -202,13 +202,8 @@ public class UnknownWordController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @DeleteMapping("/word")
-    public ResponseEntity<Object> deleteWord(@Valid @RequestParam UUID listId, @Valid @RequestParam String word, @RequestHeader(Header.USER_EMAIL) String email) {
-        try {
-            return Response.create("Successfully deleted word.", HttpStatus.OK, unknownWordService.deleteWord(listId, email, word));
-        }
-        catch (Exception e) {
-            return Response.create(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Object> deleteWord(@Valid @RequestParam UUID listId, @Valid @RequestParam String word, @RequestHeader(Header.USER_EMAIL) String email) throws Exception {
+        return Response.create("Successfully removed '" + word + "'.", HttpStatus.OK, unknownWordService.deleteWord(listId, email, word));
     }
 
     @Operation(
