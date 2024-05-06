@@ -33,4 +33,6 @@ public interface IUnknownWordRepository extends JpaRepository<UnknownWord, Unkno
 
     @Query("SELECT u.confidence AS confidence, COUNT(u) AS count FROM UnknownWord u WHERE u.ownerList.user.id = :userId GROUP BY u.confidence")
     List<IConfidenceCount> countWordsByConfidenceLevel(@Param("userId") UUID userId);
+
+    void deleteByOwnerListListIdAndWord(UUID listId, String word);
 }

@@ -2,9 +2,11 @@ package app.linguistai.bmvp.service.wordbank;
 
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
+import app.linguistai.bmvp.exception.UnauthorizedException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.embedded.UnknownWordId;
 import app.linguistai.bmvp.enums.ConfidenceEnum;
+import app.linguistai.bmvp.model.gamification.store.StoreItem;
 import app.linguistai.bmvp.model.wordbank.ListStats;
 import app.linguistai.bmvp.model.wordbank.UnknownWord;
 import app.linguistai.bmvp.model.wordbank.UnknownWordList;
@@ -348,9 +350,53 @@ public class UnknownWordService implements IUnknownWordService {
             listRepository.deleteById(listId);
 
             return response;
+        } catch (NotFoundException e) {
+            if (e.getObject().equals(User.class.getSimpleName())) {
+                log.error("When deleting a list, user is not found for email {}", email);
+            } else if (e.getObject().equals(UnknownWordList.class.getSimpleName())) {
+                log.error("When deleting a list, word list {} not found ", listId);
+            }
+            throw e;
+        } catch (UnauthorizedException e) {
+            log.error("User {} not authorized to modify list: {}", email, listId);
+            throw e;
+        } catch (Exception e) {
+            log.error("Could not delete list {} for user with email {}.", listId, email, e);
+            throw new SomethingWentWrongException();
         }
-        catch (Exception e1) {
-            log.error("Could not delete list.");
+    }
+
+    @Override
+    @Transactional
+    public RUnknownWord deleteWord(UUID listId, String email, String word) throws Exception {
+        try {
+            // Check if the user can modify this word list
+            this.getUserOwnedList(listId, email);
+
+            // Get the word
+            UnknownWord unknownWord = wordRepository.findByOwnerListListIdAndWord(listId, word).orElseThrow(() -> new NotFoundException(UnknownWord.class.getSimpleName(), true));
+
+            RUnknownWord response = RUnknownWord.builder()
+                    .word(unknownWord.getWord())
+                    .confidence(unknownWord.getConfidence()).build();
+
+            // If we are here, the list exists and the user is the owner of the list
+            wordRepository.deleteByOwnerListListIdAndWord(listId, word);
+            return response;
+        } catch (NotFoundException e) {
+            if (e.getObject().equals(User.class.getSimpleName())) {
+                log.error("When deleting a word, user is not found for email {}", email);
+            } else if (e.getObject().equals(UnknownWordList.class.getSimpleName())) {
+                log.error("When deleting a word, word list {} not found ", listId);
+            } else {
+                log.error("When deleting a word, word {} is not found for user email {} and list id {}", word, email, listId);
+            }
+            throw e;
+        } catch (UnauthorizedException e) {
+            log.error("User {} not authorized to modify list: {}", email, listId);
+            throw e;
+        } catch (Exception e) {
+            log.error("Could not delete word {} for user with email {}.", word, email, e);
             throw new SomethingWentWrongException();
         }
     }
@@ -543,15 +589,15 @@ public class UnknownWordService implements IUnknownWordService {
     protected UnknownWordListWithUser getUserOwnedList(UUID listId, String email) throws Exception {
         // Check if user exists
         User user = accountRepository.findUserByEmail(email)
-            .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
+            .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "].", User.class.getSimpleName()));
 
         // Check if list exists
         UnknownWordList userList = listRepository.findById(listId)
-            .orElseThrow(() -> new NotFoundException("Unknown Word List does not exist for given listId: [" + listId + "]."));
+            .orElseThrow(() -> new NotFoundException("Unknown Word List does not exist for given listId: [" + listId + "].", UnknownWordList.class.getSimpleName()));
 
         // Check if user is owner of the list
         if (userList.getUser().getId() != user.getId()) {
-            throw new Exception("User not authorized to modify list.");
+            throw new UnauthorizedException("User not authorized to modify list.");
         }
 
         return new UnknownWordListWithUser(user, userList);
