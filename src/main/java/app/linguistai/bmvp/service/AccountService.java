@@ -326,18 +326,21 @@ public class AccountService {
     }
 
     private void initiateUserSession(String email) throws Exception {
-        // Upon successful user entry, check whether to increase user streak or not
         try {
+            // Upon successful user entry, check whether to increase user streak or not
             userStreakService.updateUserStreak(email);
+
+            // Add the current date as a logged date
+            userLoggedDateService.addLoggedDateByEmailAndDate(email, new Date());
+
+            questService.assignQuests(email);
+            transactionService.ensureUserGemsExists(email);
         }
         catch (Exception e) {
             // Intentionally not thrown to not cause login exception for users without UserStreak
-            log.error("User streak update is failed for email {} when initiating user session.", email, e);
+            log.error("User session initialization failed for email {}.", email, e);
         }
-        // Add the current date as a logged date
-        userLoggedDateService.addLoggedDateByEmailAndDate(email, new Date());
-        questService.assignQuests(email);
-        transactionService.ensureUserGemsExists(email);
+
         log.info("User session initiated for email {}.", email);
     }
 }
