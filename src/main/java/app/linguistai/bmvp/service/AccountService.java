@@ -222,8 +222,9 @@ public class AccountService {
             final String accessToken = jwtUtils.createAccessToken(userDetails);
             final String refreshToken = jwtUtils.createRefreshToken(userDetails);
 
-            log.info("User registered with email {}.", newUser.getId());
+            this.initiateUserSession(newUser.getEmail());
 
+            log.info("User registered with email {}.", newUser.getEmail());
             return new RLoginUser(newUser, accessToken, refreshToken);          
         } catch (AlreadyFoundException e) {
             log.error("User register fail since email already exists for email {}", requestUser.getEmail());
