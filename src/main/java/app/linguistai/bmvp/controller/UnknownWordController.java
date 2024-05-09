@@ -63,16 +63,8 @@ public class UnknownWordController {
     }
 
     @PostMapping("/add-word")
-    public ResponseEntity<Object> addWord(@Valid @RequestBody QAddUnknownWord qAddUnknownWord, @RequestHeader(Header.USER_EMAIL) String email) {
-        try {
-            return Response.create("Successfully added unknown word " + qAddUnknownWord.getWord() + ".", HttpStatus.OK, unknownWordService.addWord(qAddUnknownWord, email));
-        }
-        catch (RuntimeException e) {
-            return Response.create(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
-        catch (Exception e) {
-            return Response.create("Could not add unknown word " + qAddUnknownWord.getWord() + ".", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Object> addWord(@Valid @RequestBody QAddUnknownWord qAddUnknownWord, @RequestHeader(Header.USER_EMAIL) String email) throws Exception {
+        return Response.create("Successfully added unknown word " + qAddUnknownWord.getWord() + ".", HttpStatus.OK, unknownWordService.addWord(qAddUnknownWord, email));
     }
 
     @PostMapping("/increase-confidence")
