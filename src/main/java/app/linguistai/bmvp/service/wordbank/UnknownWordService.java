@@ -1,12 +1,13 @@
 package app.linguistai.bmvp.service.wordbank;
 
+import app.linguistai.bmvp.consts.Header;
+import app.linguistai.bmvp.exception.AlreadyFoundException;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.exception.UnauthorizedException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.embedded.UnknownWordId;
 import app.linguistai.bmvp.enums.ConfidenceEnum;
-import app.linguistai.bmvp.model.gamification.store.StoreItem;
 import app.linguistai.bmvp.model.wordbank.ListStats;
 import app.linguistai.bmvp.model.wordbank.UnknownWord;
 import app.linguistai.bmvp.model.wordbank.UnknownWordList;
@@ -21,8 +22,13 @@ import app.linguistai.bmvp.request.wordbank.QUnknownWordList;
 import app.linguistai.bmvp.response.wordbank.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.http.HttpStatus;
+import reactor.core.publisher.Mono;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -47,6 +53,19 @@ public class UnknownWordService implements IUnknownWordService {
     private final int MODIFY_WORD_CONFIDENCE_UP = 2001;
 
     private final int MODIFY_WORD_CONFIDENCE_DOWN = 2002;
+
+    private WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
+
+    @Value("${dict.service.base.url}")
+    private String DICT_SERVICE_BASE_URL;
+
+    private WebClient getWebClient() {
+        if (webClient == null) {
+            webClient = webClientBuilder.baseUrl(DICT_SERVICE_BASE_URL).build();
+        }
+        return webClient;
+    }
 
     @Override
     @Transactional
@@ -209,6 +228,12 @@ public class UnknownWordService implements IUnknownWordService {
     @Transactional
     public RUnknownWord addWord(QAddUnknownWord qAddUnknownWord, String email) throws Exception {
         try {
+            // Check if dictionary service base URL is set
+            if (DICT_SERVICE_BASE_URL == null || DICT_SERVICE_BASE_URL.isEmpty()) {
+                throw new IllegalStateException("Dict Service Base URL is not set. Word addition is not allowed.");
+            }
+
+            // Retrieve user's word list
             UnknownWordListWithUser userListInfo = this.getUserOwnedList(qAddUnknownWord.getListId(), email);
             UnknownWordList userList = userListInfo.list();
 
@@ -222,7 +247,18 @@ public class UnknownWordService implements IUnknownWordService {
                 throw new RuntimeException("Word " + qAddUnknownWord.getWord().toLowerCase() + " already exists in list " + userList.getTitle() + ".");
             });
 
-            // If the word does not exist in the list, build new unknown word
+            // Call dictionary service
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("wordList", Collections.singletonList(qAddUnknownWord.getWord().toLowerCase()));
+
+            this.getWebClient().post()
+                .header(Header.USER_EMAIL, email)
+                .body(Mono.just(requestBody), Map.class)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+            // Create and save new unknown word
             UnknownWord newWord = UnknownWord.builder()
                 .ownerList(userList)
                 .word(qAddUnknownWord.getWord().toLowerCase())
@@ -232,9 +268,18 @@ public class UnknownWordService implements IUnknownWordService {
             UnknownWord saved = wordRepository.save(newWord);
 
             return RUnknownWord.builder().word(saved.getWord().toLowerCase()).confidence(saved.getConfidence()).build();
-        }
-        catch (Exception e1) {
-            log.error("Could not add unknown word.");
+        } catch (WebClientResponseException e) {
+            if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+                log.error("Word {} is not found in the dictionary.", qAddUnknownWord.getWord());
+                throw new NotFoundException("Word is not found in the dictionary.");
+            }
+            log.error("Dictionary service returned an error:" + e.getMessage());
+            throw new SomethingWentWrongException();
+        } catch (RuntimeException e) {
+            log.error(e.getMessage());
+            throw new AlreadyFoundException(e.getMessage());
+        } catch (Exception e) {
+            log.error("Could not add unknown word: " + e.getMessage());
             throw new SomethingWentWrongException();
         }
     }
