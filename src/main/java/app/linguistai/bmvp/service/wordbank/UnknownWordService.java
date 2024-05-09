@@ -7,6 +7,7 @@ import app.linguistai.bmvp.exception.WordReferencedException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.embedded.UnknownWordId;
 import app.linguistai.bmvp.enums.ConfidenceEnum;
+import app.linguistai.bmvp.model.gamification.store.StoreItem;
 import app.linguistai.bmvp.model.wordbank.ListStats;
 import app.linguistai.bmvp.model.wordbank.UnknownWord;
 import app.linguistai.bmvp.model.wordbank.UnknownWordList;
