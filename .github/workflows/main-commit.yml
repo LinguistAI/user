@@ -48,7 +48,7 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
   deploy:
-    needs: publish
+    needs: build
     runs-on: ubuntu-latest
     steps:
     - name: Docker Pull & Run From DockerHub
