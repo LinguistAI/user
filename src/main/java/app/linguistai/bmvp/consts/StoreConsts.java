@@ -7,7 +7,7 @@ public class StoreConsts {
     public static final String[] QUIZ_TYPES = {TYPE_DOUBLE_ANSWER, TYPE_ELIMINATE_WRONG_ANSWER};
 
     // Descriptions
-    public static final String DESCRIPTION_DOUBLE_ANSWER = "Consume this item to answer a quiz question twice for better practice.";
+    public static final String DESCRIPTION_DOUBLE_ANSWER = "Consume this item to have two attempts for a quiz question.";
     public static final String DESCRIPTION_ELIMINATE_WRONG_ANSWER = "Consume this item to eliminate two wrong answers from a quiz question.";
 
     // Prices
