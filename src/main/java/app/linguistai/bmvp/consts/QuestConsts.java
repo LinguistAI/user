@@ -1,6 +1,8 @@
 package app.linguistai.bmvp.consts;
 
 public class QuestConsts {
+    public static final int TOTAL_NUM_OF_QUESTS = 3;
+
     // General Identifiers
     public static final String TIMES_IDENTIFIER = "<TIMES>";
     public static final String TIMES_CLOSING_IDENTIFIER = "</TIMES>";

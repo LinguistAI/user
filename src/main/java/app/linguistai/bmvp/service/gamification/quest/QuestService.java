@@ -189,13 +189,20 @@ public class QuestService implements IQuestService {
             // Step 3. Assign 2 "Word Practice" quests for different words
             List<Quest> useWordQuests = this.buildBulkUseWordQuests(user, ASSIGN_USE_WORD_QUEST_AMOUNT);
 
-            // Step 4. Assign a "Send Message" quest
-            Integer randomSendMessagedTimes = this.generateRandomTimesForUseWordQuest();
-            Quest sendMessage = this.buildSendMessageQuest(user, randomSendMessagedTimes);
+            // Step 4. Save all quests to the repository
+            List<Quest> questsToAssign = new ArrayList<>();
 
-            // Step 5. Save all quests to the repository
-            List<Quest> questsToAssign = new ArrayList<>(useWordQuests);
-            questsToAssign.add(sendMessage);
+            // If "use word" quests list is not empty, add them
+            if (!useWordQuests.isEmpty()) {
+                questsToAssign.addAll(useWordQuests);
+            }
+
+            while (questsToAssign.size() < TOTAL_NUM_OF_QUESTS) {
+                // Assign a "Send Message" quest until total number of quests to assign is reached
+                Integer randomSendMessagedTimes = this.generateRandomTimesForUseWordQuest();
+                Quest sendMessage = this.buildSendMessageQuest(user, randomSendMessagedTimes);
+                questsToAssign.add(sendMessage);
+            }
 
             questRepository.saveAll(questsToAssign);
         }
@@ -218,8 +225,16 @@ public class QuestService implements IQuestService {
         HashSet<String> usedWords = new HashSet<>();
 
         for (int i = 0; i < count; i++) {
-            // Get one active unknown word list
-            UnknownWordList randomActiveList = unknownWordService.getRandomActiveUnknownWordList(user.getId());
+            UnknownWordList randomActiveList;
+
+            try {
+                // Try to get one active unknown word list
+                randomActiveList = unknownWordService.getRandomActiveUnknownWordList(user.getId());
+            }
+            catch (NotFoundException e) {
+                // If no active lists are present, return an empty list
+                return Collections.emptyList();
+            }
 
             // Select a random word from the retrieved unknown word list, while ensuring no duplicates exist for quests
             String randomWord = this.returnUniqueRandomWordForUseWordQuest(randomActiveList.getListId(), usedWords);
