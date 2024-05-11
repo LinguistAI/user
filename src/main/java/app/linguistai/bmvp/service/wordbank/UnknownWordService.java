@@ -226,7 +226,7 @@ public class UnknownWordService implements IUnknownWordService {
 
     @Override
     @Transactional
-    public RUnknownWord addWord(QAddUnknownWord qAddUnknownWord, String email, boolean allowUnknown) throws Exception {
+    public RUnknownWord addWord(QAddUnknownWord qAddUnknownWord, String email, boolean allowNonDictionaryWords) throws Exception {
         try {
             // Check if dictionary service base URL is set
             if (DICT_SERVICE_BASE_URL == null || DICT_SERVICE_BASE_URL.isEmpty()) {
@@ -247,8 +247,8 @@ public class UnknownWordService implements IUnknownWordService {
                 throw new RuntimeException("Word " + qAddUnknownWord.getWord().toLowerCase() + " already exists in list " + userList.getTitle() + ".");
             });
 
-            // Call dictionary service only if allowUnknown is false
-            if (!allowUnknown) {
+            // Call dictionary service only if allowNonDictionaryWords is false
+            if (!allowNonDictionaryWords) {
                 Map<String, Object> requestBody = new HashMap<>();
                 requestBody.put("wordList", Collections.singletonList(qAddUnknownWord.getWord().toLowerCase()));
 
