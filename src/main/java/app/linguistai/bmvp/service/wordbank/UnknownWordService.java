@@ -54,17 +54,17 @@ public class UnknownWordService implements IUnknownWordService {
 
     private final int MODIFY_WORD_CONFIDENCE_DOWN = 2002;
 
-    private WebClient webClient;
-    private final WebClient.Builder webClientBuilder;
+    private WebClient dictionaryWebClient;
+    private final WebClient.Builder dictionaryWebClientBuilder;
 
     @Value("${dict.service.base.url}")
     private String DICT_SERVICE_BASE_URL;
 
-    private WebClient getWebClient() {
-        if (webClient == null) {
-            webClient = webClientBuilder.baseUrl(DICT_SERVICE_BASE_URL).build();
+    private WebClient getDictionaryWebClient() {
+        if (dictionaryWebClient == null) {
+            dictionaryWebClient = dictionaryWebClientBuilder.baseUrl(DICT_SERVICE_BASE_URL).build();
         }
-        return webClient;
+        return dictionaryWebClient;
     }
 
     @Override
@@ -226,7 +226,7 @@ public class UnknownWordService implements IUnknownWordService {
 
     @Override
     @Transactional
-    public RUnknownWord addWord(QAddUnknownWord qAddUnknownWord, String email) throws Exception {
+    public RUnknownWord addWord(QAddUnknownWord qAddUnknownWord, String email, boolean allowUnknown) throws Exception {
         try {
             // Check if dictionary service base URL is set
             if (DICT_SERVICE_BASE_URL == null || DICT_SERVICE_BASE_URL.isEmpty()) {
@@ -247,16 +247,18 @@ public class UnknownWordService implements IUnknownWordService {
                 throw new RuntimeException("Word " + qAddUnknownWord.getWord().toLowerCase() + " already exists in list " + userList.getTitle() + ".");
             });
 
-            // Call dictionary service
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("wordList", Collections.singletonList(qAddUnknownWord.getWord().toLowerCase()));
+            // Call dictionary service only if allowUnknown is false
+            if (!allowUnknown) {
+                Map<String, Object> requestBody = new HashMap<>();
+                requestBody.put("wordList", Collections.singletonList(qAddUnknownWord.getWord().toLowerCase()));
 
-            this.getWebClient().post()
-                .header(Header.USER_EMAIL, email)
-                .body(Mono.just(requestBody), Map.class)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
+                this.getDictionaryWebClient().post()
+                        .header(Header.USER_EMAIL, email)
+                        .body(Mono.just(requestBody), Map.class)
+                        .retrieve()
+                        .bodyToMono(String.class)
+                        .block();
+            }
 
             // Create and save new unknown word
             UnknownWord newWord = UnknownWord.builder()
@@ -271,7 +273,7 @@ public class UnknownWordService implements IUnknownWordService {
         } catch (WebClientResponseException e) {
             if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
                 log.error("Word {} is not found in the dictionary.", qAddUnknownWord.getWord());
-                throw new NotFoundException("Word is not found in the dictionary.");
+                throw new NotFoundException(String.format("Word %s is not valid.", qAddUnknownWord.getWord()));
             }
             log.error("Dictionary service returned an error:" + e.getMessage());
             throw new SomethingWentWrongException();
