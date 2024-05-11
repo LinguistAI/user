@@ -276,7 +276,7 @@ public class UnknownWordService implements IUnknownWordService {
                 throw new NotFoundException(String.format("It looks like %s isn't in our dictionary yet. Please double-check your spelling.", qAddUnknownWord.getWord()));
             }
             log.error("Dictionary service returned an error:" + e.getMessage());
-            throw new SomethingWentWrongException();
+            throw new SomethingWentWrongException("We had trouble communicating with our dictionary service, please try again later.");
         } catch (RuntimeException e) {
             log.error(e.getMessage());
             throw new AlreadyFoundException(e.getMessage());
