@@ -273,7 +273,7 @@ public class UnknownWordService implements IUnknownWordService {
         } catch (WebClientResponseException e) {
             if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
                 log.error("Word {} is not found in the dictionary.", qAddUnknownWord.getWord());
-                throw new NotFoundException(String.format("Word %s is not valid.", qAddUnknownWord.getWord()));
+                throw new NotFoundException(String.format("It looks like %s isn't in our dictionary yet. Please double-check your spelling.", qAddUnknownWord.getWord()));
             }
             log.error("Dictionary service returned an error:" + e.getMessage());
             throw new SomethingWentWrongException();
