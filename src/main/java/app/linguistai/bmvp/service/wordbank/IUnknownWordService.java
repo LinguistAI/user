@@ -17,7 +17,7 @@ public interface IUnknownWordService {
     RUnknownWordListWords getListWithWordsById(UUID listId, String email) throws Exception;
     ROwnerUnknownWordList createList(QUnknownWordList qUnknownWordList, String email) throws Exception;
     ROwnerUnknownWordList editList(UUID listId, QUnknownWordList qUnknownWordList, String email) throws Exception;
-    RUnknownWord addWord(QAddUnknownWord qAddUnknownWord, String email, boolean allowNonDictionaryWords) throws Exception;
+    RUnknownWord addWord(QAddUnknownWord qAddUnknownWord, String email) throws Exception;
     RUnknownWord increaseConfidence(QAddUnknownWord qAddUnknownWord, String email) throws Exception;
     RUnknownWord decreaseConfidence(QAddUnknownWord qAddUnknownWord, String email) throws Exception;
     ROwnerUnknownWordList activateList(UUID listId, String email) throws Exception;

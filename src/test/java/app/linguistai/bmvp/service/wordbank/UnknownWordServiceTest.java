@@ -12,14 +12,11 @@ import app.linguistai.bmvp.repository.wordbank.IUnknownWordRepository;
 import app.linguistai.bmvp.request.wordbank.QAddUnknownWord;
 import app.linguistai.bmvp.request.wordbank.QUnknownWordList;
 import app.linguistai.bmvp.response.wordbank.*;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -42,13 +39,6 @@ class UnknownWordServiceTest {
     private IUnknownWordListRepository listRepository;
     @Mock
     private IAccountRepository accountRepository;
-
-    private static final String DICT_SERVICE_BASE_URL = "http://example.com/dictionary";
-
-    @BeforeEach
-    public void setUp() {
-        ReflectionTestUtils.setField(unknownWordService, "DICT_SERVICE_BASE_URL", DICT_SERVICE_BASE_URL);
-    }
 
     @Test
     void testGetListsByEmail() throws Exception {
@@ -367,7 +357,7 @@ class UnknownWordServiceTest {
         when(accountRepository.findUserByEmail("email")).thenReturn(Optional.empty());
 
         // Run the test
-        assertThatThrownBy(() -> unknownWordService.addWord(qAddUnknownWord, "email", true))
+        assertThatThrownBy(() -> unknownWordService.addWord(qAddUnknownWord, "email"))
             .isInstanceOf(Exception.class);
     }
 
@@ -390,7 +380,7 @@ class UnknownWordServiceTest {
             .thenReturn(Optional.empty());
 
         // Run the test
-        assertThatThrownBy(() -> unknownWordService.addWord(qAddUnknownWord, "email", true))
+        assertThatThrownBy(() -> unknownWordService.addWord(qAddUnknownWord, "email"))
             .isInstanceOf(Exception.class);
     }
 

@@ -26,8 +26,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import static app.linguistai.bmvp.consts.Parameter.ALLOW_ADDING_NON_DICTIONARY_WORDS;
-
 @AllArgsConstructor
 @RestController
 @RequestMapping("wordbank")
@@ -65,8 +63,16 @@ public class UnknownWordController {
     }
 
     @PostMapping("/add-word")
-    public ResponseEntity<Object> addWord(@Valid @RequestBody QAddUnknownWord qAddUnknownWord, @RequestHeader(Header.USER_EMAIL) String email) throws Exception {
-        return Response.create("Successfully added unknown word " + qAddUnknownWord.getWord() + ".", HttpStatus.OK, unknownWordService.addWord(qAddUnknownWord, email, ALLOW_ADDING_NON_DICTIONARY_WORDS));
+    public ResponseEntity<Object> addWord(@Valid @RequestBody QAddUnknownWord qAddUnknownWord, @RequestHeader(Header.USER_EMAIL) String email) {
+        try {
+            return Response.create("Successfully added unknown word " + qAddUnknownWord.getWord() + ".", HttpStatus.OK, unknownWordService.addWord(qAddUnknownWord, email));
+        }
+        catch (RuntimeException e) {
+            return Response.create(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+        catch (Exception e) {
+            return Response.create("Could not add unknown word " + qAddUnknownWord.getWord() + ".", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping("/increase-confidence")
