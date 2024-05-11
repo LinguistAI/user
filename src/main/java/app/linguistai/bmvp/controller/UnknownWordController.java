@@ -63,8 +63,8 @@ public class UnknownWordController {
     }
 
     @PostMapping("/add-word")
-    public ResponseEntity<Object> addWord(@Valid @RequestBody QAddUnknownWord qAddUnknownWord, @RequestHeader(Header.USER_EMAIL) String email) throws Exception {
-        return Response.create("Successfully added unknown word " + qAddUnknownWord.getWord() + ".", HttpStatus.OK, unknownWordService.addWord(qAddUnknownWord, email));
+    public ResponseEntity<Object> addWord(@Valid @RequestBody QAddUnknownWord qAddUnknownWord, @RequestHeader(Header.USER_EMAIL) String email, @RequestParam(defaultValue = "false") boolean allowUnknown) throws Exception {
+        return Response.create("Successfully added unknown word " + qAddUnknownWord.getWord() + ".", HttpStatus.OK, unknownWordService.addWord(qAddUnknownWord, email, allowUnknown));
     }
 
     @PostMapping("/increase-confidence")

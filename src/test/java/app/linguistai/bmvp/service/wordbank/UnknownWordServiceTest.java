@@ -376,7 +376,7 @@ class UnknownWordServiceTest {
         when(accountRepository.findUserByEmail("email")).thenReturn(Optional.empty());
 
         // Run the test
-        assertThatThrownBy(() -> unknownWordService.addWord(qAddUnknownWord, "email"))
+        assertThatThrownBy(() -> unknownWordService.addWord(qAddUnknownWord, "email", true))
             .isInstanceOf(Exception.class);
     }
 
@@ -399,7 +399,7 @@ class UnknownWordServiceTest {
             .thenReturn(Optional.empty());
 
         // Run the test
-        assertThatThrownBy(() -> unknownWordService.addWord(qAddUnknownWord, "email"))
+        assertThatThrownBy(() -> unknownWordService.addWord(qAddUnknownWord, "email", true))
             .isInstanceOf(Exception.class);
     }
 
