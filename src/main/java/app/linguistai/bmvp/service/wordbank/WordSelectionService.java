@@ -134,15 +134,16 @@ public class WordSelectionService {
             QPredefinedWordList predefinedWordList = readPredefinedWordListFromYamlFile(DEFAULT_WORD_LIST_FILE);
 
             predefinedWordList.getWords().forEach(word -> {
-                if (selectedWords.size() < initialSelectSize) {
-                    UnknownWord unknownWord = UnknownWord.builder()
-                            .word(word)
-                            .confidence(ConfidenceEnum.LOWEST)
-                            .ownerList(null)
-                            .build();
-
-                    selectedWords.add(unknownWord);
+                if (selectedWords.size() >= initialSelectSize) {
+                    return;
                 }
+                UnknownWord unknownWord = UnknownWord.builder()
+                        .word(word)
+                        .confidence(ConfidenceEnum.LOWEST)
+                        .ownerList(null)
+                        .build();
+
+                selectedWords.add(unknownWord);
             });
 
             if (selectedWords.size() != initialSelectSize) {
@@ -150,9 +151,6 @@ public class WordSelectionService {
                         "selectedWords size: {}, initialSelectSize: {}", selectedWords.size(), initialSelectSize);
                 throw new NotFoundException("Error in selecting new words, you need to have at least " + initialSelectSize + " unknown words in your word lists");
             }
-
-            selectedWords.addAll(unknownWordRepository.findRandomByOwnerListUserIdAndOwnerListIsActiveAndConfidence(
-                    userId, true, confidences, selectSize));
 
             return selectedWords;
         } catch (NotFoundException e) {
