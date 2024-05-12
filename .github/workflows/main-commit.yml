@@ -64,4 +64,4 @@ jobs:
           docker stop backend-main
           docker rm backend-main
           cd /home/tolgaozgun/LinguistAI-main
-          docker-compose up -d
+          docker compose up -d
