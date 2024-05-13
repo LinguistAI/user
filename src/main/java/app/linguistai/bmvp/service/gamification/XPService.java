@@ -130,12 +130,23 @@ public class XPService implements IXPService {
 
             // Send level up event to AWS
             if (userLevel > previousLevel) {
-            // Only register to SNS if fcmToken actually exists
                 Map<String, Object> requestBody = new HashMap<>();
+
+                // Select target users
                 List<String> targetUsers = new ArrayList<String>();
+                targetUsers.add(user.getId().toString());
+                
+                // Prepare data for notification
+                Map<String, Object> data = new HashMap<>();
+                data.put("type", "LevelUp");
+                data.put("previousLevel", previousLevel);
+                data.put("currentLevel", userLevel);
+                
+                // Prepare request body
                 requestBody.put("userIds", targetUsers);
-                requestBody.put("type", "LevelUp");
-                requestBody.put("message", "newUser.getId().toString()");
+                requestBody.put("title", "Level Up!");
+                requestBody.put("notificationMessage", "Congrats, you've leveled up to level " + userLevel + "!");
+                requestBody.put("data", data);                
 
                 this.getWebClient().post()
                     .uri(ServiceUris.AWS_SERVICE_SEND_NOTIFICATION)
@@ -152,10 +163,10 @@ public class XPService implements IXPService {
                             log.error("Failed to send LevelUp Notification to SNS - Error from AWS service: " + error.getMessage());
                         }
                     });
-
                 log.info("User {} leveled up to new level {} from level {}", user.getId(), userLevel, previousLevel);
             }
 
+            log.info("User XP increased from {} to {} for user {}", userXP.getExperience(), updated.getExperience(), user.getId());
             return RUserXP.builder()
                 .username(user.getUsername())
                 .currentExperience(updated.getExperience())
