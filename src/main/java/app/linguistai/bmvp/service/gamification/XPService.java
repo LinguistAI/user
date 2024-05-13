@@ -128,43 +128,7 @@ public class XPService implements IXPService {
             Long userLevel = newLevelInfo.level();
             Long xpToNextLevel = newLevelInfo.totalExperienceToNextLevel();
 
-            // Send level up event to AWS
-            if (userLevel > previousLevel) {
-                Map<String, Object> requestBody = new HashMap<>();
-
-                // Select target users
-                List<String> targetUsers = new ArrayList<String>();
-                targetUsers.add(user.getId().toString());
-                
-                // Prepare data for notification
-                Map<String, Object> data = new HashMap<>();
-                data.put("type", "LevelUp");
-                data.put("previousLevel", previousLevel);
-                data.put("currentLevel", userLevel);
-                
-                // Prepare request body
-                requestBody.put("userIds", targetUsers);
-                requestBody.put("title", "Level Up!");
-                requestBody.put("notificationMessage", "Congrats, you've leveled up to level " + userLevel + "!");
-                requestBody.put("data", data);                
-
-                this.getWebClient().post()
-                    .uri(ServiceUris.AWS_SERVICE_SEND_NOTIFICATION)
-                    .header(Header.USER_EMAIL, user.getEmail())
-                    .body(Mono.just(requestBody), Map.class)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .subscribe(response -> {
-                        if (response != null) {
-                            log.info("Successfully sent LevelUp Notification to SNS - Response from AWS service: " + response);
-                        }
-                    }, error -> {
-                        if (error != null) {
-                            log.error("Failed to send LevelUp Notification to SNS - Error from AWS service: " + error.getMessage());
-                        }
-                    });
-                log.info("User {} leveled up to new level {} from level {}", user.getId(), userLevel, previousLevel);
-            }
+            notifyUserLevelUp(previousLevel, user, userLevel);
 
             log.info("User XP increased from {} to {} for user {}", userXP.getExperience(), updated.getExperience(), user.getId());
             return RUserXP.builder()
@@ -184,6 +148,47 @@ public class XPService implements IXPService {
         catch (Exception e2) {
             log.error("Could not increase user XP", e2);
             throw new SomethingWentWrongException();
+        }
+    }
+
+
+    private void notifyUserLevelUp(Long previousLevel, User user, Long userLevel) {
+        // Send level up event to AWS
+        if (userLevel > previousLevel) {
+            Map<String, Object> requestBody = new HashMap<>();
+
+            // Select target users
+            List<String> targetUsers = new ArrayList<String>();
+            targetUsers.add(user.getId().toString());
+            
+            // Prepare data for notification
+            Map<String, Object> data = new HashMap<>();
+            data.put("type", "LevelUp");
+            data.put("previousLevel", previousLevel);
+            data.put("currentLevel", userLevel);
+            
+            // Prepare request body
+            requestBody.put("userIds", targetUsers);
+            requestBody.put("title", "Level Up!");
+            requestBody.put("notificationMessage", "Congrats, you've leveled up to level " + userLevel + "!");
+            requestBody.put("data", data);                
+
+            this.getWebClient().post()
+                .uri(ServiceUris.AWS_SERVICE_SEND_NOTIFICATION)
+                .header(Header.USER_EMAIL, user.getEmail())
+                .body(Mono.just(requestBody), Map.class)
+                .retrieve()
+                .bodyToMono(String.class)
+                .subscribe(response -> {
+                    if (response != null) {
+                        log.info("Successfully sent LevelUp Notification to SNS - Response from AWS service: " + response);
+                    }
+                }, error -> {
+                    if (error != null) {
+                        log.error("Failed to send LevelUp Notification to SNS - Error from AWS service: " + error.getMessage());
+                    }
+                });
+            log.info("User {} leveled up to new level {} from level {}", user.getId(), userLevel, previousLevel);
         }
     }
 
