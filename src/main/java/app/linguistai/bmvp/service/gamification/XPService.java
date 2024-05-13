@@ -127,8 +127,7 @@ public class XPService implements IXPService {
             UserXPWithLevel newLevelInfo = this.determineProceduralLevel(updated.getExperience());
             Long userLevel = newLevelInfo.level();
             Long xpToNextLevel = newLevelInfo.totalExperienceToNextLevel();
-
-            notifyUserLevelUp(previousLevel, user, userLevel);
+            this.notifyUserLevelUp(previousLevel, user, userLevel);
 
             log.info("User XP increased from {} to {} for user {}", userXP.getExperience(), updated.getExperience(), user.getId());
             return RUserXP.builder()

@@ -79,17 +79,17 @@ public class AccountService {
     private final IQuestService questService;
     private final ProfileService profileService;
 
-    private WebClient webClient;
-    private final WebClient.Builder webClientBuilder;
+    private WebClient accountServiceWebClient;
+    private final WebClient.Builder accountServiceWebClientBuilder;
 
     @Value("${aws.service.base.url}")
     private String AWS_SERVICE_BASE_URL;
 
-    private WebClient getWebClient() {
-        if (webClient == null) {
-            webClient = webClientBuilder.baseUrl(AWS_SERVICE_BASE_URL).build();
+    private WebClient getAccountServiceWebClient() {
+        if (accountServiceWebClient == null) {
+            accountServiceWebClient = accountServiceWebClientBuilder.baseUrl(AWS_SERVICE_BASE_URL).build();
         }
-        return webClient;
+        return accountServiceWebClient;
     }
 
     public RLoginUser login(QUserLogin user) throws Exception {
@@ -237,30 +237,7 @@ public class AccountService {
             xpService.createUserXPForRegister(newUser);
             profileService.createEmptyProfile(newUser);
             unknownWordService.addPredefinedWordList(DEFAULT_WORD_LIST_FILE, newUser.getEmail());
-
-            String fcmToken = requestUser.getFcmToken();
-            boolean isTokenValid = fcmToken != null && !fcmToken.isEmpty();
-            // Only register to SNS if fcmToken actually exists
-            if (isTokenValid) {
-                Map<String, Object> requestBody = new HashMap<>();
-                requestBody.put("fcmToken", fcmToken);
-                requestBody.put("userId", newUser.getId().toString());
-                this.getWebClient().post()
-                    .uri(ServiceUris.AWS_SERVICE_REGISTER_TO_SNS)
-                    .header(Header.USER_EMAIL, newUser.getEmail())
-                    .body(Mono.just(requestBody), Map.class)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .subscribe(response -> {
-                        if (response != null) {
-                            log.info("register to SNS - Response from AWS service: " + response);
-                        }
-                    }, error -> {
-                        if (error != null) {
-                            log.error("register to SNS - Error from AWS service: " + error.getMessage());
-                        }
-                    });
-            }
+            this.registerToSNS(requestUser, newUser);
 
             // Create access and reset tokens so that user does not have to log in after registering
             final UserDetails userDetails = jwtUserService.loadUserByUsername(newUser.getEmail());
@@ -280,6 +257,32 @@ public class AccountService {
         } catch (Exception e) {
             log.error("User register failed for email {}", requestUser.getEmail(), e);
             throw new SomethingWentWrongException();
+        }
+    }
+
+    private void registerToSNS(QUser requestUser, User newUser) {
+        String fcmToken = requestUser.getFcmToken();
+        boolean isTokenValid = fcmToken != null && !fcmToken.isEmpty();
+        // Only register to SNS if fcmToken actually exists
+        if (isTokenValid) {
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("fcmToken", fcmToken);
+            requestBody.put("userId", newUser.getId().toString());
+            this.getAccountServiceWebClient().post()
+                .uri(ServiceUris.AWS_SERVICE_REGISTER_TO_SNS)
+                .header(Header.USER_EMAIL, newUser.getEmail())
+                .body(Mono.just(requestBody), Map.class)
+                .retrieve()
+                .bodyToMono(String.class)
+                .subscribe(response -> {
+                    if (response != null) {
+                        log.info("register to SNS - Response from AWS service: " + response);
+                    }
+                }, error -> {
+                    if (error != null) {
+                        log.error("register to SNS - Error from AWS service: " + error.getMessage());
+                    }
+                });
         }
     }
 
