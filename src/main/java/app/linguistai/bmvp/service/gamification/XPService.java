@@ -47,7 +47,7 @@ public class XPService implements IXPService {
     @Value("${aws.service.base.url}")
     private String AWS_SERVICE_BASE_URL;
 
-    private WebClient getWebClient() {
+    private WebClient getXpServiceWebClient() {
         if (xpServiceWebClient == null) {
             xpServiceWebClient = xpServiceWebClientBuilder.baseUrl(AWS_SERVICE_BASE_URL).build();
         }
@@ -172,7 +172,7 @@ public class XPService implements IXPService {
             requestBody.put("notificationMessage", "Congrats, you've leveled up to level " + userLevel + "!");
             requestBody.put("data", data);                
 
-            this.getWebClient().post()
+            this.getXpServiceWebClient().post()
                 .uri(ServiceUris.AWS_SERVICE_SEND_NOTIFICATION)
                 .header(Header.USER_EMAIL, user.getEmail())
                 .body(Mono.just(requestBody), Map.class)
