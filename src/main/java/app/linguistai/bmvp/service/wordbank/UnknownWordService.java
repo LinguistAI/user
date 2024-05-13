@@ -3,7 +3,6 @@ package app.linguistai.bmvp.service.wordbank;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.exception.UnauthorizedException;
-import app.linguistai.bmvp.exception.WordReferencedException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.embedded.UnknownWordId;
 import app.linguistai.bmvp.enums.ConfidenceEnum;
@@ -16,7 +15,6 @@ import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.model.wordbank.IConfidenceCount;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordListRepository;
 import app.linguistai.bmvp.repository.wordbank.IUnknownWordRepository;
-import app.linguistai.bmvp.repository.wordbank.IWordSelectionRepository;
 import app.linguistai.bmvp.request.wordbank.QAddUnknownWord;
 import app.linguistai.bmvp.request.wordbank.QPredefinedWordList;
 import app.linguistai.bmvp.request.wordbank.QUnknownWordList;
@@ -39,8 +37,6 @@ public class UnknownWordService implements IUnknownWordService {
     private final IUnknownWordListRepository listRepository;
 
     private final IAccountRepository accountRepository;
-
-    private final IWordSelectionRepository wordSelectionRepository;
 
     private final int MODIFY_LIST_ACTIVE = 1001;
 
@@ -338,18 +334,6 @@ public class UnknownWordService implements IUnknownWordService {
             UnknownWordListWithUser userListInfo = this.getUserOwnedList(listId, email);
             UnknownWordList userList = userListInfo.list();
 
-            // Check if any words in the list are referenced in WordSelection
-            List<UnknownWord> wordsInList = wordRepository.findByOwnerListListId(listId);
-            boolean isAnyWordReferenced = wordsInList.stream().anyMatch(wordSelectionRepository::existsByWord);
-
-            // If any word is referenced, throw an error and revert changes
-            if (isAnyWordReferenced) {
-                throw new WordReferencedException("Cannot delete this list because it contains words that are active in a conversation. Please deactivate the list and try again later.");
-            }
-
-            // Delete all words associated with the list
-            wordRepository.deleteByOwnerListListId(listId);
-
             ROwnerUnknownWordList response = ROwnerUnknownWordList.builder()
                 .listId(userList.getListId())
                 .ownerUsername(userListInfo.user().getUsername())
@@ -362,24 +346,19 @@ public class UnknownWordService implements IUnknownWordService {
                 .listStats(this.getListStats(userList.getListId()))
                 .build();
 
-            // If we are here, the list exists, the user is the owner of the list, and no word is referenced
+            // If we are here, the list exists and the user is the owner of the list
             listRepository.deleteById(listId);
 
             return response;
         } catch (NotFoundException e) {
             if (e.getObject().equals(User.class.getSimpleName())) {
-                log.error("When deleting a list, user is not found for email {}.", email);
+                log.error("When deleting a list, user is not found for email {}", email);
             } else if (e.getObject().equals(UnknownWordList.class.getSimpleName())) {
-                log.error("When deleting a list, word list {} not found.", listId);
-            } else {
-                log.error("When deleting a list, something went wrong.", e);
+                log.error("When deleting a list, word list {} not found ", listId);
             }
             throw e;
         } catch (UnauthorizedException e) {
             log.error("User {} not authorized to modify list: {}", email, listId);
-            throw e;
-        } catch (WordReferencedException e) {
-            log.error("Cannot delete list '{}' because it contains words referenced in WordSelection", listId);
             throw e;
         } catch (Exception e) {
             log.error("Could not delete list {} for user with email {}.", listId, email, e);
@@ -395,20 +374,13 @@ public class UnknownWordService implements IUnknownWordService {
             this.getUserOwnedList(listId, email);
 
             // Get the word
-            UnknownWord unknownWord = wordRepository.findByOwnerListListIdAndWord(listId, word)
-                    .orElseThrow(() -> new NotFoundException(UnknownWord.class.getSimpleName(), true));
-
-            // Check if the word is referenced in WordSelection
-            boolean isReferenced = wordSelectionRepository.existsByWord(unknownWord);
-            if (isReferenced) {
-                throw new WordReferencedException(String.format("Cannot delete '%s' because it is an active word in a conversation.", word));
-            }
+            UnknownWord unknownWord = wordRepository.findByOwnerListListIdAndWord(listId, word).orElseThrow(() -> new NotFoundException(UnknownWord.class.getSimpleName(), true));
 
             RUnknownWord response = RUnknownWord.builder()
                     .word(unknownWord.getWord())
                     .confidence(unknownWord.getConfidence()).build();
 
-            // If we are here, the list exists, the user is the owner of the list, and the word is not referenced
+            // If we are here, the list exists and the user is the owner of the list
             wordRepository.deleteByOwnerListListIdAndWord(listId, word);
             return response;
         } catch (NotFoundException e) {
@@ -422,9 +394,6 @@ public class UnknownWordService implements IUnknownWordService {
             throw e;
         } catch (UnauthorizedException e) {
             log.error("User {} not authorized to modify list: {}", email, listId);
-            throw e;
-        } catch (WordReferencedException e) {
-            log.error("Cannot delete word '{}' since it is referenced in the WordSelection table (active words)", word);
             throw e;
         } catch (Exception e) {
             log.error("Could not delete word {} for user with email {}.", word, email, e);
@@ -620,11 +589,11 @@ public class UnknownWordService implements IUnknownWordService {
     protected UnknownWordListWithUser getUserOwnedList(UUID listId, String email) throws Exception {
         // Check if user exists
         User user = accountRepository.findUserByEmail(email)
-            .orElseThrow(() -> new NotFoundException(User.class.getSimpleName()));
+            .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "].", User.class.getSimpleName()));
 
         // Check if list exists
         UnknownWordList userList = listRepository.findById(listId)
-            .orElseThrow(() -> new NotFoundException(UnknownWordList.class.getSimpleName()));
+            .orElseThrow(() -> new NotFoundException("Unknown Word List does not exist for given listId: [" + listId + "].", UnknownWordList.class.getSimpleName()));
 
         // Check if user is owner of the list
         if (userList.getUser().getId() != user.getId()) {

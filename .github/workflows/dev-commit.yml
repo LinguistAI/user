@@ -80,4 +80,4 @@ jobs:
           docker stop backend-dev
           docker rm backend-dev
           cd /home/${{ secrets.SSH_USERNAME }}/LinguistAI-dev
-          docker compose up -d
+          docker-compose up -d

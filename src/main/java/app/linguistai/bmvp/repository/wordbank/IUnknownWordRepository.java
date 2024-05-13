@@ -35,6 +35,4 @@ public interface IUnknownWordRepository extends JpaRepository<UnknownWord, Unkno
     List<IConfidenceCount> countWordsByConfidenceLevel(@Param("userId") UUID userId);
 
     void deleteByOwnerListListIdAndWord(UUID listId, String word);
-
-    void deleteByOwnerListListId(UUID listId);
 }

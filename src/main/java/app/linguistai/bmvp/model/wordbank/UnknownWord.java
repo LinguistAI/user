@@ -2,7 +2,6 @@ package app.linguistai.bmvp.model.wordbank;
 
 import app.linguistai.bmvp.model.embedded.UnknownWordId;
 import app.linguistai.bmvp.enums.ConfidenceEnum;
-import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -19,15 +18,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @IdClass(UnknownWordId.class)
 public class UnknownWord {
-
-    @Nullable
+    @NotNull
     @Id
     @ManyToOne
     @JoinColumn(
             name = "unknown_word_list",
             referencedColumnName = "list_id",
             foreignKey = @ForeignKey(),
-            nullable = true
+            nullable = false
     )
     private UnknownWordList ownerList;
 
