@@ -335,6 +335,9 @@ public class AccountService {
             // Ensure language is selected
             this.ensureUserLanguage(email);
 
+            // Ensure user's lists have languages
+            unknownWordService.ensureUserListsHaveLanguage(email);
+
             // Upon successful user entry, check whether to increase user streak or not
             userStreakService.updateUserStreak(email);
 
