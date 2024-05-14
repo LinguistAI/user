@@ -21,13 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import app.linguistai.bmvp.consts.Header;
 import app.linguistai.bmvp.model.User;
@@ -55,7 +49,7 @@ public class AccountController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "login")
     public ResponseEntity<Object> login(@Valid @RequestBody QUserLogin userInfo) throws Exception {
         RLoginUser token = accountService.login(userInfo);
-        return Response.create("Login is successful", HttpStatus.OK, token);      
+        return Response.create("Login is successful", HttpStatus.OK, token);
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "register")
@@ -68,13 +62,13 @@ public class AccountController {
     public ResponseEntity<Object> changePassword(@Valid @RequestBody QChangePassword userInfo,
         @RequestHeader(Header.USER_EMAIL) String email) throws Exception {
         accountService.changePassword(email, userInfo);
-        return Response.create("Password is changed", HttpStatus.OK);       
+        return Response.create("Password is changed", HttpStatus.OK);
     }
 
     @GetMapping("/refresh")
     public ResponseEntity<Object> refreshToken(@RequestHeader(HttpHeaders.AUTHORIZATION) String auth) throws Exception {
         RRefreshToken newToken = accountService.refreshToken(auth);
-        return Response.create("New access token is created", HttpStatus.OK, newToken);      
+        return Response.create("New access token is created", HttpStatus.OK, newToken);
     }
 
     @GetMapping("/test")
@@ -85,13 +79,23 @@ public class AccountController {
             return Response.create("ok", HttpStatus.OK, test);
         } catch (Exception e) {
             return Response.create(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }     
+        }
+    }
+
+    @GetMapping("/language")
+    public ResponseEntity<Object> getUserLanguage(@RequestHeader(Header.USER_EMAIL) String email) throws Exception {
+        return Response.create("ok", HttpStatus.OK, accountService.getUserLanguage(email));
+    }
+
+    @PostMapping("/language/{language}")
+    public ResponseEntity<Object> getUserLanguage(@RequestHeader(Header.USER_EMAIL) String email, @PathVariable String language) throws Exception {
+        return Response.create("ok", HttpStatus.OK, accountService.setUserLanguage(email, language));
     }
 
     @GetMapping("/")
     public ResponseEntity<Object> getUsers() {
         List<User> userList = accountService.getUsers();
-        return Response.create("Ok", HttpStatus.OK, userList);        
+        return Response.create("Ok", HttpStatus.OK, userList);
     }
 
     @GetMapping("hello")

@@ -7,7 +7,6 @@ import app.linguistai.bmvp.exception.WordReferencedException;
 import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.embedded.UnknownWordId;
 import app.linguistai.bmvp.enums.ConfidenceEnum;
-import app.linguistai.bmvp.model.gamification.store.StoreItem;
 import app.linguistai.bmvp.model.wordbank.ListStats;
 import app.linguistai.bmvp.model.wordbank.UnknownWord;
 import app.linguistai.bmvp.model.wordbank.UnknownWordList;
@@ -28,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static app.linguistai.bmvp.consts.LanguageCodes.CODE_ENGLISH;
 import static app.linguistai.bmvp.utils.FileUtils.readPredefinedWordListFromYamlFile;
 
 @Slf4j
@@ -59,10 +60,18 @@ public class UnknownWordService implements IUnknownWordService {
             User user = accountRepository.findUserByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User does not exist for given email: [" + email + "]."));
 
+            // Get current language of user
+            String languageOfUser = user.getCurrentLanguage();
+
             List<UnknownWordList> listsOfUser = listRepository.findByUserIdOrderByIsPinnedDesc(user.getId());
             List<RUnknownWordList> responseListsOfUser = new ArrayList<>();
 
             for (UnknownWordList list : listsOfUser) {
+                // If the language of the list is not the same as users current language, skip
+                if (list.getLanguage() == null || !list.getLanguage().equalsIgnoreCase(languageOfUser)) {
+                    continue;
+                }
+
                 responseListsOfUser.add(RUnknownWordList.builder()
                     .listId(list.getListId())
                     .title(list.getTitle())
@@ -143,6 +152,7 @@ public class UnknownWordService implements IUnknownWordService {
                 .isFavorite(qUnknownWordList.getIsFavorite())
                 .isPinned(qUnknownWordList.getIsPinned())
                 .imageUrl(qUnknownWordList.getImageUrl())
+                .language(user.getCurrentLanguage())
                 .build();
 
             UnknownWordList savedList = listRepository.save(newList);
@@ -187,6 +197,7 @@ public class UnknownWordService implements IUnknownWordService {
                 .isFavorite(qUnknownWordList.getIsFavorite())
                 .isPinned(qUnknownWordList.getIsPinned())
                 .imageUrl(qUnknownWordList.getImageUrl())
+                .language(user.getCurrentLanguage())
                 .build();
 
             UnknownWordList savedList = listRepository.save(editedList);
@@ -436,9 +447,14 @@ public class UnknownWordService implements IUnknownWordService {
     @Transactional
     public UnknownWordList getRandomActiveUnknownWordList(UUID userId) throws Exception {
         try {
+            // Check if user exists
+            User user = accountRepository.findUserById(userId)
+                .orElseThrow(() -> new NotFoundException("User does not exist"));
+
             List<UnknownWordList> activeLists = listRepository.findByUserId(userId)
                 .stream()
                 .filter(UnknownWordList::getIsActive)
+                .filter(list -> user.getCurrentLanguage() != null && user.getCurrentLanguage().equalsIgnoreCase(list.getLanguage()))
                 .toList();
 
             if (activeLists.isEmpty()) {
@@ -448,7 +464,37 @@ public class UnknownWordService implements IUnknownWordService {
             return activeLists.get(new Random().nextInt(activeLists.size()));
         }
         catch (NotFoundException e) {
-            log.error("No active unknown word lists found for user with ID {}", userId);
+            log.error("No active unknown word lists found for user with ID, either because list does not exist or user does not exist {}", userId);
+            throw e;
+        }
+        catch (Exception e) {
+            log.error("Could not retrieve random active unknown word list.");
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    @Override
+    public void ensureUserListsHaveLanguage(String email) throws Exception {
+        try {
+            // Check if user exists
+            User user = accountRepository.findUserByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User does not exist"));
+
+            List<UnknownWordList> listsWithoutLanguage = listRepository.findByUserId(user.getId())
+                .stream()
+                // The filter below checks if the user has a current language, and if the list does not have a language
+                .filter(list -> user.getCurrentLanguage() != null && (list.getLanguage() == null || list.getLanguage().isBlank()))
+                .toList();
+
+
+            // Update the language of each list to CODE_ENGLISH
+            listsWithoutLanguage.forEach(list -> list.setLanguage(CODE_ENGLISH));
+
+            // Save the updated lists back to the repository
+            listRepository.saveAll(listsWithoutLanguage);
+        }
+        catch (NotFoundException e) {
+            log.error("User does not exist for email {}", email);
             throw e;
         }
         catch (Exception e) {
@@ -516,15 +562,16 @@ public class UnknownWordService implements IUnknownWordService {
 
             // Create new unknown word list
             UnknownWordList wordList = UnknownWordList.builder()
-                    .listId(UUID.randomUUID())
-                    .user(user)
-                    .title(predefinedWordList.getTitle())
-                    .description(predefinedWordList.getDescription())
-                    .isActive(predefinedWordList.getIsActive())
-                    .isFavorite(predefinedWordList.getIsFavorite())
-                    .isPinned(predefinedWordList.getIsPinned())
-                    .imageUrl(predefinedWordList.getImageUrl())
-                    .build();
+                .listId(UUID.randomUUID())
+                .user(user)
+                .title(predefinedWordList.getTitle())
+                .description(predefinedWordList.getDescription())
+                .isActive(predefinedWordList.getIsActive())
+                .isFavorite(predefinedWordList.getIsFavorite())
+                .isPinned(predefinedWordList.getIsPinned())
+                .imageUrl(predefinedWordList.getImageUrl())
+                .language(CODE_ENGLISH)
+                .build();
 
             UnknownWordList savedList = listRepository.save(wordList);
 
@@ -532,10 +579,11 @@ public class UnknownWordService implements IUnknownWordService {
             List<UnknownWord> unknownWords = new ArrayList<>();
             for (String word : predefinedWordList.getWords()) {
                 UnknownWord newWord = UnknownWord.builder()
-                        .ownerList(savedList)
-                        .word(word.toLowerCase())
-                        .confidence(ConfidenceEnum.LOWEST)
-                        .build();
+                    .ownerList(savedList)
+                    .word(word.toLowerCase())
+                    .confidence(ConfidenceEnum.LOWEST)
+                    .build();
+
                 unknownWords.add(newWord);
             }
 
