@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static app.linguistai.bmvp.consts.LanguageCodes.CODE_ENGLISH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
@@ -63,6 +64,7 @@ class UnknownWordServiceTest {
         user1.setUsername("ownerUsername");
         user1.setEmail("email");
         user1.setPassword("password");
+        user1.setCurrentLanguage(CODE_ENGLISH);
         final Optional<User> user = Optional.of(user1);
         when(accountRepository.findUserByEmail("email")).thenReturn(user);
 
@@ -76,6 +78,7 @@ class UnknownWordServiceTest {
             .isFavorite(false)
             .isPinned(false)
             .imageUrl("imageUrl")
+            .language(CODE_ENGLISH)
             .build());
         when(listRepository.findByUserIdOrderByIsPinnedDesc(UUID.fromString("67a444dc-14f4-4abc-bd83-b1c380f2004d")))
             .thenReturn(unknownWordLists);
@@ -90,6 +93,7 @@ class UnknownWordServiceTest {
             .isFavorite(false)
             .isPinned(false)
             .imageUrl("imageUrl")
+            .language(CODE_ENGLISH)
             .build());
         when(listRepository.findById(UUID.fromString("cc04e013-6d5e-4015-887f-5e5a9bc58382")))
             .thenReturn(optionalUnknownWordList);
@@ -105,6 +109,7 @@ class UnknownWordServiceTest {
                 .isFavorite(false)
                 .isPinned(false)
                 .imageUrl("imageUrl")
+                .language(CODE_ENGLISH)
                 .build())
             .word("word")
             .confidence(ConfidenceEnum.LOWEST)
@@ -137,6 +142,7 @@ class UnknownWordServiceTest {
         user1.setUsername("ownerUsername");
         user1.setEmail("email");
         user1.setPassword("password");
+        user1.setCurrentLanguage(CODE_ENGLISH);
         final Optional<User> user = Optional.of(user1);
         when(accountRepository.findUserByEmail("email")).thenReturn(user);
 
@@ -150,6 +156,7 @@ class UnknownWordServiceTest {
             .isFavorite(false)
             .isPinned(false)
             .imageUrl("imageUrl")
+            .language(CODE_ENGLISH)
             .build());
         when(listRepository.findByUserIdOrderByIsPinnedDesc(UUID.fromString("67a444dc-14f4-4abc-bd83-b1c380f2004d")))
             .thenReturn(unknownWordLists);
@@ -184,6 +191,7 @@ class UnknownWordServiceTest {
         user1.setUsername("ownerUsername");
         user1.setEmail("email");
         user1.setPassword("password");
+        user1.setCurrentLanguage(CODE_ENGLISH);
         final Optional<User> user = Optional.of(user1);
         when(accountRepository.findUserByEmail("email")).thenReturn(user);
 
@@ -197,6 +205,7 @@ class UnknownWordServiceTest {
             .isFavorite(false)
             .isPinned(false)
             .imageUrl("imageUrl")
+            .language(CODE_ENGLISH)
             .build());
         when(listRepository.findByUserIdOrderByIsPinnedDesc(UUID.fromString("67a444dc-14f4-4abc-bd83-b1c380f2004d")))
             .thenReturn(unknownWordLists);
