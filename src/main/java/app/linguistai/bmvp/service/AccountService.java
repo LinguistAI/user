@@ -15,6 +15,7 @@ import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.exception.StreakException;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
+import app.linguistai.bmvp.response.RUserLanguage;
 import app.linguistai.bmvp.service.currency.ITransactionService;
 import app.linguistai.bmvp.service.gamification.IXPService;
 import app.linguistai.bmvp.service.gamification.quest.IQuestService;
@@ -46,6 +47,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import static app.linguistai.bmvp.consts.FilePaths.DEFAULT_WORD_LIST_FILE;
+import static app.linguistai.bmvp.consts.LanguageCodes.ALL_CODES;
 import static app.linguistai.bmvp.consts.LanguageCodes.CODE_ENGLISH;
 
 @Slf4j
@@ -107,6 +109,59 @@ public class AccountService {
             log.info("User with email {} logged in with a valid token.", email);
         } catch (Exception e) {
             log.error("User login with valid token failed for email {}", email, e);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    public RUserLanguage getUserLanguage(String email) throws Exception {
+        try {
+            // Check if user exists
+            User user = accountRepository.findUserByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User does not exist"));
+
+            return RUserLanguage.builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .language(user.getCurrentLanguage())
+                .build();
+        }
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        }
+        catch (Exception e1) {
+            log.error("Create user XP failed for email {}", email, e1);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    public RUserLanguage setUserLanguage(String email, String language) throws Exception {
+        try {
+            // Check if user exists
+            User user = accountRepository.findUserByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User does not exist"));
+
+            String currentLanguage = user.getCurrentLanguage();
+
+            if (ALL_CODES.contains(language.toUpperCase())) {
+                user.setCurrentLanguage(language.toUpperCase());
+                currentLanguage = accountRepository.save(user).getCurrentLanguage();
+            }
+
+            return RUserLanguage.builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .language(currentLanguage)
+                .build();
+        }
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        }
+        catch (Exception e1) {
+            log.error("Create user XP failed for email {}", email, e1);
             throw new SomethingWentWrongException();
         }
     }
