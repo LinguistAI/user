@@ -8,11 +8,11 @@ public class QuestConsts {
     public static final String TIMES_CLOSING_IDENTIFIER = "</TIMES>";
 
     // Quest "Times" Upper Limits
-    public static final int USE_WORD_TIMES_UPPER_LIMIT = 8;
+    public static final int USE_WORD_TIMES_UPPER_LIMIT = 4;
     public static final int SEND_MESSAGE_TIMES_UPPER_LIMIT = 10;
 
     // Quest "Times" Lower Limits
-    public static final int USE_WORD_TIMES_LOWER_LIMIT = 3;
+    public static final int USE_WORD_TIMES_LOWER_LIMIT = 2;
     public static final int SEND_MESSAGE_TIMES_LOWER_LIMIT = 6;
 
     // Use Word Quest Amount
