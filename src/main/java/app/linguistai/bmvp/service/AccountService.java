@@ -46,6 +46,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import static app.linguistai.bmvp.consts.FilePaths.DEFAULT_WORD_LIST_FILE;
+import static app.linguistai.bmvp.consts.LanguageCodes.CODE_ENGLISH;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -109,7 +110,7 @@ public class AccountService {
             throw new SomethingWentWrongException();
         }
     }
-  
+
     public PageImpl<RUserSearch> searchUser(QUserSearch userSearch, String userEmail) throws Exception {
         try {
             System.out.println(userSearch.getPage());
@@ -131,7 +132,7 @@ public class AccountService {
                 .collect(Collectors.toList());
 
             log.info("User {} searched for users {}.", userEmail, userSearch.getUsername());
-            
+
             return new PageImpl<RUserSearch>(searchResults, pageable, users.getTotalElements());
         } catch (Exception e) {
             log.error("User {} search for users {} failed.", userEmail, userSearch.getUsername(), e);
@@ -191,7 +192,7 @@ public class AccountService {
         try {
             // Check if email or username is already used before
             boolean userExist = accountRepository.existsByEmail(requestUser.getEmail());
-            
+
             if (userExist) {
                 throw new AlreadyFoundException("User already exists with the provided email address. Please use a different email or sign in.");
             }
@@ -206,7 +207,10 @@ public class AccountService {
             requestUser.setId(UUID.randomUUID());
             requestUser.setPassword(encodePassword(requestUser.getPassword()));
 
-            User newUser = accountRepository.save(new User(requestUser));
+            User userToSave = new User(requestUser);
+            userToSave.setCurrentLanguage(CODE_ENGLISH);
+
+            User newUser = accountRepository.save(userToSave);
 
             // Create UserStreak for the new user
             if (!userStreakService.createUserStreak(newUser)) {
@@ -216,7 +220,7 @@ public class AccountService {
             xpService.createUserXPForRegister(newUser);
             profileService.createEmptyProfile(newUser);
             unknownWordService.addPredefinedWordList(DEFAULT_WORD_LIST_FILE, newUser.getEmail());
-          
+
             // Create access and reset tokens so that user does not have to log in after registering
             final UserDetails userDetails = jwtUserService.loadUserByUsername(newUser.getEmail());
             final String accessToken = jwtUtils.createAccessToken(userDetails);
@@ -225,7 +229,7 @@ public class AccountService {
             this.initiateUserSession(newUser.getEmail());
 
             log.info("User registered with email {}.", newUser.getEmail());
-            return new RLoginUser(newUser, accessToken, refreshToken);          
+            return new RLoginUser(newUser, accessToken, refreshToken);
         } catch (AlreadyFoundException e) {
             log.error("User register fail since email already exists for email {}", requestUser.getEmail());
             throw e;
@@ -260,7 +264,7 @@ public class AccountService {
             ResetToken resetToken = new ResetToken(user);
 
             log.info("Email token is generated for user with email {}.", email);
-            
+
             return resetTokenRepository.save(resetToken);
         } catch (NotFoundException e) {
             log.error("User is not found for email {}", email);
@@ -328,6 +332,9 @@ public class AccountService {
 
     private void initiateUserSession(String email) throws Exception {
         try {
+            // Ensure language is selected
+            this.ensureUserLanguage(email);
+
             // Upon successful user entry, check whether to increase user streak or not
             userStreakService.updateUserStreak(email);
 
@@ -343,5 +350,27 @@ public class AccountService {
         }
 
         log.info("User session initiated for email {}.", email);
+    }
+
+    private void ensureUserLanguage(String email) throws Exception {
+        try {
+            User user = accountRepository.findUserByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+            // Check if user has language
+            if (user.getCurrentLanguage() == null || user.getCurrentLanguage().isBlank()) {
+                user.setCurrentLanguage(CODE_ENGLISH);
+            }
+
+            accountRepository.save(user);
+        }
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        }
+        catch (Exception e) {
+            log.error("Could not ensure user language {}", email, e);
+            throw new SomethingWentWrongException();
+        }
     }
 }
