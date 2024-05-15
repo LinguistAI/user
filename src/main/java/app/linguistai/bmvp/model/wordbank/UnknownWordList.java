@@ -50,4 +50,8 @@ public class UnknownWordList {
     @NotBlank
     @Column(name = "image_url", nullable = false)
     private String imageUrl;
+
+    @NotBlank
+    @Column(name = "language", nullable = false)
+    private String language;
 }

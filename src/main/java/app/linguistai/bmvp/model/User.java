@@ -14,6 +14,8 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import static app.linguistai.bmvp.consts.LanguageCodes.CODE_ENGLISH;
+
 @Data
 @Entity
 @Table(name = "user")
@@ -37,10 +39,15 @@ public class User {
     @Column(name = "password", nullable = false)
     private String password;
 
+    @NotBlank
+    @Column(name = "language", nullable = false)
+    private String currentLanguage;
+
     public User(QUser reqUser) {
         this.id = reqUser.getId();
         this.username = reqUser.getUsername();
         this.email = reqUser.getEmail();
         this.password = reqUser.getPassword();
+        this.currentLanguage = CODE_ENGLISH;
     }
 }
