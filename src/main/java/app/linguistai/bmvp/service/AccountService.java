@@ -1,7 +1,9 @@
 package app.linguistai.bmvp.service;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -23,14 +25,18 @@ import app.linguistai.bmvp.service.profile.ProfileService;
 import app.linguistai.bmvp.service.stats.UserLoggedDateService;
 import app.linguistai.bmvp.service.wordbank.UnknownWordService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import app.linguistai.bmvp.model.User;
+import app.linguistai.bmvp.consts.Header;
+import app.linguistai.bmvp.consts.ServiceUris;
 import app.linguistai.bmvp.enums.UserSearchFriendshipStatus;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.request.QChangePassword;
@@ -46,6 +52,8 @@ import app.linguistai.bmvp.service.gamification.UserStreakService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
+
 import static app.linguistai.bmvp.consts.FilePaths.DEFAULT_WORD_LIST_FILE;
 import static app.linguistai.bmvp.consts.LanguageCodes.ALL_CODES;
 import static app.linguistai.bmvp.consts.LanguageCodes.CODE_ENGLISH;
@@ -73,6 +81,19 @@ public class AccountService {
     private final IXPService xpService;
     private final IQuestService questService;
     private final ProfileService profileService;
+
+    private WebClient accountServiceWebClient;
+    private final WebClient.Builder accountServiceWebClientBuilder;
+
+    @Value("${aws.service.base.url}")
+    private String AWS_SERVICE_BASE_URL;
+
+    private WebClient getAccountServiceWebClient() {
+        if (accountServiceWebClient == null) {
+            accountServiceWebClient = accountServiceWebClientBuilder.baseUrl(AWS_SERVICE_BASE_URL).build();
+        }
+        return accountServiceWebClient;
+    }
 
     public RLoginUser login(QUserLogin user) throws Exception {
         try {
@@ -275,6 +296,7 @@ public class AccountService {
             xpService.createUserXPForRegister(newUser);
             profileService.createEmptyProfile(newUser);
             unknownWordService.addPredefinedWordList(DEFAULT_WORD_LIST_FILE, newUser.getEmail());
+            this.registerToSNS(requestUser, newUser);
 
             // Create access and reset tokens so that user does not have to log in after registering
             final UserDetails userDetails = jwtUserService.loadUserByUsername(newUser.getEmail());
@@ -294,6 +316,32 @@ public class AccountService {
         } catch (Exception e) {
             log.error("User register failed for email {}", requestUser.getEmail(), e);
             throw new SomethingWentWrongException();
+        }
+    }
+
+    private void registerToSNS(QUser requestUser, User newUser) {
+        String fcmToken = requestUser.getFcmToken();
+        boolean isTokenValid = fcmToken != null && !fcmToken.isEmpty();
+        // Only register to SNS if fcmToken actually exists
+        if (isTokenValid) {
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("fcmToken", fcmToken);
+            requestBody.put("userId", newUser.getId().toString());
+            this.getAccountServiceWebClient().post()
+                .uri(ServiceUris.AWS_SERVICE_REGISTER_TO_SNS)
+                .header(Header.USER_EMAIL, newUser.getEmail())
+                .body(Mono.just(requestBody), Map.class)
+                .retrieve()
+                .bodyToMono(String.class)
+                .subscribe(response -> {
+                    if (response != null) {
+                        log.info("register to SNS - Response from AWS service: " + response);
+                    }
+                }, error -> {
+                    if (error != null) {
+                        log.error("register to SNS - Error from AWS service: " + error.getMessage());
+                    }
+                });
         }
     }
 
