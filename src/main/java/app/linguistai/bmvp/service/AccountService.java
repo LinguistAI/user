@@ -182,19 +182,41 @@ public class AccountService {
             log.info("Reset Tokens are deleted for {}", dbUser.getEmail());
 
             friendshipRepository.deleteByUserId(dbUser.getId());
+            log.info("Friendships are deleted for {}", dbUser.getEmail());
+
             questRepository.deleteAllByUser(dbUser);
+            log.info("Quests are deleted for {}", dbUser.getEmail());
+
             transactionRepository.deleteAllByUser(dbUser);
+            log.info("Transactions are deleted for {}", dbUser.getEmail());
+
             userGemsRepository.deleteByUser(dbUser);
+            log.info("User gems are deleted for {}", dbUser.getEmail());
+
             userHobbyRepository.deleteAllByUser(dbUser);
+            log.info("User hobbies are deleted for {}", dbUser.getEmail());
+
             userItemRepository.deleteAllByUser(dbUser);
+            log.info("User items are deleted for {}", dbUser.getEmail());
+
             userLoggedDateRepository.deleteAllByUser(dbUser);
+            log.info("User logged dates are deleted for {}", dbUser.getEmail());
+
             profileRepository.deleteByUser(dbUser);
+            log.info("Profile is deleted for {}", dbUser.getEmail());
+
             userStreakRepository.deleteByUser(dbUser);
+            log.info("User streak is deleted for {}", dbUser.getEmail());
+
             userXPRepository.deleteByUser(dbUser);
+            log.info("User XP is deleted for {}", dbUser.getEmail());
+
             unknownWordService.deleteAllListsOfUser(dbUser.getEmail());
+            log.info("Unknown word lists are deleted for {}", dbUser.getEmail());
 
             // Finally, delete the user from account repository
             accountRepository.delete(dbUser);
+            log.info("User is deleted with email {}. Adios!", email);
         }
         catch (NotFoundException e) {
             log.error("User is not found for email {}", email);
