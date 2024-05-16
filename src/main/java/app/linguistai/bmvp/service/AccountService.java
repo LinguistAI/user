@@ -157,6 +157,20 @@ public class AccountService {
         }
     }
 
+    public void deleteAccount(String email) {
+        try {
+            User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException("User does not exist"));
+
+            accountRepository.delete(user);
+
+            log.info("User with email {} is deleted.", email);
+        } catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+        } catch (Exception e) {
+            log.error("Delete account failed for email {}", email, e);
+        }
+    }
+
     public RUserLanguage setUserLanguage(String email, String language) throws Exception {
         try {
             // Check if user exists
