@@ -4,6 +4,7 @@ import java.util.UUID;
 import java.util.List;
 import java.util.Optional;
 
+import app.linguistai.bmvp.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import app.linguistai.bmvp.model.gamification.UserStreak;
@@ -15,4 +16,6 @@ public interface IUserStreakRepository extends JpaRepository<UserStreak, UUID> {
 	Optional<UserStreak> findByUserId(UUID id);
 
 	Optional<UserStreak> findByUserEmail(String email);
+
+	void deleteByUser(User user);
 }

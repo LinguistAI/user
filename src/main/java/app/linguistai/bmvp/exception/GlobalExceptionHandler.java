@@ -30,20 +30,13 @@ public class GlobalExceptionHandler {
         return Response.create(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
-    @ExceptionHandler(AccountMarkedForDeletionException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    @ResponseBody
-    public ResponseEntity<Object> handleAccountDeletedException(LoginException ex) {
-        return Response.create(ex.getMessage(), HttpStatus.FORBIDDEN);
-    }
-
     @ExceptionHandler(SomethingWentWrongException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
     public ResponseEntity<Object> handleSomethingWentWrongException(SomethingWentWrongException ex) {
         return Response.create(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    
+
     @ExceptionHandler(CustomException.class)
     @ResponseBody
     public ResponseEntity<Object> handleCustomException(CustomException ex) {
@@ -54,7 +47,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<Object> handleValidationException(MethodArgumentNotValidException e) {
-        
+
         // Get validation errors
         List<String> validationErrors = e.getBindingResult()
             .getFieldErrors()

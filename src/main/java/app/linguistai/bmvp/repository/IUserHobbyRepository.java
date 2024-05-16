@@ -3,6 +3,7 @@ package app.linguistai.bmvp.repository;
 import java.util.List;
 import java.util.UUID;
 
+import app.linguistai.bmvp.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,4 +18,5 @@ public interface IUserHobbyRepository extends JpaRepository<UserHobby, UserHobby
     List<String> findHobbiesByUserId(@Param("userId") UUID userId);
 
     void deleteByUserId(UUID id);
+    void deleteAllByUser(User user);
 }

@@ -9,9 +9,21 @@ import java.util.stream.Collectors;
 
 import app.linguistai.bmvp.exception.*;
 import app.linguistai.bmvp.model.ResetToken;
+import app.linguistai.bmvp.repository.IProfileRepository;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
+import app.linguistai.bmvp.repository.IUserHobbyRepository;
+import app.linguistai.bmvp.repository.currency.ITransactionRepository;
+import app.linguistai.bmvp.repository.currency.IUserGemsRepository;
+import app.linguistai.bmvp.repository.gamification.IFriendshipRepository;
+import app.linguistai.bmvp.repository.gamification.IUserStreakRepository;
+import app.linguistai.bmvp.repository.gamification.IUserXPRepository;
+import app.linguistai.bmvp.repository.gamification.quest.IQuestRepository;
+import app.linguistai.bmvp.repository.gamification.store.IUserItemRepository;
+import app.linguistai.bmvp.repository.stats.IUserLoggedDateRepository;
+import app.linguistai.bmvp.repository.wordbank.IWordSelectionRepository;
 import app.linguistai.bmvp.response.RUserLanguage;
 import app.linguistai.bmvp.service.currency.ITransactionService;
+import app.linguistai.bmvp.service.gamification.FriendshipService;
 import app.linguistai.bmvp.service.gamification.IXPService;
 import app.linguistai.bmvp.service.gamification.quest.IQuestService;
 import app.linguistai.bmvp.service.profile.ProfileService;
@@ -63,6 +75,16 @@ public class AccountService {
 
     private final IAccountRepository accountRepository;
     private final IResetTokenRepository resetTokenRepository;
+    private final IFriendshipRepository friendshipRepository;
+    private final IQuestRepository questRepository;
+    private final ITransactionRepository transactionRepository;
+    private final IUserGemsRepository userGemsRepository;
+    private final IUserHobbyRepository userHobbyRepository;
+    private final IUserItemRepository userItemRepository;
+    private final IUserLoggedDateRepository userLoggedDateRepository;
+    private final IProfileRepository profileRepository;
+    private final IUserStreakRepository userStreakRepository;
+    private final IUserXPRepository userXPRepository;
     private final JWTUserService jwtUserService;
 
     @Autowired
@@ -98,10 +120,6 @@ public class AccountService {
 
             if (!passwordMatch) {
                 throw new LoginException();
-            }
-
-            if (dbUser.getMarkedForDeletion() != null && dbUser.getMarkedForDeletion()) {
-                throw new AccountMarkedForDeletionException();
             }
 
             final UserDetails userDetails = jwtUserService.loadUserByUsername(user.getEmail());
@@ -156,14 +174,44 @@ public class AccountService {
     }
 
     @Transactional
+    public void terminateUser(String email) throws Exception {
+        try {
+            User dbUser = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
+
+            resetTokenRepository.deleteAllByUser(dbUser);
+            log.info("Reset Tokens are deleted for {}", dbUser.getEmail());
+
+            friendshipRepository.deleteByUserId(dbUser.getId());
+            questRepository.deleteAllByUser(dbUser);
+            transactionRepository.deleteAllByUser(dbUser);
+            userGemsRepository.deleteByUser(dbUser);
+            userHobbyRepository.deleteAllByUser(dbUser);
+            userItemRepository.deleteAllByUser(dbUser);
+            userLoggedDateRepository.deleteAllByUser(dbUser);
+            profileRepository.deleteByUser(dbUser);
+            userStreakRepository.deleteByUser(dbUser);
+            userXPRepository.deleteByUser(dbUser);
+            unknownWordService.deleteAllListsOfUser(dbUser.getEmail());
+
+            // Finally, delete the user from account repository
+            accountRepository.delete(dbUser);
+        }
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        }
+        catch (Exception e) {
+            log.error("User could not be terminated {}", email, e);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    @Transactional
     public void deleteAccount(String email) {
         try {
             User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException("User does not exist"));
 
-            user.setMarkedForDeletion(true);
-            user.setMarkedForDeletionDate(new Date());
-
-            accountRepository.save(user);
+            this.terminateUser(user.getEmail());
             log.info("User with email {} is deleted.", email);
         } catch (NotFoundException e) {
             log.error("User is not found for email {}", email);
@@ -304,9 +352,7 @@ public class AccountService {
             User newUser = accountRepository.save(userToSave);
 
             // Create UserStreak for the new user
-            if (!userStreakService.createUserStreak(newUser)) {
-                throw new StreakException();
-            }
+            userStreakService.createUserStreak(newUser);
 
             xpService.createUserXPForRegister(newUser);
             profileService.createEmptyProfile(newUser);

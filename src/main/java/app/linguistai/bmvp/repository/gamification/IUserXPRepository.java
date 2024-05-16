@@ -1,5 +1,6 @@
 package app.linguistai.bmvp.repository.gamification;
 
+import app.linguistai.bmvp.model.User;
 import app.linguistai.bmvp.model.gamification.IXPRanking;
 import app.linguistai.bmvp.model.gamification.UserXP;
 import org.springframework.data.domain.Page;
@@ -40,4 +41,5 @@ public interface IUserXPRepository extends JpaRepository<UserXP, UUID> {
             nativeQuery = true)
     Optional<IXPRanking> findFriendsUserRankById(UUID userId);
 
+    void deleteByUser(User user);
 }

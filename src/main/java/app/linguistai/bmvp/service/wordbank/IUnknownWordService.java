@@ -27,6 +27,7 @@ public interface IUnknownWordService {
     ROwnerUnknownWordList pinList(UUID listId, String email) throws Exception;
     ROwnerUnknownWordList unpinList(UUID listId, String email) throws Exception;
     ROwnerUnknownWordList deleteList(UUID listId, String email) throws Exception;
+    ROwnerUnknownWordList deleteListWithForceFlag(UUID listId, String email, boolean forced) throws Exception;
     RUnknownWord deleteWord(UUID listId, String email, String word) throws Exception;
     UnknownWordList getRandomActiveUnknownWordList(UUID userId) throws Exception;
     String getRandomWordFromList(UUID listId) throws Exception;
@@ -35,4 +36,5 @@ public interface IUnknownWordService {
     RUnknownWordListsStats getAllListStatsByEmail(String email) throws Exception;
     RUnknownWordListsStats getAllListStatsByUserId(UUID userId) throws Exception;
     void ensureUserListsHaveLanguage(String email) throws Exception;
+    void deleteAllListsOfUser(String email) throws Exception;
 }

@@ -16,4 +16,5 @@ public interface IUserLoggedDateRepository extends JpaRepository<UserLoggedDate,
     List<UserLoggedDate> findByUserEmailOrderByLoggedDateAsc(String email);
     List<UserLoggedDate> findByUserEmailAndLoggedDateGreaterThanEqualOrderByLoggedDateDesc(String email, Date startDate);
     List<UserLoggedDate> findByUserEmailAndLoggedDateGreaterThanEqualOrderByLoggedDateAsc(String email, Date startDate);
+    void deleteAllByUser(User user);
 }
