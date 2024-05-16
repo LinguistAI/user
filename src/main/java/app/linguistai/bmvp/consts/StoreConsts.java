@@ -17,4 +17,7 @@ public class StoreConsts {
     // Enabled status
     public static final boolean ENABLED_DOUBLE_ANSWER = true;
     public static final boolean ENABLED_ELIMINATE_WRONG_ANSWER = true;
+
+    // Reward Coefficient
+    public static final Long GEM_REWARD_PER_LEVEL = 50L;
 }
