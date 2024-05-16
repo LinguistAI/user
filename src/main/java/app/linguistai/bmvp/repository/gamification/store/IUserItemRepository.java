@@ -14,5 +14,6 @@ import java.util.Optional;
 @Repository
 public interface IUserItemRepository extends JpaRepository<UserItem, UserItemId> {
     Page<UserItem> findByUser(User user, Pageable page);
+    void deleteAllByUser(User user);
     Optional<UserItem> findByUserAndStoreItem(User user, StoreItem storeItem);
 }

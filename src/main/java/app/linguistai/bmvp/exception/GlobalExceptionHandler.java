@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Object> handleSomethingWentWrongException(SomethingWentWrongException ex) {
         return Response.create(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    
+
     @ExceptionHandler(CustomException.class)
     @ResponseBody
     public ResponseEntity<Object> handleCustomException(CustomException ex) {
@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<Object> handleValidationException(MethodArgumentNotValidException e) {
-        
+
         // Get validation errors
         List<String> validationErrors = e.getBindingResult()
             .getFieldErrors()

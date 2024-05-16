@@ -55,6 +55,32 @@ public class UnknownWordService implements IUnknownWordService {
 
     @Override
     @Transactional
+    public void deleteAllListsOfUser(String email) throws Exception {
+        try {
+            User user = accountRepository.findUserByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User does not exist for email " + email + "."));
+
+            // Get lists of user
+            List<RUnknownWordList> userLists = this.getListsByEmail(user.getEmail()).getLists();
+
+            // For every list, forcefully delete it
+            for (RUnknownWordList list : userLists) {
+                UUID listToDeleteId = list.getListId();
+                this.deleteListWithForceFlag(listToDeleteId, email, true);
+            }
+        }
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        }
+        catch (Exception e) {
+            log.error("Get lists by email failed for email {}", email, e);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    @Override
+    @Transactional
     public RUnknownWordLists getListsByEmail(String email) throws Exception {
         try {
             User user = accountRepository.findUserByEmail(email)
@@ -345,17 +371,31 @@ public class UnknownWordService implements IUnknownWordService {
     @Override
     @Transactional
     public ROwnerUnknownWordList deleteList(UUID listId, String email) throws Exception {
+        return this.deleteListWithForceFlag(listId, email, false);
+    }
+
+    @Override
+    @Transactional
+    public ROwnerUnknownWordList deleteListWithForceFlag(UUID listId, String email, boolean forced) throws Exception {
         try {
             UnknownWordListWithUser userListInfo = this.getUserOwnedList(listId, email);
             UnknownWordList userList = userListInfo.list();
 
             // Check if any words in the list are referenced in WordSelection
             List<UnknownWord> wordsInList = wordRepository.findByOwnerListListId(listId);
-            boolean isAnyWordReferenced = wordsInList.stream().anyMatch(wordSelectionRepository::existsByWord);
 
-            // If any word is referenced, throw an error and revert changes
-            if (isAnyWordReferenced) {
-                throw new WordReferencedException("Cannot delete this list because it contains words that are active in a conversation. Please deactivate the list and try again later.");
+            if (!forced) {
+                boolean isAnyWordReferenced = wordsInList.stream().anyMatch(wordSelectionRepository::existsByWord);
+
+                // If any word is referenced, throw an error and revert changes
+                if (isAnyWordReferenced) {
+                    throw new WordReferencedException("Cannot delete this list because it contains words that are active in a conversation. Please deactivate the list and try again later.");
+                }
+            }
+
+            // Delete all selected words from the list
+            for (UnknownWord word : wordsInList) {
+                wordSelectionRepository.deleteByWord(word);
             }
 
             // Delete all words associated with the list

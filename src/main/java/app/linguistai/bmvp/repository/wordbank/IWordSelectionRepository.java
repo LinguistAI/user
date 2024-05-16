@@ -13,4 +13,6 @@ public interface IWordSelectionRepository extends JpaRepository<WordSelection, W
     List<WordSelection> findByConversationIdAndWordOwnerListUserEmail(UUID conversationId, String email);
 
     boolean existsByWord(UnknownWord word);
+
+    void deleteByWord(UnknownWord word);
 }

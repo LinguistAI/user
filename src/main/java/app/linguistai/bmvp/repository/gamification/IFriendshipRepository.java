@@ -5,16 +5,18 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import app.linguistai.bmvp.model.Friendship;
 import app.linguistai.bmvp.model.embedded.FriendshipId;
 import app.linguistai.bmvp.enums.FriendshipStatus;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-public interface IFriendshipRepository extends JpaRepository<Friendship, FriendshipId> {  
-    
+public interface IFriendshipRepository extends JpaRepository<Friendship, FriendshipId> {
+
 	@Query("SELECT f FROM Friendship f " +
 		"WHERE (f.user1.id = :userId OR f.user2.id = :userId) " +
 		"AND f.status = :status")
@@ -32,4 +34,9 @@ public interface IFriendshipRepository extends JpaRepository<Friendship, Friends
 	Optional<Friendship> findByUserPair(UUID user1Id, UUID user2Id);
 
 	Optional<Friendship> findByUser1IdAndUser2IdAndStatus(UUID id1, UUID id2, FriendshipStatus status);
+
+	@Modifying
+	@Transactional
+	@Query("DELETE FROM Friendship f WHERE (f.user1.id = :userId OR f.user2.id = :userId)")
+	void deleteByUserId(UUID userId);
 }

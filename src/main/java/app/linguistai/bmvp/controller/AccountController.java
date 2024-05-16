@@ -1,6 +1,5 @@
 package app.linguistai.bmvp.controller;
 
-import java.util.Date;
 import java.util.List;
 
 import app.linguistai.bmvp.model.ResetToken;
@@ -15,7 +14,6 @@ import app.linguistai.bmvp.service.stats.UserLoggedDateService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -63,6 +61,12 @@ public class AccountController {
         @RequestHeader(Header.USER_EMAIL) String email) throws Exception {
         accountService.changePassword(email, userInfo);
         return Response.create("Password is changed", HttpStatus.OK);
+    }
+
+    @DeleteMapping()
+    public ResponseEntity<Object> deleteUser(@RequestHeader(Header.USER_EMAIL) String email) throws Exception {
+        accountService.deleteAccount(email);
+        return Response.create("Account is deleted", HttpStatus.OK);
     }
 
     @GetMapping("/refresh")

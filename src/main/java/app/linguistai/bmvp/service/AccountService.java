@@ -7,18 +7,23 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import app.linguistai.bmvp.exception.AlreadyFoundException;
-import app.linguistai.bmvp.exception.CustomException;
-import app.linguistai.bmvp.exception.InvalidResetCodeException;
-import app.linguistai.bmvp.exception.LoginException;
-import app.linguistai.bmvp.exception.NotFoundException;
-import app.linguistai.bmvp.exception.PasswordNotMatchException;
-import app.linguistai.bmvp.exception.SomethingWentWrongException;
-import app.linguistai.bmvp.exception.StreakException;
+import app.linguistai.bmvp.exception.*;
 import app.linguistai.bmvp.model.ResetToken;
+import app.linguistai.bmvp.repository.IProfileRepository;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
+import app.linguistai.bmvp.repository.IUserHobbyRepository;
+import app.linguistai.bmvp.repository.currency.ITransactionRepository;
+import app.linguistai.bmvp.repository.currency.IUserGemsRepository;
+import app.linguistai.bmvp.repository.gamification.IFriendshipRepository;
+import app.linguistai.bmvp.repository.gamification.IUserStreakRepository;
+import app.linguistai.bmvp.repository.gamification.IUserXPRepository;
+import app.linguistai.bmvp.repository.gamification.quest.IQuestRepository;
+import app.linguistai.bmvp.repository.gamification.store.IUserItemRepository;
+import app.linguistai.bmvp.repository.stats.IUserLoggedDateRepository;
+import app.linguistai.bmvp.repository.wordbank.IWordSelectionRepository;
 import app.linguistai.bmvp.response.RUserLanguage;
 import app.linguistai.bmvp.service.currency.ITransactionService;
+import app.linguistai.bmvp.service.gamification.FriendshipService;
 import app.linguistai.bmvp.service.gamification.IXPService;
 import app.linguistai.bmvp.service.gamification.quest.IQuestService;
 import app.linguistai.bmvp.service.profile.ProfileService;
@@ -29,6 +34,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -69,6 +75,16 @@ public class AccountService {
 
     private final IAccountRepository accountRepository;
     private final IResetTokenRepository resetTokenRepository;
+    private final IFriendshipRepository friendshipRepository;
+    private final IQuestRepository questRepository;
+    private final ITransactionRepository transactionRepository;
+    private final IUserGemsRepository userGemsRepository;
+    private final IUserHobbyRepository userHobbyRepository;
+    private final IUserItemRepository userItemRepository;
+    private final IUserLoggedDateRepository userLoggedDateRepository;
+    private final IProfileRepository profileRepository;
+    private final IUserStreakRepository userStreakRepository;
+    private final IUserXPRepository userXPRepository;
     private final JWTUserService jwtUserService;
 
     @Autowired
@@ -154,6 +170,75 @@ public class AccountService {
         catch (Exception e1) {
             log.error("Create user XP failed for email {}", email, e1);
             throw new SomethingWentWrongException();
+        }
+    }
+
+    @Transactional
+    public void terminateUser(String email) throws Exception {
+        try {
+            User dbUser = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
+
+            resetTokenRepository.deleteAllByUser(dbUser);
+            log.info("Reset Tokens are deleted for {}", dbUser.getEmail());
+
+            friendshipRepository.deleteByUserId(dbUser.getId());
+            log.info("Friendships are deleted for {}", dbUser.getEmail());
+
+            questRepository.deleteAllByUser(dbUser);
+            log.info("Quests are deleted for {}", dbUser.getEmail());
+
+            transactionRepository.deleteAllByUser(dbUser);
+            log.info("Transactions are deleted for {}", dbUser.getEmail());
+
+            userGemsRepository.deleteByUser(dbUser);
+            log.info("User gems are deleted for {}", dbUser.getEmail());
+
+            userHobbyRepository.deleteAllByUser(dbUser);
+            log.info("User hobbies are deleted for {}", dbUser.getEmail());
+
+            userItemRepository.deleteAllByUser(dbUser);
+            log.info("User items are deleted for {}", dbUser.getEmail());
+
+            userLoggedDateRepository.deleteAllByUser(dbUser);
+            log.info("User logged dates are deleted for {}", dbUser.getEmail());
+
+            profileRepository.deleteByUser(dbUser);
+            log.info("Profile is deleted for {}", dbUser.getEmail());
+
+            userStreakRepository.deleteByUser(dbUser);
+            log.info("User streak is deleted for {}", dbUser.getEmail());
+
+            userXPRepository.deleteByUser(dbUser);
+            log.info("User XP is deleted for {}", dbUser.getEmail());
+
+            unknownWordService.deleteAllListsOfUser(dbUser.getEmail());
+            log.info("Unknown word lists are deleted for {}", dbUser.getEmail());
+
+            // Finally, delete the user from account repository
+            accountRepository.delete(dbUser);
+            log.info("User is deleted with email {}. Adios!", email);
+        }
+        catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+            throw e;
+        }
+        catch (Exception e) {
+            log.error("User could not be terminated {}", email, e);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    @Transactional
+    public void deleteAccount(String email) {
+        try {
+            User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException("User does not exist"));
+
+            this.terminateUser(user.getEmail());
+            log.info("User with email {} is deleted.", email);
+        } catch (NotFoundException e) {
+            log.error("User is not found for email {}", email);
+        } catch (Exception e) {
+            log.error("Delete account failed for email {}", email, e);
         }
     }
 
@@ -289,9 +374,7 @@ public class AccountService {
             User newUser = accountRepository.save(userToSave);
 
             // Create UserStreak for the new user
-            if (!userStreakService.createUserStreak(newUser)) {
-                throw new StreakException();
-            }
+            userStreakService.createUserStreak(newUser);
 
             xpService.createUserXPForRegister(newUser);
             profileService.createEmptyProfile(newUser);
