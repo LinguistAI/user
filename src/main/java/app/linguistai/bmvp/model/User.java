@@ -48,7 +48,7 @@ public class User {
 
     @Nullable
     @Column(name = "marked_for_deletion", nullable = true)
-    private Boolean markedForDeletion = false;
+    private boolean markedForDeletion = false;
 
     @Nullable
     @Column(name = "marked_for_deletion_date")
