@@ -100,7 +100,7 @@ public class AccountService {
                 throw new LoginException();
             }
 
-            if (dbUser.getMarkedForDeletion()) {
+            if (dbUser.getMarkedForDeletion() != null && dbUser.getMarkedForDeletion()) {
                 throw new AccountMarkedForDeletionException();
             }
 

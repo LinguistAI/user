@@ -46,8 +46,8 @@ public class User {
     @Column(name = "language", nullable = false)
     private String currentLanguage;
 
-    @NotNull
-    @Column(name = "marked_for_deletion", nullable = false)
+    @Nullable
+    @Column(name = "marked_for_deletion", nullable = true)
     private Boolean markedForDeletion = false;
 
     @Nullable
