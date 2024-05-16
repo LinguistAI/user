@@ -14,6 +14,7 @@ import app.linguistai.bmvp.model.gamification.UserXPWithUser;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.gamification.IUserXPRepository;
 import app.linguistai.bmvp.response.gamification.RUserXP;
+import app.linguistai.bmvp.service.currency.ITransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -30,6 +31,9 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import static app.linguistai.bmvp.consts.StoreConsts.GEM_REWARD_PER_LEVEL;
+import static app.linguistai.bmvp.enums.TransactionType.GEMS_REWARD;
+
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -40,6 +44,8 @@ public class XPService implements IXPService {
     private final IAccountRepository accountRepository;
 
     private final IUserXPRepository xpRepository;
+
+    private final ITransactionService transactionService;
 
     private WebClient xpServiceWebClient;
     private final WebClient.Builder xpServiceWebClientBuilder;
@@ -127,7 +133,14 @@ public class XPService implements IXPService {
             UserXPWithLevel newLevelInfo = this.determineProceduralLevel(updated.getExperience());
             Long userLevel = newLevelInfo.level();
             Long xpToNextLevel = newLevelInfo.totalExperienceToNextLevel();
-            this.notifyUserLevelUp(previousLevel, user, userLevel);
+
+            // If user has levelled up
+            if (userLevel > previousLevel) {
+                this.notifyUserLevelUp(previousLevel, user, userLevel);
+
+                Long gemsToReward = userLevel * GEM_REWARD_PER_LEVEL;
+                transactionService.processTransaction(user.getEmail(), GEMS_REWARD, gemsToReward);
+            }
 
             log.info("User XP increased from {} to {} for user {}", userXP.getExperience(), updated.getExperience(), user.getId());
             return RUserXP.builder()
@@ -150,27 +163,26 @@ public class XPService implements IXPService {
         }
     }
 
-
-    private void notifyUserLevelUp(Long previousLevel, User user, Long userLevel) {
-        // Send level up event to AWS
-        if (userLevel > previousLevel) {
+    private void notifyUserLevelUp(Long previousLevel, User user, Long userLevel) throws Exception {
+        try {
+            // Send level up event to AWS
             Map<String, Object> requestBody = new HashMap<>();
 
             // Select target users
             List<String> targetUsers = new ArrayList<String>();
             targetUsers.add(user.getId().toString());
-            
+
             // Prepare data for notification
             Map<String, Object> data = new HashMap<>();
             data.put("type", "LevelUp");
             data.put("previousLevel", previousLevel);
             data.put("currentLevel", userLevel);
-            
+
             // Prepare request body
             requestBody.put("userIds", targetUsers);
             requestBody.put("title", "Level Up!");
             requestBody.put("notificationMessage", "Congrats, you've leveled up to level " + userLevel + "!");
-            requestBody.put("data", data);                
+            requestBody.put("data", data);
 
             this.getXpServiceWebClient().post()
                 .uri(ServiceUris.AWS_SERVICE_SEND_NOTIFICATION)
@@ -187,7 +199,12 @@ public class XPService implements IXPService {
                         log.error("Failed to send LevelUp Notification to SNS - Error from AWS service: " + error.getMessage());
                     }
                 });
+
             log.info("User {} leveled up to new level {} from level {}", user.getId(), userLevel, previousLevel);
+        }
+        catch (Exception e2) {
+            log.error("Could not notify user of XP level up", e2);
+            throw new SomethingWentWrongException();
         }
     }
 
