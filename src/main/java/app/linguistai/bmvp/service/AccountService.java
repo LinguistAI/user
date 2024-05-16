@@ -157,6 +157,7 @@ public class AccountService {
         }
     }
 
+    @Transactional
     public void deleteAccount(String email) {
         try {
             User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException("User does not exist"));
