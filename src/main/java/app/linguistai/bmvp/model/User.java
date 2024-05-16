@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -45,7 +46,7 @@ public class User {
     @Column(name = "language", nullable = false)
     private String currentLanguage;
 
-    @NotBlank
+    @NotNull
     @Column(name = "marked_for_deletion", nullable = false)
     private Boolean markedForDeletion = false;
 
