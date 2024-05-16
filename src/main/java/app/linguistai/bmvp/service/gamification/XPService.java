@@ -1,6 +1,8 @@
 package app.linguistai.bmvp.service.gamification;
 
 import app.linguistai.bmvp.configs.XPConfiguration;
+import app.linguistai.bmvp.consts.Header;
+import app.linguistai.bmvp.consts.ServiceUris;
 import app.linguistai.bmvp.exception.NotFoundException;
 import app.linguistai.bmvp.exception.SomethingWentWrongException;
 import app.linguistai.bmvp.exception.UserXPNotFoundException;
@@ -12,14 +14,25 @@ import app.linguistai.bmvp.model.gamification.UserXPWithUser;
 import app.linguistai.bmvp.repository.IAccountRepository;
 import app.linguistai.bmvp.repository.gamification.IUserXPRepository;
 import app.linguistai.bmvp.response.gamification.RUserXP;
+import app.linguistai.bmvp.service.currency.ITransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+
+import static app.linguistai.bmvp.consts.StoreConsts.GEM_REWARD_PER_LEVEL;
+import static app.linguistai.bmvp.enums.TransactionType.GEMS_REWARD;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -31,6 +44,22 @@ public class XPService implements IXPService {
     private final IAccountRepository accountRepository;
 
     private final IUserXPRepository xpRepository;
+
+    private final ITransactionService transactionService;
+
+    private WebClient xpServiceWebClient;
+    private final WebClient.Builder xpServiceWebClientBuilder;
+
+    @Value("${aws.service.base.url}")
+    private String AWS_SERVICE_BASE_URL;
+
+    private WebClient getXpServiceWebClient() {
+        if (xpServiceWebClient == null) {
+            xpServiceWebClient = xpServiceWebClientBuilder.baseUrl(AWS_SERVICE_BASE_URL).build();
+        }
+        return xpServiceWebClient;
+    }
+
 
     @Override
     @Transactional
@@ -90,18 +119,30 @@ public class XPService implements IXPService {
     @Transactional
     public RUserXP increaseUserXP(String email, XPAction action) throws Exception {
         try {
+            // Current XP info
             UserXPWithUser info = this.getUserOwnedXPByEmail(email);
             UserXP userXP = info.userXP();
+            Long previousLevel = this.determineProceduralLevel(userXP.getExperience()).level();
             User user = info.user();
 
-            userXP.setExperience(userXP.getExperience() + xp.getXP(action.key()));
-
+            // Calculate new XP and update
+            Long newExperience = userXP.getExperience() + xp.getXP(action.key());
+            userXP.setExperience(newExperience);
             UserXP updated = xpRepository.save(userXP);
 
-            UserXPWithLevel levelInfo = this.determineProceduralLevel(updated.getExperience());
-            Long userLevel = levelInfo.level();
-            Long xpToNextLevel = levelInfo.totalExperienceToNextLevel();
+            UserXPWithLevel newLevelInfo = this.determineProceduralLevel(updated.getExperience());
+            Long userLevel = newLevelInfo.level();
+            Long xpToNextLevel = newLevelInfo.totalExperienceToNextLevel();
 
+            // If user has levelled up
+            if (userLevel > previousLevel) {
+                this.notifyUserLevelUp(previousLevel, user, userLevel);
+
+                Long gemsToReward = userLevel * GEM_REWARD_PER_LEVEL;
+                transactionService.processTransaction(user.getEmail(), GEMS_REWARD, gemsToReward);
+            }
+
+            log.info("User XP increased from {} to {} for user {}", userXP.getExperience(), updated.getExperience(), user.getId());
             return RUserXP.builder()
                 .username(user.getUsername())
                 .currentExperience(updated.getExperience())
@@ -118,6 +159,51 @@ public class XPService implements IXPService {
         }
         catch (Exception e2) {
             log.error("Could not increase user XP", e2);
+            throw new SomethingWentWrongException();
+        }
+    }
+
+    private void notifyUserLevelUp(Long previousLevel, User user, Long userLevel) throws Exception {
+        try {
+            // Send level up event to AWS
+            Map<String, Object> requestBody = new HashMap<>();
+
+            // Select target users
+            List<String> targetUsers = new ArrayList<String>();
+            targetUsers.add(user.getId().toString());
+
+            // Prepare data for notification
+            Map<String, Object> data = new HashMap<>();
+            data.put("type", "LevelUp");
+            data.put("previousLevel", previousLevel);
+            data.put("currentLevel", userLevel);
+
+            // Prepare request body
+            requestBody.put("userIds", targetUsers);
+            requestBody.put("title", "Level Up!");
+            requestBody.put("notificationMessage", "Congrats, you've leveled up to level " + userLevel + "!");
+            requestBody.put("data", data);
+
+            this.getXpServiceWebClient().post()
+                .uri(ServiceUris.AWS_SERVICE_SEND_NOTIFICATION)
+                .header(Header.USER_EMAIL, user.getEmail())
+                .body(Mono.just(requestBody), Map.class)
+                .retrieve()
+                .bodyToMono(String.class)
+                .subscribe(response -> {
+                    if (response != null) {
+                        log.info("Successfully sent LevelUp Notification to SNS - Response from AWS service: " + response);
+                    }
+                }, error -> {
+                    if (error != null) {
+                        log.error("Failed to send LevelUp Notification to SNS - Error from AWS service: " + error.getMessage());
+                    }
+                });
+
+            log.info("User {} leveled up to new level {} from level {}", user.getId(), userLevel, previousLevel);
+        }
+        catch (Exception e2) {
+            log.error("Could not notify user of XP level up", e2);
             throw new SomethingWentWrongException();
         }
     }

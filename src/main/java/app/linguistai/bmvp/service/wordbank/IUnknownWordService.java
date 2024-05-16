@@ -34,5 +34,5 @@ public interface IUnknownWordService {
     ROwnerUnknownWordList addPredefinedWordList(String wordListYamlFile, String email) throws Exception;
     RUnknownWordListsStats getAllListStatsByEmail(String email) throws Exception;
     RUnknownWordListsStats getAllListStatsByUserId(UUID userId) throws Exception;
-
+    void ensureUserListsHaveLanguage(String email) throws Exception;
 }
