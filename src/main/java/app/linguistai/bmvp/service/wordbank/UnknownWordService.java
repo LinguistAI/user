@@ -22,6 +22,7 @@ import app.linguistai.bmvp.request.wordbank.QAddUnknownWord;
 import app.linguistai.bmvp.request.wordbank.QPredefinedWordList;
 import app.linguistai.bmvp.request.wordbank.QUnknownWordList;
 import app.linguistai.bmvp.response.wordbank.*;
+import app.linguistai.bmvp.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -263,17 +264,23 @@ public class UnknownWordService implements IUnknownWordService {
                 throw new RuntimeException("Word " + qAddUnknownWord.getWord().toLowerCase() + " already exists in list " + userList.getTitle() + ".");
             });
 
-            // Call dictionary service only if allowNonDictionaryWords is false
-            if (!allowNonDictionaryWords) {
+            // Call dictionary service only if allowNonDictionaryWords is false and the user language is English
+            User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException(User.class.getSimpleName(), true));
+            if (!allowNonDictionaryWords && user.getCurrentLanguage().equals(CODE_ENGLISH) ) {
                 Map<String, Object> requestBody = new HashMap<>();
                 requestBody.put("wordList", Collections.singletonList(qAddUnknownWord.getWord().toLowerCase()));
 
-                this.getDictionaryWebClient().post()
+                // Log the request body
+                log.info("Sending a request to the dictionary service. Request Body: {}", requestBody);
+
+                String response = this.getDictionaryWebClient().post()
                         .header(Header.USER_EMAIL, email)
                         .body(Mono.just(requestBody), Map.class)
                         .retrieve()
                         .bodyToMono(String.class)
                         .block();
+
+                log.info("Dictionary service's response: {}", response);
             }
 
             // Create and save new unknown word
@@ -286,12 +293,26 @@ public class UnknownWordService implements IUnknownWordService {
             UnknownWord saved = wordRepository.save(newWord);
 
             return RUnknownWord.builder().word(saved.getWord().toLowerCase()).confidence(saved.getConfidence()).build();
+        } catch (NotFoundException e) {
+            if (e.getObject().equals(User.class.getSimpleName())) {
+                log.error("When adding a word, user is not found for email {}", email);
+                throw e;
+            } else if (e.getObject().equals(UnknownWordList.class.getSimpleName())) {
+                log.error("When adding a word, word list {} not found ", qAddUnknownWord.getListId());
+                throw e;
+            } else {
+                log.error(e.getMessage());
+                throw e;
+            }
+        } catch (UnauthorizedException e) {
+            log.error("User {} not authorized to modify list: {}", email, qAddUnknownWord.getListId());
+            throw e;
         } catch (WebClientResponseException e) {
             if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-                log.error("Word {} is not found in the dictionary.", qAddUnknownWord.getWord());
+                log.error("Word {} is not found in the dictionary. Dictionary service's error: {}", qAddUnknownWord.getWord(), e.getResponseBodyAsString());
                 throw new NotFoundException(String.format("It looks like %s isn't in our dictionary yet. Please double-check your spelling.", qAddUnknownWord.getWord()));
             }
-            log.error("Dictionary service returned an error:" + e.getMessage());
+            log.error("Dictionary service returned an error:" + e.getResponseBodyAsString());
             throw new SomethingWentWrongException("We had trouble communicating with our dictionary service, please try again later.");
         } catch (RuntimeException e) {
             log.error(e.getMessage());
