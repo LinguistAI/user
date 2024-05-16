@@ -63,7 +63,7 @@ public class AccountController {
         return Response.create("Password is changed", HttpStatus.OK);
     }
 
-    @DeleteMapping(consumes = MediaType.APPLICATION_JSON_VALUE, path = "/delete")
+    @DeleteMapping()
     public ResponseEntity<Object> deleteUser(@RequestHeader(Header.USER_EMAIL) String email) throws Exception {
         accountService.deleteAccount(email);
         return Response.create("Account is deleted", HttpStatus.OK);

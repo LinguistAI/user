@@ -1,10 +1,12 @@
 package app.linguistai.bmvp.model;
 
+import java.util.Date;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import app.linguistai.bmvp.request.QUser;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -42,6 +44,14 @@ public class User {
     @NotBlank
     @Column(name = "language", nullable = false)
     private String currentLanguage;
+
+    @NotBlank
+    @Column(name = "marked_for_deletion", nullable = false)
+    private Boolean markedForDeletion = false;
+
+    @Nullable
+    @Column(name = "marked_for_deletion_date")
+    private Date markedForDeletionDate;
 
     public User(QUser reqUser) {
         this.id = reqUser.getId();

@@ -30,6 +30,13 @@ public class GlobalExceptionHandler {
         return Response.create(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(AccountMarkedForDeletionException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ResponseBody
+    public ResponseEntity<Object> handleAccountDeletedException(LoginException ex) {
+        return Response.create(ex.getMessage(), HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(SomethingWentWrongException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody

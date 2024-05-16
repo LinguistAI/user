@@ -7,14 +7,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import app.linguistai.bmvp.exception.AlreadyFoundException;
-import app.linguistai.bmvp.exception.CustomException;
-import app.linguistai.bmvp.exception.InvalidResetCodeException;
-import app.linguistai.bmvp.exception.LoginException;
-import app.linguistai.bmvp.exception.NotFoundException;
-import app.linguistai.bmvp.exception.PasswordNotMatchException;
-import app.linguistai.bmvp.exception.SomethingWentWrongException;
-import app.linguistai.bmvp.exception.StreakException;
+import app.linguistai.bmvp.exception.*;
 import app.linguistai.bmvp.model.ResetToken;
 import app.linguistai.bmvp.repository.IResetTokenRepository;
 import app.linguistai.bmvp.response.RUserLanguage;
@@ -29,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -106,6 +100,10 @@ public class AccountService {
                 throw new LoginException();
             }
 
+            if (dbUser.getMarkedForDeletion()) {
+                throw new AccountMarkedForDeletionException();
+            }
+
             final UserDetails userDetails = jwtUserService.loadUserByUsername(user.getEmail());
             final String accessToken = jwtUtils.createAccessToken(userDetails);
             final String refreshToken = jwtUtils.createRefreshToken(userDetails);
@@ -162,8 +160,10 @@ public class AccountService {
         try {
             User user = accountRepository.findUserByEmail(email).orElseThrow(() -> new NotFoundException("User does not exist"));
 
-            accountRepository.delete(user);
+            user.setMarkedForDeletion(true);
+            user.setMarkedForDeletionDate(new Date());
 
+            accountRepository.save(user);
             log.info("User with email {} is deleted.", email);
         } catch (NotFoundException e) {
             log.error("User is not found for email {}", email);
