@@ -203,7 +203,7 @@ public class XPService implements IXPService {
             log.info("User {} leveled up to new level {} from level {}", user.getId(), userLevel, previousLevel);
         }
         catch (Exception e2) {
-            log.error("Could not increase user XP", e2);
+            log.error("Could not notify user of XP level up", e2);
             throw new SomethingWentWrongException();
         }
     }
